@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.Light">
+        <item name="android:colorPrimary">#673AB7</item> <!-- 500 deep purple -->
+        <item name="android:colorPrimaryDark">#512DA8</item> <!-- 700 deep purple -->
+        <item name="android:colorAccent">#FFFF00</item> <!-- A200 Yellow -->
+
     </style>
 </resources>
