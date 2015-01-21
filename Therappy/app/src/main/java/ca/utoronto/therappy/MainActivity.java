@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,12 +24,14 @@ import java.io.IOException;
 public class MainActivity extends ActionBarActivity implements SensorEventListener, OnClickListener {
 
     private SensorManager mSensorManager;
-    private Sensor mAccelerometer;
-    private FileWriter writer;
-    private File sensorFiles, root;
+    private Sensor mAccelerometer, mGyroscope;
+    private BufferedWriter writer;
+    private FileWriter fwriter;
+    private File sensorFiles;
     private Button btnStart, btnStop;
     private boolean started = false;
-    TextView title,tv,tv1,tv2;
+    private final int bufferSize = 2048;
+    TextView title,ax,ay,az, rx, ry, rz;
     RelativeLayout layout;
 
     @Override
@@ -38,6 +41,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop = (Button) findViewById(R.id.btnStop);
@@ -48,11 +52,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         btnStart.setEnabled(true);
         btnStop.setEnabled(false);
 
-        root = android.os.Environment.getExternalStorageDirectory();
+        File root = android.os.Environment.getExternalStorageDirectory();
 
         try {
             sensorFiles = new File(root + "/therappy" + System.currentTimeMillis() + ".txt");
-            writer = new FileWriter(sensorFiles, true);
+            fwriter = new FileWriter(sensorFiles, true);
+            writer = new BufferedWriter(fwriter, bufferSize);
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -60,9 +65,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         layout = (RelativeLayout)findViewById(R.id.relative);
 
         title=(TextView)findViewById(R.id.name);
-        tv=(TextView)findViewById(R.id.xval);
-        tv1=(TextView)findViewById(R.id.yval);
-        tv2=(TextView)findViewById(R.id.zval);
+        ax=(TextView)findViewById(R.id.ax);
+        ay=(TextView)findViewById(R.id.ay);
+        az=(TextView)findViewById(R.id.az);
+        rx=(TextView)findViewById(R.id.rx);
+        ry=(TextView)findViewById(R.id.ry);
+        rz=(TextView)findViewById(R.id.rz);
     }
 
     @Override
@@ -73,27 +81,46 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public final void onSensorChanged(SensorEvent event)
     {
-        // Many sensors return 3 values, one for each axis.
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
-        long currTime = System.currentTimeMillis();
+        synchronized (this) {
+            // Many sensors return 3 values, one for each axis.
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            long currTime = System.currentTimeMillis();
+            title.setText(R.string.app_name);
+            switch (event.sensor.getType())
+            {
+                case Sensor.TYPE_ACCELEROMETER:
+                    //display values using TextView
+                    ax.setText("X axis" + "\t\t" + x);
+                    ay.setText("Y axis" + "\t\t" + y);
+                    az.setText("Z axis" + "\t\t" + z);
 
-        //display values using TextView
-        title.setText(R.string.app_name);
-        tv.setText("X axis" +"\t\t"+x);
-        tv1.setText("Y axis" + "\t\t" +y);
-        tv2.setText("Z axis" +"\t\t" +z);
+                    if (started) {
+                        try {
+                            writer.write(currTime + ",a," + x + "," + y + "," + z + "\n");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    rx.setText("X axis" + "\t\t" + x);
+                    ry.setText("Y axis" + "\t\t" + y);
+                    rz.setText("Z axis" + "\t\t" + z);
 
-        if(started)
-        {
-            try{
-                writer.write(currTime + "," + x + "," + y + "," + z + "\n");
-            } catch (IOException e){
-                e.printStackTrace();
+                    if (started) {
+                        try {
+                            writer.write(currTime + ",r," + x + "," + y + "," + z + "\n");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
-
     }
 
     @Override
@@ -110,7 +137,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 btnStart.setEnabled(true);
                 btnStop.setEnabled(false);
                 try{
+                    writer.flush();
                     writer.close();
+                    fwriter.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -125,9 +154,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume()
     {
         super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
         try {
-            writer = new FileWriter(sensorFiles, true);
+            fwriter = new FileWriter(sensorFiles, true);
+            writer = new BufferedWriter(fwriter, bufferSize);
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -140,7 +171,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         mSensorManager.unregisterListener(this);
         if(writer != null) {
             try {
+                writer.flush();
                 writer.close();
+                fwriter.close();
             } catch (IOException e) {
             e.printStackTrace();
             }
