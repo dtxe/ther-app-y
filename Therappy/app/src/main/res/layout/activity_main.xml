@@ -2,102 +2,67 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/relative"
+    android:orientation="vertical"
     android:keepScreenOn="true">
 
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Start"
-        android:id="@+id/btnStart"
-        android:layout_marginStart="46dp"
-        android:layout_below="@+id/rz"
-        android:layout_alignParentStart="true" />
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:text="start measurement\nsession"
+        android:id="@+id/btnSM"
+        android:onClick="startSensorModule"
+        android:layout_marginBottom="15dp"
+        android:layout_above="@+id/btnInfoDispLib"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="#311B92"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textAllCaps="false"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:drawablePadding="15dp"
+        android:drawableLeft="@drawable/ic_launcher" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:id="@+id/btnStop"
-        android:layout_marginStart="246dp"
-        android:layout_below="@+id/rz"
-        android:layout_alignParentStart="true" />
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:text="view progress"
+        android:id="@+id/btnInfoDispLib"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_above="@+id/btnSend"
+        android:layout_marginBottom="15dp"
+        android:background="#311B92"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textAllCaps="false"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:drawablePadding="15dp"
+        android:drawableLeft="@drawable/ic_launcher" />
 
-
-    <TextView
-        android:textSize="30dp"
-        android:id="@+id/name"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Acceleration (m/s2)"
-        android:id="@+id/titleAcceleration"
-        android:layout_below="@+id/name"
-        android:layout_alignParentStart="true"
-        />
-
-    <TextView
-        android:textSize="20dp"
-        android:layout_below="@+id/titleAcceleration"
-        android:id="@+id/ax"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        />
-
-    <TextView
-        android:textSize="20dp"
-        android:id="@+id/ay"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ax"
-        />
-
-    <TextView
-        android:textSize="20dp"
-        android:id="@+id/az"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ay"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Rotation (rad/s)"
-        android:id="@+id/titleGyroscope"
-        android:layout_below="@+id/az"
-        android:layout_alignParentStart="true"
-        />
-    <TextView
-        android:textSize="20dp"
-        android:layout_below="@+id/titleGyroscope"
-        android:id="@+id/rx"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        />
-
-    <TextView
-        android:textSize="20dp"
-        android:id="@+id/ry"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/rx"
-        />
-
-    <TextView
-        android:textSize="20dp"
-        android:id="@+id/rz"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ry"
-        android:layout_alignParentStart="true" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:text="upload for review"
+        android:id="@+id/btnSend"
+        android:layout_marginBottom="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:enabled="true"
+        android:background="#311B92"
+        android:textColor="#FFFFFF"
+        android:textStyle="normal"
+        android:textSize="20sp"
+        android:textAllCaps="false"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:drawablePadding="15dp"
+        android:drawableLeft="@drawable/ic_launcher" />
 
 </RelativeLayout>
