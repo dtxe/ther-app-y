@@ -1,14 +1,18 @@
 package ca.utoronto.therappy;
 
 import android.app.Fragment;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,13 +20,20 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.Wearable;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 
 
-public class SensorModule extends ActionBarActivity implements SensorEventListener, View.OnClickListener {
+public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener /*implements SensorEventListener, View.OnClickListener*/ {
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope;
@@ -35,14 +46,22 @@ public class SensorModule extends ActionBarActivity implements SensorEventListen
     TextView title,ax,ay,az, rx, ry, rz;
     RelativeLayout layout;
 
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor_module);
 
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Wearable.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+
         Intent intent = getIntent();
 
+        /*
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -74,9 +93,9 @@ public class SensorModule extends ActionBarActivity implements SensorEventListen
         az=(TextView)findViewById(R.id.az);
         rx=(TextView)findViewById(R.id.rx);
         ry=(TextView)findViewById(R.id.ry);
-        rz=(TextView)findViewById(R.id.rz);
+        rz=(TextView)findViewById(R.id.rz); */
     }
-
+/*
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy)
     {
@@ -197,7 +216,7 @@ public class SensorModule extends ActionBarActivity implements SensorEventListen
                 e.printStackTrace();
             }
         }
-    }
+    } */
 /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -206,6 +225,48 @@ public class SensorModule extends ActionBarActivity implements SensorEventListen
         return true;
     }
 */
+
+    static interface DataListener {
+        //do something
+    }
+
+    static interface NodeListener {
+        void onPeerConnected(Node node);
+        void onPeerDisconnected(Node node);
+    }
+
+
+    public void onSendMessage(View view) {
+        //Get Connected Nodes
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint){
+        // do something
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        // do something
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        // do something
+    }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
