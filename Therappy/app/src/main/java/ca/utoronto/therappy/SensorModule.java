@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 
-public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener /*implements SensorEventListener, View.OnClickListener*/ {
+public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, SensorEventListener, View.OnClickListener {
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope;
@@ -61,7 +61,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
         Intent intent = getIntent();
 
-        /*
+
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -93,9 +93,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         az=(TextView)findViewById(R.id.az);
         rx=(TextView)findViewById(R.id.rx);
         ry=(TextView)findViewById(R.id.ry);
-        rz=(TextView)findViewById(R.id.rz); */
+        rz=(TextView)findViewById(R.id.rz);
     }
-/*
+
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy)
     {
@@ -216,15 +216,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 e.printStackTrace();
             }
         }
-    } */
-/*
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_sensor_module, menu);
         return true;
     }
-*/
+
 
     static interface DataListener {
         //do something

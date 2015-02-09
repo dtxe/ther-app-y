@@ -15,29 +15,33 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-//import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.MessageEvent;
+
 
 public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager mSensorManager;
-    private Sensor /*mAccelerometer, mGyroscope, */ mLinAccelerometer;
+    private Sensor mLinAccelerometer, mGyroscope;
     private LinearLayout mRectBackground;
     private RelativeLayout mRoundBackground;
     private TextView ax, ay, az, rx, ry, rz;
-
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.rect_activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-
+        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        /*
         WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
@@ -49,14 +53,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                 ay = (TextView) stub.findViewById(R.id.ay);
                 az = (TextView) stub.findViewById(R.id.az);
             }
-        });
-
-
-        //rx = (TextView) findViewById(R.id.rx);
-        //ry = (TextView) findViewById(R.id.ry);
-        //rz = (TextView) findViewById(R.id.rz);
-
-
+        });*/
+        ax = (TextView)findViewById(R.id.ax);
+        ay = (TextView)findViewById(R.id.ay);
+        az = (TextView)findViewById(R.id.az);
+        rx = (TextView)findViewById(R.id.rx);
+        ry = (TextView)findViewById(R.id.ry);
+        rz = (TextView)findViewById(R.id.rz);
     }
 
     @Override
@@ -66,19 +69,34 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Many sensors return 3 values, one for each axis.
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
 
-        ax.setText("X axis: " + x);
-        ay.setText("Y axis: " + y);
-        az.setText("Z axis: " + z);
+        switch (event.sensor.getType())
+        {
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                //display values using TextView
+                ax.setText("X axis" + "\t\t" + x);
+                ay.setText("Y axis" + "\t\t" + y);
+                az.setText("Z axis" + "\t\t" + z);
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                rx.setText("X axis" + "\t\t" + x);
+                ry.setText("Y axis" + "\t\t" + y);
+                rz.setText("Z axis" + "\t\t" + z);
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mLinAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override

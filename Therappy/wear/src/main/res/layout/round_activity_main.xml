@@ -9,7 +9,7 @@
         android:text="Acceleration (m/s2)"
         android:id="@+id/titleAcceleration"
         android:textSize="20sp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="25dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 
@@ -36,6 +36,38 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/ay"
         android:layout_alignParentStart="true" />
+<!--
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gyroscope (rad/s)"
+        android:id="@+id/titleGyroscope"
+        android:layout_below="@+id/az"
+        android:textSize="20sp" />
 
+    <TextView
+        android:textSize="15sp"
+        android:id="@+id/rx"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/titleGyroscope"
+        />
+
+    <TextView
+        android:textSize="15sp"
+        android:id="@+id/ry"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rx"
+        />
+
+    <TextView
+        android:textSize="15sp"
+        android:id="@+id/rz"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ry"
+        />
+-->
 
 </RelativeLayout>
