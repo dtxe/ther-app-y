@@ -23,7 +23,9 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.BufferedWriter;
@@ -40,13 +42,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private BufferedWriter writer;
     private FileWriter fwriter;
     private File sensorFiles;
-    private Button btnStart, btnStop;
+    private Button btnStart, btnStop, btnWear;
     private boolean started = false;
     private final int bufferSize = 2048;
     TextView title,ax,ay,az, rx, ry, rz;
     RelativeLayout layout;
 
     private GoogleApiClient mGoogleApiClient;
+    private static final String START_ACTIVITY = "/start_activity";
+    private static final String WEAR_MESSAGE_PATH = "/message";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,13 +58,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_sensor_module);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+            .addApi(Wearable.API)
+            .addConnectionCallbacks(this)
+            .addOnConnectionFailedListener(this)
+            .build();
 
         Intent intent = getIntent();
-
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -68,17 +71,20 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop = (Button) findViewById(R.id.btnStop);
+        btnWear = (Button) findViewById(R.id.wearButton);
 
         btnStart.setOnClickListener(this);
         btnStop.setOnClickListener(this);
+        btnWear.setOnClickListener(this);
 
         btnStart.setEnabled(true);
         btnStop.setEnabled(false);
+        btnWear.setEnabled(true);
 
         File root = android.os.Environment.getExternalStorageDirectory();
 
         try {
-            sensorFiles = new File(root + "/therappy" + System.currentTimeMillis() + ".txt");
+            sensorFiles = new File(root + "/therappy/therappy" + System.currentTimeMillis() + ".txt");
             fwriter = new FileWriter(sensorFiles, true);
             writer = new BufferedWriter(fwriter, bufferSize);
         } catch (IOException e){
@@ -94,17 +100,16 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         rx=(TextView)findViewById(R.id.rx);
         ry=(TextView)findViewById(R.id.ry);
         rz=(TextView)findViewById(R.id.rz);
+
     }
 
     @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy)
-    {
+    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Do something here if sensor accuracy changes.
     }
 
     @Override
-    public final void onSensorChanged(SensorEvent event)
-    {
+    public final void onSensorChanged(SensorEvent event) {
         synchronized (this) {
             // Many sensors return 3 values, one for each axis.
             float x = event.values[0];
@@ -148,8 +153,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    public void onClick(View view)
-    {
+    public void onClick(View view) {
         switch(view.getId())
         {
             case R.id.btnStart:
@@ -168,6 +172,22 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     e.printStackTrace();
                 }
                 started = false;
+                finish();
+                break;
+            case R.id.wearButton:
+                int notificationId = 001;
+                // send a notification that recording is starting
+                NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(SensorModule.this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("therappy")
+                        .setContentText("Recording in progress!");
+
+                NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(SensorModule.this);
+
+                notificationManager.notify(notificationId, notificationBuilder.build());
+                sendMessage(WEAR_MESSAGE_PATH, "");
                 break;
             default:
                 break;
@@ -175,8 +195,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
@@ -189,8 +208,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
         if(writer != null) {
@@ -205,8 +223,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
         mSensorManager.unregisterListener(this);
         if(writer != null) {
@@ -216,6 +233,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 e.printStackTrace();
             }
         }
+        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -225,24 +243,16 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         return true;
     }
 
-
-    static interface DataListener {
-        //do something
-    }
-
-    static interface NodeListener {
-        void onPeerConnected(Node node);
-        void onPeerDisconnected(Node node);
-    }
-
-
-    public void onSendMessage(View view) {
-        //Get Connected Nodes
+    private void initGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+            .addApi(Wearable.API)
+            .build();
     }
 
     @Override
     public void onConnected(Bundle connectionHint){
         // do something
+        sendMessage(START_ACTIVITY,"");
     }
 
     @Override
@@ -255,6 +265,40 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         // do something
     }
 
+    private void sendMessage(final String path, final String text) {
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
+                for(Node node : nodes.getNodes()) {
+                    MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
+                        mGoogleApiClient, node.getId(), path, text.getBytes() ).await();
+                }
+
+                runOnUiThread( new Runnable() {
+                    @Override
+                    public void run() {
+                        // creating something in the UI that notifies user that the thing is recording
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public void onMessageReceived( final MessageEvent messageEvent ) {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                if( messageEvent.getPath().equalsIgnoreCase( WEAR_MESSAGE_PATH ) ) {
+                    // what happens when you receive a message
+                    // g = gyro data
+                    // a = lin accel data
+                    messageEvent.getData(); //Byte[] need to convert to string or something...
+                }
+            }
+        });
+    }
+
     @Override
     protected void onStart(){
         super.onStart();
@@ -265,6 +309,13 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     protected void onStop(){
         super.onStop();
         mGoogleApiClient.disconnect();
+    }
+
+    @Override
+    public void finish() {
+        // do something
+        super.finish();
+
     }
 
     @Override

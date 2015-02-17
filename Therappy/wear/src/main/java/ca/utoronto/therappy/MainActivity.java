@@ -17,13 +17,24 @@ import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
+import com.google.android.gms.wearable.WearableListenerService;
+
+import java.nio.ByteBuffer;
 
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, MessageApi.MessageListener {
 
     private SensorManager mSensorManager;
     private Sensor mLinAccelerometer, mGyroscope;
@@ -31,36 +42,58 @@ public class MainActivity extends Activity implements SensorEventListener {
     private RelativeLayout mRoundBackground;
     private TextView ax, ay, az, rx, ry, rz;
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String START_RECORDING = "/message_start";
+    private static final String STOP_RECORDING = "/message_stop";
+    private ArrayAdapter<String> mAdapter;
+    private GoogleApiClient mGoogleApiClient;
+
+    static final int COUNT = 32;
+    static ByteBuffer AcceleratorBuffer = ByteBuffer.allocate((4 * 3 * COUNT) + (8 * 1 * COUNT));
+    static ByteBuffer GyroBuffer = ByteBuffer.allocate((4 * 3 * COUNT) + (8 * 1 * COUNT));
+
+    static int accelerator_cycle = 0;
+    static int gyro_cycle = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rect_activity_main);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        // start sensor manager
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //mAdapter = new ArrayAdapter<String>(this, R.layout.list_item);
+        //mListView.setAdapter(mAdapter);
+
+        // initiate communication
+        initGoogleApiClient();
+    }
+
+    public void startMeasuring() {
+        // start sensor recording
         mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        /*
-        WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
-        stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
-            @Override
-            public void onLayoutInflated(WatchViewStub stub) {
-                mRectBackground = (LinearLayout) findViewById(R.id.rect_layout);
-                mRoundBackground = (RelativeLayout) findViewById(R.id.round_layout);
 
-                ax = (TextView) stub.findViewById(R.id.ax);
-                ay = (TextView) stub.findViewById(R.id.ay);
-                az = (TextView) stub.findViewById(R.id.az);
-            }
-        });*/
-        ax = (TextView)findViewById(R.id.ax);
-        ay = (TextView)findViewById(R.id.ay);
-        az = (TextView)findViewById(R.id.az);
-        rx = (TextView)findViewById(R.id.rx);
-        ry = (TextView)findViewById(R.id.ry);
-        rz = (TextView)findViewById(R.id.rz);
+        ax = (TextView) findViewById(R.id.ax);
+        ay = (TextView) findViewById(R.id.ay);
+        az = (TextView) findViewById(R.id.az);
+        rx = (TextView) findViewById(R.id.rx);
+        ry = (TextView) findViewById(R.id.ry);
+        rz = (TextView) findViewById(R.id.rz);
     }
+
+    public void stopMeasuring() {
+        // end message
+        // send message
+        // stop recording
+        mSensorManager.unregisterListener(this);
+        // destroy
+    }
+
+
+    /* Sensors Protocols */
 
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -74,8 +107,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         float y = event.values[1];
         float z = event.values[2];
 
-        switch (event.sensor.getType())
-        {
+        switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 //display values using TextView
                 ax.setText("X axis" + "\t\t" + x);
@@ -86,11 +118,92 @@ public class MainActivity extends Activity implements SensorEventListener {
                 rx.setText("X axis" + "\t\t" + x);
                 ry.setText("Y axis" + "\t\t" + y);
                 rz.setText("Z axis" + "\t\t" + z);
+                Log.i(TAG, "Gyro x: " + x + " y: " + y + " z: " + z);
+                GyroBuffer.putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
+                ++gyro_cycle;
+                if (gyro_cycle % COUNT == 0) {
+                    sendMessage('g', GyroBuffer);
+                    GyroBuffer.clear();
+                    gyro_cycle = 0;
+                }
                 break;
             default:
                 break;
         }
     }
+
+    /* Communications Protocols */
+
+    private void initGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Wearable.API)
+                .addConnectionCallbacks(this)
+                .build();
+        if (mGoogleApiClient != null && !(mGoogleApiClient.isConnected() || mGoogleApiClient.isConnecting()))
+            mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onMessageReceived(final MessageEvent messageEvent) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (messageEvent.getPath().equalsIgnoreCase(START_RECORDING)) {
+                    startMeasuring();
+                }
+                else if (messageEvent.getPath().equalsIgnoreCase(STOP_RECORDING)) {
+                    stopMeasuring();
+                }
+            }
+        });
+    }
+
+    public void sendMessage(char type, ByteBuffer message) {
+        final byte[] data = message.array();
+        final String DATA_PACKET_TYPE = type + "";
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
+                for(Node node : nodes.getNodes()) {
+                    Wearable.MessageApi.sendMessage(
+                        mGoogleApiClient, node.getId(), DATA_PACKET_TYPE, data)
+                        .setResultCallback(
+                            new ResultCallback<MessageApi.SendMessageResult>() {
+                                @Override
+                                public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+
+                                    if (!sendMessageResult.getStatus().isSuccess()) {
+                                        Log.e(TAG, "Failed to send message with status code: "
+                                                + sendMessageResult.getStatus().getStatusCode());
+                                    } else {
+                                        Log.e(TAG, "send data successfully, type: "+ DATA_PACKET_TYPE);
+                                    }
+                                }
+                            }
+                        );
+                }
+
+                runOnUiThread( new Runnable() {
+                    @Override
+                    public void run() {
+                        // creating something in the UI that notifies user that the thing is recording
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public void onConnected(Bundle bundle) {
+        Wearable.MessageApi.addListener(mGoogleApiClient, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        // do something
+    }
+
+    /* System commands */
 
     @Override
     protected void onResume() {
@@ -109,14 +222,18 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onDestroy() {
         super.onDestroy();
         mSensorManager.unregisterListener(this);
+        if (mGoogleApiClient != null)
+            mGoogleApiClient.unregisterConnectionCallbacks(this);
     }
-/*
-    public void onMessageReceived(MessageEvent messageEvent) {
-        if (messageEvent.getPath().equals("/startactivity")) {
 
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient != null) {
+            Wearable.MessageApi.removeListener(mGoogleApiClient, this);
+            if (mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.disconnect();
+            }
         }
-    }*/
+    }
 }

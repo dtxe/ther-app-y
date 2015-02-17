@@ -27,7 +27,7 @@
 
 
     <TextView
-        android:textSize="30dp"
+        android:textSize="30sp"
         android:id="@+id/name"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
         />
 
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:layout_below="@+id/titleAcceleration"
         android:id="@+id/ax"
         android:layout_width="fill_parent"
@@ -53,7 +53,7 @@
         />
 
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:id="@+id/ay"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -61,7 +61,7 @@
         />
 
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:id="@+id/az"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -78,7 +78,7 @@
         android:layout_alignParentStart="true"
         />
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:layout_below="@+id/titleGyroscope"
         android:id="@+id/rx"
         android:layout_width="fill_parent"
@@ -86,7 +86,7 @@
         />
 
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:id="@+id/ry"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -94,7 +94,7 @@
         />
 
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:id="@+id/rz"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
