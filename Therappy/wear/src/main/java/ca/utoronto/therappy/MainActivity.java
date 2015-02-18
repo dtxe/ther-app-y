@@ -40,15 +40,17 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private Sensor mLinAccelerometer, mGyroscope;
     private LinearLayout mRectBackground;
     private RelativeLayout mRoundBackground;
-    private TextView ax, ay, az, rx, ry, rz;
+    private TextView status, ax, ay, az, rx, ry, rz;
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String START_RECORDING = "/message_start";
-    private static final String STOP_RECORDING = "/message_stop";
+    private static final String WEAR_MESSAGE_PATH = "/message";
+    private static final String DATA_MESSAGE_PATH = "/sensordata";
     private ArrayAdapter<String> mAdapter;
     private GoogleApiClient mGoogleApiClient;
+    private boolean started = false;
+    private boolean sending = false;
 
     static final int COUNT = 32;
-    static ByteBuffer AcceleratorBuffer = ByteBuffer.allocate((4 * 3 * COUNT) + (8 * 1 * COUNT));
+    static ByteBuffer MessageBuffer = ByteBuffer.allocate(2 + 4*3 + 8);
     static ByteBuffer GyroBuffer = ByteBuffer.allocate((4 * 3 * COUNT) + (8 * 1 * COUNT));
 
     static int accelerator_cycle = 0;
@@ -69,29 +71,41 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // initiate communication
         initGoogleApiClient();
-    }
-
-    public void startMeasuring() {
-        // start sensor recording
-        mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
+        status = (TextView) findViewById(R.id.status);
         ax = (TextView) findViewById(R.id.ax);
         ay = (TextView) findViewById(R.id.ay);
         az = (TextView) findViewById(R.id.az);
         rx = (TextView) findViewById(R.id.rx);
         ry = (TextView) findViewById(R.id.ry);
         rz = (TextView) findViewById(R.id.rz);
+
+    }
+
+    public void startMeasuring() {
+        status.setText("Measuring");
+        started = true;
     }
 
     public void stopMeasuring() {
-        // end message
-        // send message
-        // stop recording
+        status.setText("Not Measuring");
+        started = false;
         mSensorManager.unregisterListener(this);
-        // destroy
+        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+        MessageBuffer.clear();
     }
 
+    public void sendData(){
+        // start sensor recording
+        status.setText("Data Enabled");
+        if(!sending) {
+            mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+            mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        }
+        else{
+            mSensorManager.unregisterListener(this);
+        }
+
+    }
 
     /* Sensors Protocols */
 
@@ -106,6 +120,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
+        char type = 'x';
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
@@ -113,22 +128,22 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 ax.setText("X axis" + "\t\t" + x);
                 ay.setText("Y axis" + "\t\t" + y);
                 az.setText("Z axis" + "\t\t" + z);
+                Log.i(TAG, "Accel x: " + x + " y: " + y + " z: " + z);
+                type = 'a';
                 break;
             case Sensor.TYPE_GYROSCOPE:
                 rx.setText("X axis" + "\t\t" + x);
                 ry.setText("Y axis" + "\t\t" + y);
                 rz.setText("Z axis" + "\t\t" + z);
-                Log.i(TAG, "Gyro x: " + x + " y: " + y + " z: " + z);
-                GyroBuffer.putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
-                ++gyro_cycle;
-                if (gyro_cycle % COUNT == 0) {
-                    sendMessage('g', GyroBuffer);
-                    GyroBuffer.clear();
-                    gyro_cycle = 0;
-                }
+                type = 'g';
                 break;
             default:
                 break;
+        }
+        if(type != 'x' && started) {
+            MessageBuffer.putChar(type).putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
+            sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+            MessageBuffer.clear();
         }
     }
 
@@ -145,29 +160,38 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     @Override
     public void onMessageReceived(final MessageEvent messageEvent) {
+        final String msg = new String(messageEvent.getData());
+        status.setText("MSG REC'D");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (messageEvent.getPath().equalsIgnoreCase(START_RECORDING)) {
-                    startMeasuring();
-                }
-                else if (messageEvent.getPath().equalsIgnoreCase(STOP_RECORDING)) {
-                    stopMeasuring();
+                if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
+                    if(msg.equalsIgnoreCase("START")) {
+                        status.setText("START MSG REC'D");
+                        startMeasuring();
+                    }
+                    else if (msg.equalsIgnoreCase("STOP")) {
+                        status.setText("STOP MSG REC'D");
+                        stopMeasuring();
+                    }
+                    else if(msg.equalsIgnoreCase("SEND")) {
+                        status.setText("SEND MSG REC'D");
+                        sendData();
+                    }
                 }
             }
         });
     }
 
-    public void sendMessage(char type, ByteBuffer message) {
+    public void sendMessage(final String path, final ByteBuffer message) {
         final byte[] data = message.array();
-        final String DATA_PACKET_TYPE = type + "";
         new Thread( new Runnable() {
             @Override
             public void run() {
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
                 for(Node node : nodes.getNodes()) {
                     Wearable.MessageApi.sendMessage(
-                        mGoogleApiClient, node.getId(), DATA_PACKET_TYPE, data)
+                        mGoogleApiClient, node.getId(), path, data)
                         .setResultCallback(
                             new ResultCallback<MessageApi.SendMessageResult>() {
                                 @Override
@@ -177,7 +201,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                                         Log.e(TAG, "Failed to send message with status code: "
                                                 + sendMessageResult.getStatus().getStatusCode());
                                     } else {
-                                        Log.e(TAG, "send data successfully, type: "+ DATA_PACKET_TYPE);
+                                        Log.e(TAG, "data sent successfully");
                                     }
                                 }
                             }
