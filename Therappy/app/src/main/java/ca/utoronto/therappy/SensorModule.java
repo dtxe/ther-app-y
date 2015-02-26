@@ -87,7 +87,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         btnWear.setEnabled(true);
 
         try {
-            sensorFiles = new File(root + "/therappy/therappy" + System.currentTimeMillis() + ".txt");
+            sensorFiles = new File(root + "/therappy" + System.currentTimeMillis() + ".txt");
             fwriter = new FileWriter(sensorFiles, true);
             writer = new BufferedWriter(fwriter, bufferSize);
         } catch (IOException e){
@@ -250,6 +250,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         super.onResume();
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
+        mGoogleApiClient.connect();
         try {
             fwriter = new FileWriter(sensorFiles, true);
             writer = new BufferedWriter(fwriter, bufferSize);
@@ -262,6 +263,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        mGoogleApiClient.disconnect();
         if(writer != null) {
             try {
                 writer.flush();
@@ -279,7 +281,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         mSensorManager.unregisterListener(this);
         if(writer != null) {
             try {
+                writer.flush();
                 writer.close();
+                fwriter.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

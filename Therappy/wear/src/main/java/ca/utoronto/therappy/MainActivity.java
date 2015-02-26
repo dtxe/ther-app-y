@@ -161,10 +161,11 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     @Override
     public void onMessageReceived(final MessageEvent messageEvent) {
         final String msg = new String(messageEvent.getData());
-        status.setText("MSG REC'D");
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                status.setText("MSG REC'D");
                 if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     if(msg.equalsIgnoreCase("START")) {
                         status.setText("START MSG REC'D");
@@ -234,12 +235,14 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         super.onResume();
         mSensorManager.registerListener(this, mLinAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
+        mGoogleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        mGoogleApiClient.disconnect();
     }
 
     @Override
