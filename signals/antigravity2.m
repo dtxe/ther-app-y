@@ -6,8 +6,7 @@
 close all
 clear
 
-data = importdata('./therappy1425147273141.txt');
-% data = importdata('./therappy1424922398062.txt');
+data = importdata('./therappy1425162175863.txt');
 
 t_begin = tic;
 
@@ -177,7 +176,6 @@ for jj = 2:data_re_len
     
     vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
 end
-
 
 pos_rt = zeros(data_re_len, 3);
 for kk = 1:3
