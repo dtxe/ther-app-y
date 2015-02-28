@@ -32,26 +32,30 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 
 public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, MessageApi.MessageListener {
 
+    /* sensor variables */
     private SensorManager mSensorManager;
     private Sensor mLinAccelerometer, mGyroscope;
-    private LinearLayout mRectBackground;
-    private RelativeLayout mRoundBackground;
+    /* UI variables */
     private TextView status, ax, ay, az, rx, ry, rz;
+
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    private GoogleApiClient mGoogleApiClient;
     private static final String WEAR_MESSAGE_PATH = "/message";
     private static final String DATA_MESSAGE_PATH = "/sensordata";
+
     private ArrayAdapter<String> mAdapter;
-    private GoogleApiClient mGoogleApiClient;
+
     private boolean started = false;
 
+    /* message buffers */
     static final int COUNT = 32;
-    static ByteBuffer MessageBuffer = ByteBuffer.allocate(2 + 4*3 + 8);
-    static ByteBuffer GyroBuffer = ByteBuffer.allocate((4 * 3 * COUNT) + (8 * 1 * COUNT));
-
+    static ByteBuffer MessageBuffer = ByteBuffer.allocate((2 + 4*3 + 8));
     static int accelerator_cycle = 0;
     static int gyro_cycle = 0;
 
@@ -63,7 +67,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // start sensor manager
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
+        mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //mAdapter = new ArrayAdapter<String>(this, R.layout.list_item);
         //mListView.setAdapter(mAdapter);
@@ -90,15 +95,16 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         status.setText("Not Measuring");
         started = false;
         mSensorManager.unregisterListener(this);
-        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+        //sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
         MessageBuffer.clear();
     }
 
     public void sendData(){
         // start sensor recording
         status.setText("Data Enabled");
-        mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        Log.i(TAG, "sendData called");
+        mSensorManager.registerListener(this, mLinAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /* Sensors Protocols */
@@ -117,12 +123,12 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         char type = 'x';
 
         switch (event.sensor.getType()) {
-            case Sensor.TYPE_LINEAR_ACCELERATION:
+            case Sensor.TYPE_ACCELEROMETER:
                 //display values using TextView
                 ax.setText("X axis" + "\t\t" + x);
                 ay.setText("Y axis" + "\t\t" + y);
                 az.setText("Z axis" + "\t\t" + z);
-                Log.i(TAG, "Accel x: " + x + " y: " + y + " z: " + z);
+                //Log.i(TAG, "Accel x: " + x + " y: " + y + " z: " + z);
                 type = 'a';
                 break;
             case Sensor.TYPE_GYROSCOPE:
@@ -135,9 +141,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 break;
         }
         if(type != 'x' && started) {
-            MessageBuffer.putChar(type).putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
+            /*MessageBuffer.putChar(type).putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
             sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-            MessageBuffer.clear();
+            MessageBuffer.clear();*/
+            sendMessage(DATA_MESSAGE_PATH, type+","+x+","+y+","+z);
         }
     }
 
@@ -148,8 +155,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .build();
-        if (mGoogleApiClient != null && !(mGoogleApiClient.isConnected() || mGoogleApiClient.isConnecting()))
-            mGoogleApiClient.connect();
+        mGoogleApiClient.connect();
     }
 
     @Override
@@ -178,6 +184,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         });
     }
 
+
+    /*
     public void sendMessage(final String path, final ByteBuffer message) {
         final byte[] data = message.array();
         new Thread( new Runnable() {
@@ -211,6 +219,45 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 });
             }
         }).start();
+    }*/
+    /*
+    private void sendMessage(final String path, final String text) {
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
+                for(Node node : nodes.getNodes()) {
+                    MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
+                            mGoogleApiClient, node.getId(), path, text.getBytes() ).await();
+                }
+                Log.i(TAG,"Message sent");
+                runOnUiThread( new Runnable() {
+                    @Override
+                    public void run() {
+                        // creating something in the UI that notifies user that the thing is recording
+                    }
+                });
+            }
+        }).start();
+    }*/
+
+    private void sendMessage(final String path, final String text) {
+        Log.i(TAG, "WEAR Sending message " + text);
+        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+            @Override
+            public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+                List<Node> nodes = getConnectedNodesResult.getNodes();
+                for (Node node : nodes) {
+                    Log.i(TAG, "WEAR sending " + text + " to " + node);
+                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, text.getBytes()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                        @Override
+                        public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                            Log.i(TAG, "WEAR Result " + sendMessageResult.getStatus());
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public void onConnected(Bundle bundle) {
