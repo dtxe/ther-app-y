@@ -47,7 +47,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private ArrayAdapter<String> mAdapter;
     private GoogleApiClient mGoogleApiClient;
     private boolean started = false;
-    private boolean sending = false;
 
     static final int COUNT = 32;
     static ByteBuffer MessageBuffer = ByteBuffer.allocate(2 + 4*3 + 8);
@@ -83,6 +82,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     public void startMeasuring() {
         status.setText("Measuring");
+        sendData();
         started = true;
     }
 
@@ -97,14 +97,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     public void sendData(){
         // start sensor recording
         status.setText("Data Enabled");
-        if(!sending) {
-            mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-            mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        }
-        else{
-            mSensorManager.unregisterListener(this);
-        }
-
+        mLinAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
     }
 
     /* Sensors Protocols */
@@ -175,8 +169,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         status.setText("STOP MSG REC'D");
                         stopMeasuring();
                     }
-                    else if(msg.equalsIgnoreCase("SEND")) {
-                        status.setText("SEND MSG REC'D");
+                    else if(msg.equalsIgnoreCase("READ")) {
+                        status.setText("READ MSG REC'D");
                         sendData();
                     }
                 }
@@ -249,8 +243,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     protected void onDestroy() {
         super.onDestroy();
         mSensorManager.unregisterListener(this);
-        if (mGoogleApiClient != null)
+        if (mGoogleApiClient != null) {
             mGoogleApiClient.unregisterConnectionCallbacks(this);
+            mGoogleApiClient.disconnect();
+        }
     }
 
     @Override
