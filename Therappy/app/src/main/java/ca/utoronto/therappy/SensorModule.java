@@ -2,8 +2,11 @@ package ca.utoronto.therappy;
 
 import android.app.Fragment;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -84,8 +87,24 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         rx=(TextView)findViewById(R.id.rx);
         ry=(TextView)findViewById(R.id.ry);
         rz=(TextView)findViewById(R.id.rz);
-
+        // Register to receive messages.
+        // We are registering an observer (mMessageReceiver) to receive Intents
+        // with actions named "custom-event-name".
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("custom-event-name"));
     }
+
+    // Our handler for received Intents. This will be called whenever an Intent
+    // with an action named "custom-event-name" is broadcasted.
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("message");
+            Log.d("receiver", "Got message: " + message);
+        }
+    };
+
 
     public void setData(byte[] message)
     {
@@ -264,17 +283,17 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
     @Override
     public void onMessageReceived( final MessageEvent messageEvent ) {
-       runOnUiThread( new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "something something something haha");
-                if( messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH) ) {
-                    final String msg = new String(messageEvent.getData());
-                    Log.i(TAG, msg);
-                    setData(messageEvent.getData());
-                }
-            }
-        });
+       runOnUiThread(new Runnable() {
+           @Override
+           public void run() {
+               Log.i(TAG, "something something something haha");
+               if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
+                   final String msg = new String(messageEvent.getData());
+                   Log.i(TAG, msg);
+                   setData(messageEvent.getData());
+               }
+           }
+       });
     }
 
     @Override
