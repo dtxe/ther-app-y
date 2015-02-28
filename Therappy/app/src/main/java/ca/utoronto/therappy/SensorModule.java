@@ -4,13 +4,6 @@ import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,21 +27,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
-import java.nio.ShortBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 
-public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, SensorEventListener, View.OnClickListener, MessageApi.MessageListener{
+public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, MessageApi.MessageListener{
 
-    private SensorManager mSensorManager;
-    private Sensor mAccelerometer, mGyroscope;
     private BufferedWriter writer;
     private FileWriter fwriter;
     private File sensorFiles;
@@ -72,10 +54,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         initGoogleApiClient();
 
         Intent intent = getIntent();
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop = (Button) findViewById(R.id.btnStop);
@@ -145,55 +123,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
-    }
-
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        /*synchronized (this) {
-            // Many sensors return 3 values, one for each axis.
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-            long currTime = System.currentTimeMillis();
-            title.setText(R.string.app_name);
-            switch (event.sensor.getType())
-            {
-                case Sensor.TYPE_ACCELEROMETER:
-                    //display values using TextView
-                    ax.setText("X axis" + "\t\t" + x);
-                    ay.setText("Y axis" + "\t\t" + y);
-                    az.setText("Z axis" + "\t\t" + z);
-
-                    if (started) {
-                        try {
-                            writer.write(currTime + ",a," + x + "," + y + "," + z + "\n");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    break;
-                case Sensor.TYPE_GYROSCOPE:
-                    rx.setText("X axis" + "\t\t" + x);
-                    ry.setText("Y axis" + "\t\t" + y);
-                    rz.setText("Z axis" + "\t\t" + z);
-
-                    if (started) {
-                        try {
-                            writer.write(currTime + ",r," + x + "," + y + "," + z + "\n");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }*/
-    }
-
-    @Override
     public void onClick(View view) {
         /*NotificationCompat.Builder notificationBuilder;
         int notificationId = 001;
@@ -241,8 +170,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
         mGoogleApiClient.connect();
         try {
             fwriter = new FileWriter(sensorFiles, true);
@@ -255,7 +182,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onPause() {
         super.onPause();
-        mSensorManager.unregisterListener(this);
         mGoogleApiClient.disconnect();
         if(writer != null) {
             try {
@@ -271,7 +197,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSensorManager.unregisterListener(this);
         if(writer != null) {
             try {
                 writer.flush();
