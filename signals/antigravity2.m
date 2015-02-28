@@ -38,14 +38,14 @@ gyro_t = gyro_t - gyro_t(1);
 % Need to resample, since std-dev is +/- 20% of mean time difference
 
 % find average sampling period, divide by 4 (increase sample rate by 4x)
-avg_diff = mean([mean(diff(accl_t)) mean(diff(gyro_t))]);
+avg_diff = mean(diff(accl_t));
 avg_diff = round(avg_diff)/4;
 
 % get ending time of accl and gyro recordings, whichever ends first
 ending_time = min([accl_t(end), gyro_t(end)]);
 
 % form time vector
-data_re_t = (0:avg_diff:accl_t(end))';
+data_re_t = (0:avg_diff:ending_time)';
 
 data_re_srate = 1000/avg_diff;
 data_re_len = length(data_re_t);
@@ -91,13 +91,16 @@ fq_gain = ones(data_re_len, 1);
 % frequency ranges to cut + invert for -ve freqs
 fq_gain((fq < 0.02)) = 0;
 fq_gain((fq > 30)) = 0;
-fq_gain(data_re_len:-1:round(data_re_len/2)+1) = fq_gain(1:round(data_re_len/2));
+fq_gain(data_re_len:-1:ceil(data_re_len/2)+1) = fq_gain(1:floor(data_re_len/2));
 
 % filter using fft/ifft
 accl_re_filtd = zeros(data_re_len, 3);
+gyro_re_filtd = zeros(data_re_len, 3);
 for kk = 1:3
     accl_re_filtd(:,kk) = real(ifft(fq_gain .* fft(accl_re_data(:,kk))));
+    gyro_re_filtd(:,kk) = real(ifft(fq_gain .* fft(gyro_re_data(:,kk))));
 end
+
 
 
 % Plot filter stuff
@@ -127,6 +130,12 @@ end
 
 %% Integration
 
+%%%%% Rotation matrix
+rotatevec3d = @(x, rot) ([cos(rot(1))*cos(rot(3))-cos(rot(2))*sin(rot(1))*sin(rot(3)), -cos(rot(1))*sin(rot(3))-cos(rot(2))*sin(rot(1))*cos(rot(3)), sin(rot(1))*sin(rot(2));
+                          sin(rot(1))*cos(rot(3))+cos(rot(2))*cos(rot(1))*sin(rot(3)), -sin(rot(1))*sin(rot(3))+cos(rot(2))*cos(rot(1))*cos(rot(3)), -cos(rot(1))*sin(rot(2));
+                          sin(rot(3))*sin(rot(2)),                                     cos(rot(3))*sin(rot(2)),                                      cos(rot(2))            ] * x')';
+
+%%%%% RAW ACCL
 vel = zeros(data_re_len, 3);
 for kk = 1:3
     % initial velocity is zero
@@ -146,12 +155,55 @@ for kk = 1:3
     end
 end
 
+%%%%% ROTATION CORRECTED
+% Keep track of rotation vector
+rot = zeros(data_re_len, 3);
+for kk = 1:3
+    % initial rotation is zero
+    rot(1,kk) = gyro_re_filtd(1,kk)*(avg_diff/1000);
+    
+    for jj = 2:data_re_len
+        rot(jj,kk) = rot(jj-1,kk) + gyro_re_filtd(jj,kk)*(avg_diff/1000);
+    end
+end
+
+% Integrate with corrected direction
+vel_rt = zeros(data_re_len, 3);
+
+vel_rt(1,:) = accl_re_filtd(1,:)*(avg_diff/1000);
+for jj = 2:data_re_len
+    accl_rtcor = accl_re_filtd(jj,:)*(avg_diff/1000);
+    accl_rtcor = rotatevec3d(accl_rtcor, rot(jj,:));
+    
+    vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
+end
+
+
+pos_rt = zeros(data_re_len, 3);
+for kk = 1:3
+    pos_rt(1,kk) = vel_rt(1,kk)*(avg_diff/1000);
+    
+    for jj = 2:data_re_len
+        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*(avg_diff/1000);
+    end
+end
+
+
+% Plot integrated trace
 figure;
 plot3(pos(:,1), pos(:,2), pos(:,3));
 daspect([1 1 1]);
+title('Raw integrated trace');
+
+figure;
+plot3(pos(:,1), pos(:,2), pos(:,3));
+daspect([1 1 1]);
+title('Rotation-corrected integrated trace');
+
 
 %% Timing
 toc(t_begin);
+
 
 %% Animate
 vidwriter = VideoWriter(['test.avi']);
