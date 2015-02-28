@@ -141,10 +141,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 break;
         }
         if(type != 'x' && started) {
-            /*MessageBuffer.putChar(type).putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
-            sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-            MessageBuffer.clear();*/
-            sendMessage(DATA_MESSAGE_PATH, type+","+x+","+y+","+z);
+            //MessageBuffer.putChar(type).putFloat(x).putFloat(y).putFloat(z).putLong(System.currentTimeMillis()).array();
+            //sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+            //MessageBuffer.clear();
+            sendMessage(DATA_MESSAGE_PATH, type+","+x+","+y+","+z+","+System.currentTimeMillis());
         }
     }
 
@@ -241,15 +241,16 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         }).start();
     }*/
 
-    private void sendMessage(final String path, final String text) {
-        Log.i(TAG, "WEAR Sending message " + text);
+    private void sendMessage(final String path, final String message) {
+        final String data = message;
+        //final byte[] data = message.array();
         Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
             @Override
             public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
                 List<Node> nodes = getConnectedNodesResult.getNodes();
                 for (Node node : nodes) {
-                    Log.i(TAG, "WEAR sending " + text + " to " + node);
-                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, text.getBytes()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                    Log.i(TAG, "WEAR sending " + data + " to " + node);
+                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, data.getBytes()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                         @Override
                         public void onResult(MessageApi.SendMessageResult sendMessageResult) {
                             Log.i(TAG, "WEAR Result " + sendMessageResult.getStatus());

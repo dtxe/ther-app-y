@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.StringTokenizer;
 
 
 public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, MessageApi.MessageListener{
@@ -54,6 +55,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         initGoogleApiClient();
 
         Intent intent = getIntent();
+        Wearable.MessageApi.addListener(mGoogleApiClient, this);
 
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop = (Button) findViewById(R.id.btnStop);
@@ -89,16 +91,17 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
     public void setData(byte[] message)
     {
-        ByteBuffer bufferedData = ByteBuffer.allocate(message.length);
         char type;
         float x, y, z;
         long time;
-        bufferedData.put(message, 0, message.length);
-        type = bufferedData.getChar();
-        x = bufferedData.getFloat();
-        y = bufferedData.getFloat();
-        z = bufferedData.getFloat();
-        time = bufferedData.getLong();
+        StringTokenizer st = new StringTokenizer(new String(message), ",", false);
+        type = st.nextToken().charAt(0);
+        x = Float.parseFloat(st.nextToken());
+        y = Float.parseFloat(st.nextToken());
+        z = Float.parseFloat(st.nextToken());
+        time = Long.parseLong(st.nextToken());
+
+
         Log.i(TAG, "Data is: " + type + "," + x + "," + y + "," + z);
 
         if(type == 'a')
@@ -267,10 +270,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
        runOnUiThread( new Runnable() {
             @Override
             public void run() {
-                Log.i(TAG, "something something something haha");
                 if( messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH) ) {
                     final String msg = new String(messageEvent.getData());
-                    Log.i(TAG, msg);
+                    Log.i(TAG, "data rec'd: " + msg);
                     setData(messageEvent.getData());
                 }
             }
