@@ -25,3 +25,22 @@ Simeon Wong
 
 Random motion with rotation in free space. Should return back to origin-ish.
 
+
+=====
+therappy1425162175863
+Simeon Wong
+
+Diamond shape: bottom => top => left => right => bottom
+Phone remained on flat table surface
+Phone was rotated.
+
+
+
+=====
+therappy1425162204831
+Simeon Wong
+
+Diamond shape: bottom => top => left => right => bottom
+Phone remained on flat table surface
+Phone was rotated.
+Less jerky motion.
