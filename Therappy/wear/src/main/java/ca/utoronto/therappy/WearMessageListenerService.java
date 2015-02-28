@@ -7,7 +7,7 @@ import com.google.android.gms.wearable.WearableListenerService;
 
 /**
  * Created by Andrew on 13/02/2015.
- * Listener background servce to start/stop recording
+ * Listener background service to start/stop recording
  */
 public class WearMessageListenerService extends WearableListenerService {
     private static final String START_ACTIVITY = "/start_activity";
