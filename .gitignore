@@ -7,3 +7,7 @@
 
 *node_modules*
 *bower_modules*
+
+# MATLAB stuff
+*.avi
+*.m~
