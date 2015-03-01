@@ -69,6 +69,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         // set up some basic stuff
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // start sensor manager and register sensors
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);

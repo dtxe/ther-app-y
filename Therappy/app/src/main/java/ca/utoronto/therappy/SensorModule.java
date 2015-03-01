@@ -41,7 +41,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private boolean started = false;
     private final int bufferSize = 2048;
     private final File root = android.os.Environment.getExternalStorageDirectory();
-    TextView title,ax,ay,az, rx, ry, rz;
+    TextView title;
     RelativeLayout layout;
 
     private GoogleApiClient mGoogleApiClient;
@@ -114,7 +114,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
             if (started) {                                                                          // save data only if the recording has started
                 try {
-                    writer.write(time + "," + type + "," + x + "," + y + "," + z + "\n");
+                    writer.write(time + "," + type + "," + x + "," + y + "," + z);
+                    writer.newLine();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -283,7 +284,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 .setSmallIcon(R.drawable.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(text);
-
         notificationManager.notify(notificationId, notificationBuilder.build());
     }
 
