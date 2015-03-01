@@ -142,6 +142,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 btnStop.setEnabled(false);
                 sendMessage(WEAR_MESSAGE_PATH, "STOP");
                 // stop recording. flush buffer and save file.
+                
                 try{
                     writer.flush();
                     fwriter.flush();

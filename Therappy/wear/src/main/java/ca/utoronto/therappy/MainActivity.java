@@ -14,6 +14,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
 import android.view.WindowManager;
@@ -113,6 +114,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
+        long time = SystemClock.elapsedRealtimeNanos();
         char type = 'x';
 
         switch (event.sensor.getType()) {
@@ -126,7 +128,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 break;
         }
         if(type != 'x') {
-            MessageBuffer.putLong(System.currentTimeMillis()).putChar(type).putFloat(x).putFloat(y).putFloat(z).array();
+            MessageBuffer.putLong(time).putChar(type).putFloat(x).putFloat(y).putFloat(z).array();
             cycle++;
             if(cycle == COUNT){
                 sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
