@@ -6,7 +6,7 @@
 close all
 clear
 
-data = importdata('./therappy1425162175863.txt');
+data = importdata('./therappy1425246813943.txt');
 
 t_begin = tic;
 
@@ -26,7 +26,7 @@ accl_t = accl_t - accl_t(1);
 
 
 % gyroscope data
-gyro_idx = cellfun(@(c) strcmp(c, 'r'), data.textdata(:,2));
+gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
 gyro_len = sum(gyro_idx);
 gyro_data = data.data(gyro_idx,:);
 gyro_t = str2double(data.textdata(gyro_idx,1));
@@ -130,9 +130,10 @@ end
 %% Integration
 
 %%%%% Rotation matrix
-rotatevec3d = @(x, rot) ([cos(rot(1))*cos(rot(3))-cos(rot(2))*sin(rot(1))*sin(rot(3)), -cos(rot(1))*sin(rot(3))-cos(rot(2))*sin(rot(1))*cos(rot(3)), sin(rot(1))*sin(rot(2));
-                          sin(rot(1))*cos(rot(3))+cos(rot(2))*cos(rot(1))*sin(rot(3)), -sin(rot(1))*sin(rot(3))+cos(rot(2))*cos(rot(1))*cos(rot(3)), -cos(rot(1))*sin(rot(2));
-                          sin(rot(3))*sin(rot(2)),                                     cos(rot(3))*sin(rot(2)),                                      cos(rot(2))            ] * x')';
+% rotatevec3d = @(x, rot) [1, 0, 0; 0, cos(rot(1)), -1*sin(rot(1)); 0, sin(rot(1)), cos(rot(1))] * [
+rotatevec3d = @(x, rot) x;
+
+
 
 %%%%% RAW ACCL
 vel = zeros(data_re_len, 3);
