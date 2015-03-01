@@ -4,6 +4,8 @@ import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,6 +45,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     RelativeLayout layout;
 
     private GoogleApiClient mGoogleApiClient;
+    private static final String START_ACTIVITY = "/therappy-start_activity";
     private static final String WEAR_MESSAGE_PATH = "/message";
     private static final String DATA_MESSAGE_PATH = "/sensordata";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -70,7 +73,14 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         btnWear.setEnabled(true);
 
         try {
-            sensorFiles = new File(root + "/therappy" + System.currentTimeMillis() + ".txt");
+            sensorFiles = new File(root, "therappy");
+            if(!sensorFiles.exists()){
+                if(!sensorFiles.mkdir()){
+                    Log.i(TAG, "Problem creating folder...exiting");
+                    finish();
+                }
+            }
+            sensorFiles = new File(sensorFiles + "/therappy" + System.currentTimeMillis() + ".txt");
             fwriter = new FileWriter(sensorFiles, true);
             writer = new BufferedWriter(fwriter, bufferSize);
         } catch (IOException e){
@@ -80,70 +90,49 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         layout = (RelativeLayout)findViewById(R.id.sensorModuleLayout);
 
         title=(TextView)findViewById(R.id.name);
-        ax=(TextView)findViewById(R.id.ax);
-        ay=(TextView)findViewById(R.id.ay);
-        az=(TextView)findViewById(R.id.az);
-        rx=(TextView)findViewById(R.id.rx);
-        ry=(TextView)findViewById(R.id.ry);
-        rz=(TextView)findViewById(R.id.rz);
-
     }
 
     public void setData(byte[] message)
     {
-        char type;
-        float x, y, z;
+        /* setup local variables to translate the buffer message into useable information */
+        char type = 'x';
+        float x = 0, y = 0, z = 0;
         long time;
-        StringTokenizer st = new StringTokenizer(new String(message), ",", false);
-        type = st.nextToken().charAt(0);
-        x = Float.parseFloat(st.nextToken());
-        y = Float.parseFloat(st.nextToken());
-        z = Float.parseFloat(st.nextToken());
-        time = Long.parseLong(st.nextToken());
+        ByteBuffer buffer;
 
+        buffer = ByteBuffer.wrap(message);                                                          // place the message in the buffer
+        buffer.rewind();                                                                            // rewind buffer to start from 0
 
-        Log.i(TAG, "Data is: " + type + "," + x + "," + y + "," + z);
+        while(buffer.hasRemaining()) {                                                              // message has form: time, type, x, y, z
+            time = buffer.getLong();
+            type = buffer.getChar();
+            x = buffer.getFloat();
+            y = buffer.getFloat();
+            z = buffer.getFloat();
 
-        if(type == 'a')
-        {
-            ax.setText("X axis" + "\t\t" + x);
-            ay.setText("Y axis" + "\t\t" + y);
-            az.setText("Z axis" + "\t\t" + z);
-        }
-        else if (type == 'g')
-        {
-            rx.setText("X axis" + "\t\t" + x);
-            ry.setText("Y axis" + "\t\t" + y);
-            rz.setText("Z axis" + "\t\t" + z);
-        }
-        if (started) {
-            try {
-                writer.write(time + "," + type + "," + x + "," + y + "," + z + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
+            Log.i(TAG, "Data is: " + time + "," + type + "," + x + "," + y + "," + z);
+
+            if (started) {                                                                          // save data only if the recording has started
+                try {
+                    writer.write(time + "," + type + "," + x + "," + y + "," + z + "\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     @Override
     public void onClick(View view) {
-        /*NotificationCompat.Builder notificationBuilder;
-        int notificationId = 001;
-        NotificationManagerCompat notificationManager =  NotificationManagerCompat.from(SensorModule.this);
-        //start something
-        notificationBuilder =  new NotificationCompat.Builder(SensorModule.this)
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle("therappy")
-                .setContentText("doing something!");
 
-        notificationManager.notify(notificationId, notificationBuilder.build());
+        //start something
+
         //end something */
         switch(view.getId())
         {
             case R.id.btnStart:
                 btnStart.setEnabled(false);
                 btnStop.setEnabled(true);
-
                 sendMessage(WEAR_MESSAGE_PATH, "START");
                 started = true;
                 break;
@@ -154,6 +143,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 // stop recording. flush buffer and save file.
                 try{
                     writer.flush();
+                    fwriter.flush();
                     writer.close();
                     fwriter.close();
                 } catch (IOException e) {
@@ -163,7 +153,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 finish();
                 break;
             case R.id.wearButton:
-                sendMessage(WEAR_MESSAGE_PATH, "READ");
+                sendMessage(START_ACTIVITY, "");
+                Log.i(TAG, "calling wear");
                 break;
             default:
                 break;
@@ -189,6 +180,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         if(writer != null) {
             try {
                 writer.flush();
+                fwriter.flush();
                 writer.close();
                 fwriter.close();
             } catch (IOException e) {
@@ -232,17 +224,18 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onConnected(Bundle connectionHint){
         // do something
-        //sendMessage(WEAR_MESSAGE_PATH, "READ");
     }
 
     @Override
     public void onConnectionSuspended(int i) {
         // do something
+        title.setText("not connected to wear");
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         // do something
+        title.setText("not connected to wear");
     }
 
     private void sendMessage(final String path, final String text) {
@@ -275,8 +268,23 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     Log.i(TAG, "data rec'd: " + msg);
                     setData(messageEvent.getData());
                 }
+                else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)){
+                    title.setText("connected to wear");
+                }
             }
         });
+    }
+
+    public void sendNotifications(String title, String text){
+        NotificationCompat.Builder notificationBuilder;
+        int notificationId = 001;
+        NotificationManagerCompat notificationManager =  NotificationManagerCompat.from(SensorModule.this);
+        notificationBuilder =  new NotificationCompat.Builder(SensorModule.this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(text);
+
+        notificationManager.notify(notificationId, notificationBuilder.build());
     }
 
     @Override
@@ -295,7 +303,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void finish() {
         // do something
         super.finish();
-
+        Wearable.MessageApi.removeListener(mGoogleApiClient, this);
     }
 
     @Override
