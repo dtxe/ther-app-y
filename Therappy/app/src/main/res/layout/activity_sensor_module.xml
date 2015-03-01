@@ -13,19 +13,20 @@
         android:layout_height="wrap_content"
         android:text="Start"
         android:id="@+id/btnStart"
-        android:layout_marginStart="46dp"
-        android:layout_below="@+id/rz"
-        android:layout_alignParentStart="true"
-        />
+        android:layout_marginStart="39dp"
+        android:background="#280047"
+        android:layout_alignTop="@+id/btnStop"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Stop"
         android:id="@+id/btnStop"
-        android:layout_marginStart="246dp"
-        android:layout_below="@+id/rz"
-        android:layout_alignParentStart="true" />
+        android:background="#280047"
+        android:layout_centerVertical="true"
+        android:layout_alignEnd="@+id/name"
+        android:layout_marginEnd="39dp" />
 
 
     <TextView
@@ -33,86 +34,9 @@
         android:id="@+id/name"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:textColor="#280047"
         android:layout_alignParentTop="true"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Acceleration (m/s2)"
-        android:id="@+id/titleAcceleration"
-        android:layout_below="@+id/name"
-        android:layout_alignParentStart="true"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:textSize="20sp"
-        android:layout_below="@+id/titleAcceleration"
-        android:id="@+id/ax"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:textSize="20sp"
-        android:id="@+id/ay"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ax"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:textSize="20sp"
-        android:id="@+id/az"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ay"
-        android:layout_alignParentStart="true"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Rotation (rad/s)"
-        android:id="@+id/titleGyroscope"
-        android:layout_below="@+id/az"
-        android:layout_alignParentStart="true"
-        android:textColor="#000000"
-        />
-    <TextView
-        android:textSize="20sp"
-        android:layout_below="@+id/titleGyroscope"
-        android:id="@+id/rx"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:textSize="20sp"
-        android:id="@+id/ry"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/rx"
-        android:textColor="#000000"
-        />
-
-    <TextView
-        android:textSize="20sp"
-        android:id="@+id/rz"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ry"
-        android:layout_alignParentStart="true"
-        android:textColor="#000000"
-        />
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -120,7 +44,8 @@
         android:text="Notify Wearable"
         android:id="@+id/wearButton"
         android:layout_gravity="center_horizontal"
-        android:layout_below="@+id/btnStart"
+        android:background="#280047"
+        android:layout_above="@+id/btnStart"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="36dp" />
+        android:layout_marginBottom="66dp" />
 </RelativeLayout>

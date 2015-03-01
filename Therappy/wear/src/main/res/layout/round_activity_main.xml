@@ -4,70 +4,10 @@
     android:layout_height="match_parent" tools:context=".MainActivity" android:id="@+id/round_layout" tools:deviceIds="wear_round">
 
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Acceleration (m/s2)"
-        android:id="@+id/titleAcceleration"
         android:textSize="20sp"
-        android:layout_marginTop="25dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:textSize="15sp"
-        android:layout_below="@+id/titleAcceleration"
-        android:id="@+id/ax"
+        android:id="@+id/status"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         />
-
-    <TextView
-        android:textSize="15sp"
-        android:id="@+id/ay"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ax"
-        />
-
-    <TextView
-        android:textSize="15sp"
-        android:id="@+id/az"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ay"
-        android:layout_alignParentStart="true" />
-<!--
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Gyroscope (rad/s)"
-        android:id="@+id/titleGyroscope"
-        android:layout_below="@+id/az"
-        android:textSize="20sp" />
-
-    <TextView
-        android:textSize="15sp"
-        android:id="@+id/rx"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/titleGyroscope"
-        />
-
-    <TextView
-        android:textSize="15sp"
-        android:id="@+id/ry"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/rx"
-        />
-
-    <TextView
-        android:textSize="15sp"
-        android:id="@+id/rz"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ry"
-        />
--->
 
 </RelativeLayout>

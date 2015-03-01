@@ -10,7 +10,7 @@ import com.google.android.gms.wearable.WearableListenerService;
  * Listener background service to start/stop recording
  */
 public class WearMessageListenerService extends WearableListenerService {
-    private static final String START_ACTIVITY = "/start_activity";
+    private static final String START_ACTIVITY = "/therappy-start_activity";
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         if(messageEvent.getPath().equalsIgnoreCase(START_ACTIVITY)) {
