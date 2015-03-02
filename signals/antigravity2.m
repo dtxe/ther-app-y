@@ -7,7 +7,7 @@ close all
 clear
 
 % Parameters
-TIME_DIV = 1000 * 1000;
+TIME_DIV = 1000 * 1000 * 1000;
 
 FLAG_ANIMATE        = false;
 FLAG_PLOTRESAMPLE   = false;
@@ -15,7 +15,7 @@ FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
 % Load data
-data = importdata('./therappy1425252211631.txt');
+data = importdata('./therappy1425252173631.txt');
 
 
 
@@ -163,8 +163,8 @@ rotate3dX = @(theta) [1, 0, 0; 0, cos(theta), -1*sin(theta); 0, sin(theta), cos(
 rotate3dY = @(theta) [cos(theta), 0, sin(theta); 0, 1, 0; -1*sin(theta), 0, cos(theta)];
 % rotate3dZ = @(theta) [
     
-% rotatevec3d = @(x, rot)  
-rotatevec3d = @(x, rot) x;        % no rotate. for debugging.
+rotatevec3d = @(x, rot) (rotate3dZ(rot(3)) * rotate3dY(rot(2)) * rotate3dX(rot(1)) * x')';
+% rotatevec3d = @(x, rot) x;        % no rotate. for debugging.
 
 
 
@@ -223,15 +223,25 @@ end
 
 % Plot integrated trace
 if FLAG_PLOTTRACE
-    figure;
+    figure('Position', [50 50 1200 400]);
+    subplot(1, 2, 1);
+    
     plot3(pos(:,1), pos(:,2), pos(:,3));
     daspect([1 1 1]);
     title('Raw integrated trace');
+    xlabel('X distance (m)');
+    ylabel('Y distance (m)');
+    zlabel('Z distance (m)');
+    
 
-    figure;
+    subplot(1, 2, 2);
+    
     plot3(pos(:,1), pos(:,2), pos(:,3));
     daspect([1 1 1]);
     title('Rotation-corrected integrated trace');
+    xlabel('X distance (m)');
+    ylabel('Y distance (m)');
+    zlabel('Z distance (m)');
 end
 
 
