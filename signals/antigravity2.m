@@ -6,10 +6,21 @@
 close all
 clear
 
-data = importdata('./therappy1425246813943.txt');
+% Parameters
+TIME_DIV = 1000 * 1000;
 
+FLAG_ANIMATE        = false;
+FLAG_PLOTRESAMPLE   = false;
+FLAG_PLOTFILTER     = true;
+FLAG_PLOTTRACE      = true;
+
+% Load data
+data = importdata('./therappy1425252211631.txt');
+
+
+
+%% Timing
 t_begin = tic;
-
 
 %% Data Preprocessing
 % Separate accelerometer and rotation
@@ -24,6 +35,14 @@ accl_data = data.data(accl_idx,:);
 % zero-ref time vector
 accl_t = accl_t - accl_t(1);
 
+% ensure data is sorted
+[accl_t, temp_idx] = sort(accl_t);
+accl_data = accl_data(temp_idx, :);
+
+% check for duplicate values
+temp_idx = find(diff(accl_t) <= 0)+1;
+accl_t(temp_idx) = [];
+accl_data(temp_idx, :) = [];
 
 % gyroscope data
 gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
@@ -31,6 +50,16 @@ gyro_len = sum(gyro_idx);
 gyro_data = data.data(gyro_idx,:);
 gyro_t = str2double(data.textdata(gyro_idx,1));
 gyro_t = gyro_t - gyro_t(1);
+
+[gyro_t, temp_idx] = sort(gyro_t);
+gyro_data = gyro_data(temp_idx, :);
+
+temp_idx = find(diff(gyro_t) <= 0)+1;
+gyro_t(temp_idx) = [];
+gyro_data(temp_idx, :) = [];
+
+
+
 
 
 %% Resample
@@ -46,7 +75,7 @@ ending_time = min([accl_t(end), gyro_t(end)]);
 % form time vector
 data_re_t = (0:avg_diff:ending_time)';
 
-data_re_srate = 1000/avg_diff;
+data_re_srate = TIME_DIV/avg_diff;
 data_re_len = length(data_re_t);
 
 
@@ -60,7 +89,7 @@ gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
 
 
 % Plot resampled things
-if 0
+if FLAG_PLOTRESAMPLE
     pltitle = {'X-axis Raw Accl', 'Y-axis Raw Accl', 'Z-axis Raw Accl', 'X-axis Re Accl', 'Y-axis Re Accl', 'Z-axis Re Accl',};
 
     figure;
@@ -103,7 +132,7 @@ end
 
 
 % Plot filter stuff
-if 0
+if FLAG_PLOTFILTER
     
     pltitle = {'X-axis Re Accl', 'Y-axis Re Accl', 'Z-axis Re Accl', 'X-axis Filt Accl', 'Y-axis Filt Accl', 'Z-axis Filt Accl',};
 
@@ -130,8 +159,12 @@ end
 %% Integration
 
 %%%%% Rotation matrix
-% rotatevec3d = @(x, rot) [1, 0, 0; 0, cos(rot(1)), -1*sin(rot(1)); 0, sin(rot(1)), cos(rot(1))] * [
-rotatevec3d = @(x, rot) x;
+rotate3dX = @(theta) [1, 0, 0; 0, cos(theta), -1*sin(theta); 0, sin(theta), cos(theta)];
+rotate3dY = @(theta) [cos(theta), 0, sin(theta); 0, 1, 0; -1*sin(theta), 0, cos(theta)];
+% rotate3dZ = @(theta) [
+    
+% rotatevec3d = @(x, rot)  
+rotatevec3d = @(x, rot) x;        % no rotate. for debugging.
 
 
 
@@ -139,19 +172,19 @@ rotatevec3d = @(x, rot) x;
 vel = zeros(data_re_len, 3);
 for kk = 1:3
     % initial velocity is zero
-    vel(1,kk) = accl_re_filtd(1,kk)*(avg_diff/1000);
+    vel(1,kk) = accl_re_filtd(1,kk)*(avg_diff/TIME_DIV);
     
     for jj = 2:data_re_len
-        vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*(avg_diff/1000);
+        vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*(avg_diff/TIME_DIV);
     end
 end
 
 pos = zeros(data_re_len, 3);
 for kk = 1:3
-    pos(1,kk) = vel(1,kk)*(avg_diff/1000);
+    pos(1,kk) = vel(1,kk)*(avg_diff/TIME_DIV);
     
     for jj = 2:data_re_len
-        pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*(avg_diff/1000);
+        pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*(avg_diff/TIME_DIV);
     end
 end
 
@@ -160,19 +193,19 @@ end
 rot = zeros(data_re_len, 3);
 for kk = 1:3
     % initial rotation is zero
-    rot(1,kk) = gyro_re_filtd(1,kk)*(avg_diff/1000);
+    rot(1,kk) = gyro_re_filtd(1,kk)*(avg_diff/TIME_DIV);
     
     for jj = 2:data_re_len
-        rot(jj,kk) = rot(jj-1,kk) + gyro_re_filtd(jj,kk)*(avg_diff/1000);
+        rot(jj,kk) = rot(jj-1,kk) + gyro_re_filtd(jj,kk)*(avg_diff/TIME_DIV);
     end
 end
 
 % Integrate with corrected direction
 vel_rt = zeros(data_re_len, 3);
 
-vel_rt(1,:) = accl_re_filtd(1,:)*(avg_diff/1000);
+vel_rt(1,:) = accl_re_filtd(1,:)*(avg_diff/TIME_DIV);
 for jj = 2:data_re_len
-    accl_rtcor = accl_re_filtd(jj,:)*(avg_diff/1000);
+    accl_rtcor = accl_re_filtd(jj,:)*(avg_diff/TIME_DIV);
     accl_rtcor = rotatevec3d(accl_rtcor, rot(jj,:));
     
     vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
@@ -180,24 +213,26 @@ end
 
 pos_rt = zeros(data_re_len, 3);
 for kk = 1:3
-    pos_rt(1,kk) = vel_rt(1,kk)*(avg_diff/1000);
+    pos_rt(1,kk) = vel_rt(1,kk)*(avg_diff/TIME_DIV);
     
     for jj = 2:data_re_len
-        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*(avg_diff/1000);
+        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*(avg_diff/TIME_DIV);
     end
 end
 
 
 % Plot integrated trace
-figure;
-plot3(pos(:,1), pos(:,2), pos(:,3));
-daspect([1 1 1]);
-title('Raw integrated trace');
+if FLAG_PLOTTRACE
+    figure;
+    plot3(pos(:,1), pos(:,2), pos(:,3));
+    daspect([1 1 1]);
+    title('Raw integrated trace');
 
-figure;
-plot3(pos(:,1), pos(:,2), pos(:,3));
-daspect([1 1 1]);
-title('Rotation-corrected integrated trace');
+    figure;
+    plot3(pos(:,1), pos(:,2), pos(:,3));
+    daspect([1 1 1]);
+    title('Rotation-corrected integrated trace');
+end
 
 
 %% Timing
@@ -205,20 +240,23 @@ toc(t_begin);
 
 
 %% Animate
-vidwriter = VideoWriter(['test.avi']);
-open(vidwriter);
-f = figure(50);
-for tt = 1:20:length(pos)
-    hold on;
-    plot3(pos(:,1), pos(:,2), pos(:,3));
-    plot3(pos(1:tt,1), pos(1:tt,2), pos(1:tt,3), 'r', 'LineWidth', 3);
-    daspect([1 1 1]);
-    
-    refresh(f);
-    
-    writeVideo(vidwriter, getframe(f));
-    clf(f);
-end
 
-close(vidwriter);
+if FLAG_ANIMATE
+    vidwriter = VideoWriter(['test.avi']);
+    open(vidwriter);
+    f = figure(50);
+    for tt = 1:20:length(pos)
+        hold on;
+        plot3(pos(:,1), pos(:,2), pos(:,3));
+        plot3(pos(1:tt,1), pos(1:tt,2), pos(1:tt,3), 'r', 'LineWidth', 3);
+        daspect([1 1 1]);
+
+        refresh(f);
+
+        writeVideo(vidwriter, getframe(f));
+        clf(f);
+    end
+
+    close(vidwriter);
+end
 
