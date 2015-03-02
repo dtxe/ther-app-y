@@ -15,14 +15,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.MessageApi;
@@ -41,9 +35,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     /* sensor variables */
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope;
-
-    /* UI variables */
-    private TextView status;
 
     /* for debug */
     private static final String TAG = MainActivity.class.getSimpleName();
