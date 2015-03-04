@@ -38,6 +38,7 @@
         android:layout_height="100dp"
         android:text="view progress"
         android:id="@+id/btnInfoDispLib"
+        android:onClick="startViewProgress"
         android:layout_marginLeft="30dp"
         android:layout_marginRight="30dp"
         android:layout_above="@+id/btnSend"
