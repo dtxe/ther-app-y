@@ -55,4 +55,14 @@ Recorded with Wear using commit 7cdee7416ebe2ad720da50aa0a866435e45aba35
 Tesla logo
 
 
+=====
+therappy1425581389592
+Simeon Wong
+Recorded with phone
+
+Rotation in free space
+flat => vertical top up => rotate about Z, 90 left => rotate about Z, 180 right => rotate back to vertical top up => rotate about X, face down => rotate back to flat
+
+
+
 
