@@ -65,7 +65,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // start sensor manager and register sensors
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
@@ -123,7 +123,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         char type = 'x';
 
         switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
+            case Sensor.TYPE_LINEAR_ACCELERATION:
                 type = 'a';
                 break;
             case Sensor.TYPE_GYROSCOPE:
