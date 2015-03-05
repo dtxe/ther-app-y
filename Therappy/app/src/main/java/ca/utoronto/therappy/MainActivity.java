@@ -52,8 +52,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
     }
 
     public void startViewProgress(View view) {
-        Intent activityIntent =
-                new Intent(this, DrawGraph.class);
+        Intent activityIntent = new Intent(this, DrawGraph.class);
         startActivity(activityIntent);
     }
 }
