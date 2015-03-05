@@ -24,28 +24,53 @@ ss_size = size(ssimage);
 % scale grid to a size of length 1 and centre at origin
 ss_x = (ss_x' / ss_size(1)) - 0.5;
 ss_y = ((ss_y' - ss_size(2)/2) / ss_size(1));
-ss_z = 0.2 * ones(size(ss_x));
+ss_z = 0 * ones(size(ss_x));
 
 
 %% Plotting
-figure(50);
+f = figure(50);
 hold on
 
-phone_vertices = [];
+vidwriter = VideoWriter(['phonerotate.avi']);
+open(vidwriter);
+
+for kk = 1:5:length(rot)
+    hold on
+    
+    % rotate the view matrix
+    ss_x_tmp = zeros(size(ss_x));
+    ss_y_tmp = zeros(size(ss_x));
+    ss_z_tmp = zeros(size(ss_x));
+    for jj = 1:numel(ss_x)
+        outvec = rotatevec3d([ss_x(jj), ss_y(jj), ss_z(jj)], rot(kk,:));
+        ss_x_tmp(jj) = outvec(1);
+        ss_y_tmp(jj) = outvec(2);
+        ss_z_tmp(jj) = outvec(3);
+    end
+    
+    % plot picture
+    surf(ss_x_tmp, ss_y_tmp, ss_z_tmp, double(ssimage), 'EdgeColor', 'none', 'FaceAlpha', 0.7);
+    colormap(ssmap);
+    daspect([1,1,1]);
+    view(-115,40);
+
+    set(gca, 'YDir', 'reverse');
+    set(gca, 'XLim', [-0.75 0.75]);
+    set(gca, 'YLim', [-0.75 0.75]);
+    set(gca, 'ZLim', [-0.75 0.75]);
 
 
+    % plot axis
+    quiver3(0, 0, 0, 0.75, 0, 0, 'r');
+    quiver3(0, 0, 0, 0, 0.75, 0, 'g');
+    quiver3(0, 0, 0, 0, 0, 0.75, 'b');
 
-surf(ss_x, ss_y, ss_z, double(ssimage), 'EdgeColor', 'none');
-colormap(ssmap);
-daspect([1,1,1]);
-view(-115,40);
-
-set(gca, 'YDir', 'reverse');
-
-quiver3(0, 0, 0, 0.2, 0, 0, 'r');
-quiver3(0, 0, 0, 0, 0.2, 0, 'g');
-quiver3(0, 0, 0, 0, 0, 0.2, 'b');
-
-xlabel('X');
-ylabel('Y');
-zlabel('Z');
+    xlabel('X');
+    ylabel('Y');
+    zlabel('Z');
+    
+    % save video frame
+    refresh(f);
+    writeVideo(vidwriter, getframe(f));
+    clf(f);
+end
