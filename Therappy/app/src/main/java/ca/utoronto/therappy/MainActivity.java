@@ -17,16 +17,26 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
         setContentView(R.layout.activity_main);
     }
 
-    public void startSensorModule(View view)
-    {
+    /*  startSensorModule
+     *  starts intent for the sensor module section
+     */
+    public void startSensorModule(View view)  {
         Intent intent = new Intent(this, SensorModule.class);
         startActivity(intent);
     }
 
-    @Override
-    public void onClick(View view)
-    {
+    /*  startViewProgress
+     *  starts intent for the view progress section
+     */
+    public void startViewProgress(View view) {
+        Intent activityIntent = new Intent(this, DrawGraph.class);
+        startActivity(activityIntent);
+    }
 
+    @Override
+    public void onClick(View view) {
+        // do something when the user interacts with the UI
+        // note: this app has the intent calls within the XML
     }
 
     @Override
@@ -51,8 +61,4 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
         return super.onOptionsItemSelected(item);
     }
 
-    public void startViewProgress(View view) {
-        Intent activityIntent = new Intent(this, DrawGraph.class);
-        startActivity(activityIntent);
-    }
 }

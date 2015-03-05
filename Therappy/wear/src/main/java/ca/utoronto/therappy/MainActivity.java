@@ -33,10 +33,10 @@ import java.util.List;
 public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, MessageApi.MessageListener {
 
     /* sensor variables */
-    private SensorManager mSensorManager;
-    private Sensor mAccelerometer, mGyroscope;
+    private SensorManager mSensorManager;                   // sensor manager
+    private Sensor mAccelerometer, mGyroscope;              // accelerometer and gyroscope sensor variables
 
-    /* for debug */
+    /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
 
     /* communication variables */
@@ -45,12 +45,12 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private static final String DATA_MESSAGE_PATH = "/sensordata";
 
     /* for recording */
-    static final int COUNT = 32;                                                                    // size of buffer (in number of samples)
-    static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);                     // message buffer
-    static int cycle = 0;                                                                           // current number of items in buffer
+    static final int COUNT = 32;                                                        // size of buffer (in number of samples)
+    static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
+    static int cycle = 0;                                                               // current number of items in buffer
 
     /*  onCreate
-     *  Input:  Bundle savedInstanceState
+     *  Input:  Bundle savedInstanceState - previous saved state
      *  Output: void
      *
      *  This function is called when this thread is created. It sets up all sensors needed for
@@ -76,6 +76,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
+    /* stopMeasuring
+     * Input:   void
+     * Output:  void
+     *
+     * This function is called when the companion app no longer needs to measure data. It will
+     * unregister all sensors, send the remaining data and close everything. Then close the app.
+     */
     public void stopMeasuring() {
         mSensorManager.unregisterListener(this);
         MessageBuffer.compact();
@@ -86,13 +93,20 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     /* Sensors Protocols */
 
+    /* onAccuracyChanged
+     * Input:   Sensor sensor - sensor in which the accuracy has changed
+     *          int accuracy  - current sensor accuracy
+     * Output:  void
+     *
+     * Method is required for the SensorEventListener. It is not used in this app.
+     */
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Do something here if sensor accuracy changes.
     }
 
     /*  onSensorChanged
-     *  Input:  SensorEvent event
+     *  Input:  SensorEvent event - contains the sensor which has changed and the new values
      *  Output: void
      *
      *  This function is called whenever a sensor value has changed. The function extracts the
@@ -145,11 +159,24 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         mGoogleApiClient.connect();
     }
 
+    /* onConnected
+     * Input:   Bundle bundle
+     * Output:  void
+     *
+     * Function is called when the GoogleApiClient has connected with the phone. it adds the wearable
+     * listener to the phone to listen for further commands.
+     */
     @Override
     public void onConnected(Bundle bundle) {
         Wearable.MessageApi.addListener(mGoogleApiClient, this);
     }
 
+    /* onConnectionSuspended
+     * Input:   int i
+     * Output:  void
+     *
+     * Called when the connection between the phone and watch is suspended. Not used.
+     */
     @Override
     public void onConnectionSuspended(int i) {
     }
@@ -185,12 +212,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     /*  sendMessage
      *  Input:  String path - message path or header
      *          String message - message data
+     *          ByteBuffer message - message data (for the sensors)
      *  Output: void
      *
      *  This function is called when a message needs to be sent. It requires the header information
-     *  and the payload to send the data.
+     *  and the payload to send the data. Two different methods are present, depending on the type
+     *  of data being sent. ByteBuffer is used for sensor data, String is used for all other data.
      */
-
     private void sendMessage(final String path, final ByteBuffer message) {
         Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
             @Override
@@ -227,6 +255,12 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     }
 
     /* System commands */
+
+    /*  Called when the state of the watch changes. On any suspended commands (pause, destroy,
+     *  finish), the app will de-register all sensors and listeners to save battery. On any resume
+     *  commands (resume), the app will re-register all the sensors and listeners.
+     *
+     */
 
     @Override
     protected void onResume() {
@@ -267,8 +301,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     @Override
     public void finish(){
         super.finish();
-        Wearable.MessageApi.removeListener(mGoogleApiClient, this);
-        mGoogleApiClient.unregisterConnectionCallbacks(this);
-        mGoogleApiClient.disconnect();
+        if(mGoogleApiClient != null) {
+            Wearable.MessageApi.removeListener(mGoogleApiClient, this);
+            mGoogleApiClient.unregisterConnectionCallbacks(this);
+            mGoogleApiClient.disconnect();
+        }
     }
 }
