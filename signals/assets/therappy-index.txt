@@ -64,5 +64,14 @@ Rotation in free space
 flat => vertical top up => rotate about Z, 90 left => rotate about Z, 180 right => rotate back to vertical top up => rotate about X, face down => rotate back to flat
 
 
+=====
+therappy1425587865515
+Andrew Wong
+Recorded with Wear
+
+No rotation
+flat surface (on table)
+top, bottom, left, right
+
 
 
