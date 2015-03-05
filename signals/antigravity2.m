@@ -7,15 +7,17 @@ close all
 clear
 
 % Parameters
-TIME_DIV = 1000 * 1000 * 1000;
+% TIME_DIV = 1000 * 1000 * 1000;      % ns
+TIME_DIV = 1000;                % ms
 
 FLAG_ANIMATE        = false;
-FLAG_PLOTRESAMPLE   = false;
+FLAG_PLOTRESAMPLE   = true;
 FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
 % Load data
-data = importdata('./therappy1425252173631.txt');
+FILENAME = 'therappy1425162204831';
+data = importdata(['./assets/' FILENAME '.txt']);
 
 
 

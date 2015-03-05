@@ -34,6 +34,15 @@ hold on
 vidwriter = VideoWriter(['phonerotate.avi']);
 open(vidwriter);
 
+phone_vertices = [min(ss_y(:)) -0.5 0.2;
+                  min(ss_y(:)) +0.5 0.2;
+                  max(ss_y(:)) -0.5 0.2;
+                  max(ss_y(:)) +0.5 0.2;
+                  min(ss_y(:)) -0.5 -0.2;
+                  min(ss_y(:)) +0.5 -0.2;
+                  max(ss_y(:)) -0.5 -0.2;
+                  max(ss_y(:)) +0.5 -0.2;];
+
 for kk = 1:5:length(rot)
     hold on
     
@@ -41,12 +50,15 @@ for kk = 1:5:length(rot)
     ss_x_tmp = zeros(size(ss_x));
     ss_y_tmp = zeros(size(ss_x));
     ss_z_tmp = zeros(size(ss_x));
-    for jj = 1:numel(ss_x)
+    
+    parfor jj = 1:numel(ss_x)
         outvec = rotatevec3d([ss_x(jj), ss_y(jj), ss_z(jj)], rot(kk,:));
         ss_x_tmp(jj) = outvec(1);
         ss_y_tmp(jj) = outvec(2);
         ss_z_tmp(jj) = outvec(3);
     end
+    
+    
     
     % plot picture
     surf(ss_x_tmp, ss_y_tmp, ss_z_tmp, double(ssimage), 'EdgeColor', 'none', 'FaceAlpha', 0.7);
@@ -65,6 +77,7 @@ for kk = 1:5:length(rot)
     quiver3(0, 0, 0, 0, 0.75, 0, 'g');
     quiver3(0, 0, 0, 0, 0, 0.75, 'b');
 
+    title(FILENAME);
     xlabel('X');
     ylabel('Y');
     zlabel('Z');
@@ -73,4 +86,7 @@ for kk = 1:5:length(rot)
     refresh(f);
     writeVideo(vidwriter, getframe(f));
     clf(f);
+%     reset(f);
 end
+
+close(vidwriter);
