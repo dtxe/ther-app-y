@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -54,7 +55,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor_module);
-
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        
         initGoogleApiClient();
 
         Intent intent = getIntent();
@@ -262,19 +264,18 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
     @Override
     public void onMessageReceived( final MessageEvent messageEvent ) {
-       runOnUiThread( new Runnable() {
-            @Override
-            public void run() {
-                if( messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH) ) {
-                    final String msg = new String(messageEvent.getData());
-                    Log.i(TAG, "data rec'd: " + msg);
-                    setData(messageEvent.getData());
-                }
-                else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)){
-                    title.setText("connected to wear");
-                }
-            }
-        });
+       runOnUiThread(new Runnable() {
+           @Override
+           public void run() {
+               if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
+                   final String msg = new String(messageEvent.getData());
+                   Log.i(TAG, "data rec'd: " + msg);
+                   setData(messageEvent.getData());
+               } else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
+                   title.setText("connected to wear");
+               }
+           }
+       });
     }
 
     public void sendNotifications(String title, String text){
