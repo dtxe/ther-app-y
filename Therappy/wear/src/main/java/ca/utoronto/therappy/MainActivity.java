@@ -16,7 +16,10 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.MessageApi;
@@ -30,7 +33,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, MessageApi.MessageListener {
+public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, MessageApi.MessageListener, View.OnClickListener {
 
     /* sensor variables */
     private SensorManager mSensorManager;                   // sensor manager
@@ -43,11 +46,16 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private GoogleApiClient mGoogleApiClient;
     private static final String WEAR_MESSAGE_PATH = "/message";
     private static final String DATA_MESSAGE_PATH = "/sensordata";
+    private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
+    private String currInstruction;
 
     /* for recording */
-    static final int COUNT = 32;                                                        // size of buffer (in number of samples)
-    static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
-    static int cycle = 0;                                                               // current number of items in buffer
+    private static final int COUNT = 32;                                                        // size of buffer (in number of samples)
+    private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
+    private static int cycle = 0;                                                               // current number of items in buffer
+    private boolean started = false;
+
+    private Button btnMain;
 
     /*  onCreate
      *  Input:  Bundle savedInstanceState - previous saved state
@@ -73,7 +81,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         // initiate communication
         initGoogleApiClient();
 
-        sendMessage(WEAR_MESSAGE_PATH, "");
+        btnMain = (Button)findViewById(R.id.btnMain);
+        btnMain.setOnClickListener(this);
+        btnMain.setEnabled(false);
+        btnMain.setVisibility(View.GONE);
     }
 
     /* stopMeasuring
@@ -132,7 +143,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
-        if(type != 'x') {
+        if(type != 'x' && started) {
             MessageBuffer.putLong(time).putChar(type).putFloat(x).putFloat(y).putFloat(z).array();
             cycle++;
             if(cycle == COUNT){
@@ -142,6 +153,18 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             }
         }
     }
+
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btnMain:
+                    sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                break;
+            default:
+                break;
+
+        }
+    }
+
 
     /* Communications Protocols */
 
@@ -169,6 +192,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     @Override
     public void onConnected(Bundle bundle) {
         Wearable.MessageApi.addListener(mGoogleApiClient, this);
+        sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
     /* onConnectionSuspended
@@ -199,10 +223,32 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     if(msg.equalsIgnoreCase("START")) {
                         Log.i(TAG, "Recording has started");
+                        started = true;
                     }
                     else if (msg.equalsIgnoreCase("STOP")) {
                         Log.i(TAG, "Recording has stopped");
+                        started = false;
                         stopMeasuring();
+                    }
+                }
+                else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)) {
+                    // do something
+                    if(msg.equalsIgnoreCase("READY")){
+                        btnMain.setVisibility(View.VISIBLE);
+                        btnMain.setEnabled(true);
+                        btnMain.setText("START");
+                        currInstruction = "START";
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_start), null, null);
+                    }
+                    else if (msg.equalsIgnoreCase("NEXT")){
+                        btnMain.setText("NEXT");
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_next), null, null);
+                        currInstruction = "NEXT";
+                    }
+                    else if(msg.equalsIgnoreCase("END")) {
+                        btnMain.setText("DONE");
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_stop), null, null);
+                        currInstruction = "END";
                     }
                 }
             }

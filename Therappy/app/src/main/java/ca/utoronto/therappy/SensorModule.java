@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -41,18 +42,22 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private final File root = android.os.Environment.getExternalStorageDirectory();     // location of external directory
 
     /* UI variables */
-    private Button btnStart, btnStop, btnWear;            // UI buttons
-    TextView title;                                       // UI title
-    RelativeLayout layout;                                // UI layout
+    private Button btnWear;            // UI buttons
+    private ImageView ivInstruction;
+    private TextView status;                                       // UI title
+    private RelativeLayout layout;                                // UI layout
 
     /* recording variables */
     private boolean started = false;                      // whether or not the app is recording data or not
+    private int step = 0;
+    private int NUM_STEPS = 5;
 
     /* communication variables */
     private GoogleApiClient mGoogleApiClient;                                           // communications protocol with the watch
     private static final String START_ACTIVITY = "/therappy-start_activity";            // start command for watch
     private static final String WEAR_MESSAGE_PATH = "/message";                         // watch message header
     private static final String DATA_MESSAGE_PATH = "/sensordata";                      // watch sensor data header
+    private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -71,16 +76,17 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         Intent intent = getIntent();
 
         // set up UI elements
-        btnStart = (Button) findViewById(R.id.btnStart);
-        btnStop = (Button) findViewById(R.id.btnStop);
+        //btnStart = (Button) findViewById(R.id.btnStart);
+        //btnStop = (Button) findViewById(R.id.btnStop);
         btnWear = (Button) findViewById(R.id.wearButton);
+        ivInstruction = (ImageView) findViewById(R.id.instruction);
 
-        btnStart.setOnClickListener(this);
-        btnStop.setOnClickListener(this);
+        //btnStart.setOnClickListener(this);
+        //btnStop.setOnClickListener(this);
         btnWear.setOnClickListener(this);
 
-        btnStart.setEnabled(true);
-        btnStop.setEnabled(false);
+        //btnStart.setEnabled(true);
+        //btnStop.setEnabled(false);
         btnWear.setEnabled(true);
 
         // create file in folder called therappy. if folder doesn't exist, create it
@@ -104,7 +110,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         layout = (RelativeLayout)findViewById(R.id.sensorModuleLayout);
 
         // setup UI text elements
-        title=(TextView)findViewById(R.id.name);
+        status=(TextView)findViewById(R.id.tvStatus);
     }
 
     /*  onClick
@@ -117,31 +123,17 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void onClick(View view) {
         switch(view.getId())
         {
-            case R.id.btnStart:
+            /*case R.id.btnStart:
                 // when the start button is pressed, start recording (and notify the watch for debug)
-                btnStart.setEnabled(false);
-                btnStop.setEnabled(true);
-                sendMessage(WEAR_MESSAGE_PATH, "START");
-                started = true;
+                startRecording();
+
                 break;
             case R.id.btnStop:
                 // when stop button is pressed, stop recording
                 btnStart.setEnabled(true);
                 btnStop.setEnabled(false);
-                sendMessage(WEAR_MESSAGE_PATH, "STOP");
-                // stop recording. flush buffer and save file.
-                try{
-                    writer.flush();
-                    fwriter.flush();
-                    writer.close();
-                    fwriter.close();
-                } catch (IOException e) {
-                    Log.i(TAG, "I/O issue at flush and close");
-                    e.printStackTrace();
-                }
-                started = false;
-                finish();
-                break;
+                stopRecording();
+                break;*/
             case R.id.wearButton:
                 sendMessage(START_ACTIVITY, "");
                 Log.i(TAG, "calling wear");
@@ -151,14 +143,35 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
+    private void startRecording(){
+        sendMessage(WEAR_MESSAGE_PATH, "START");
+        getNextInstruction();
+        started = true;
+    }
+
+    private void stopRecording(){
+        sendMessage(WEAR_MESSAGE_PATH, "STOP");
+        // stop recording. flush buffer and save file.
+        try{
+            writer.flush();
+            fwriter.flush();
+            writer.close();
+            fwriter.close();
+        } catch (IOException e) {
+            Log.i(TAG, "I/O issue at flush and close");
+            e.printStackTrace();
+        }
+        started = false;
+        finish();
+    }
+
     /*  setData
      *  Input:  byte[] message - sensor data from the watch in a byte array (buffered)
      *  Output: void
      *
      *  This function will take the sensor data from the watch, and save it to the open file.
      */
-    public void setData(byte[] message)
-    {
+    public void setData(byte[] message) {
         /* setup local variables to translate the buffer message into useable information */
         char type = 'x';
         float x = 0, y = 0, z = 0;
@@ -186,6 +199,25 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 }
             }
         }
+    }
+
+    /*  getNextInstruction
+     *  Input:  void
+     *  Output: void
+     *
+     *  This function retrieves the next instruction in the sequence, displays the appropriate
+     *  visual aid, and sends the correct next sequence to the watch.
+     */
+    public void getNextInstruction() {
+        step++;
+        if (step < NUM_STEPS){
+            sendMessage(INSTRUCTION_MESSAGE_PATH, "NEXT");
+        }
+        else if (step == NUM_STEPS){
+            sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
+        }
+        String source = "drawable/instruction" + step;
+        ivInstruction.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(source, null, getPackageName())));
     }
 
     /* settings/option menu commands */
@@ -249,7 +281,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onConnectionSuspended(int i) {
         // do something
-        title.setText("not connected to wear");
+        status.setText("not connected to wear");
     }
 
     /* onConnectionFailed
@@ -261,7 +293,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         // do something
-        title.setText("not connected to wear");
+        status.setText("not connected to wear");
     }
 
     /*  sendMessage
@@ -306,15 +338,33 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                final String msg = new String(messageEvent.getData());
                 // if the message is sensor data, send it to be recorded
                 if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
-                    final String msg = new String(messageEvent.getData());
                     Log.i(TAG, "data rec'd: " + msg);
                     setData(messageEvent.getData());
                 }
                 // if it is connection data, set the label
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
-                    title.setText("connected to wear");
+                    status.setText("connected to wear");
+                    Log.i(TAG, "connected to wear");
+                    sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
+                }
+                else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
+                    // do something
+                    if(msg.equalsIgnoreCase("START")){
+                        Log.i(TAG, "message for recording start");
+                        startRecording();
+                    }
+                    else if (msg.equalsIgnoreCase("NEXT")){
+                        Log.i(TAG, "message for next instruction");
+                        getNextInstruction();
+                    }
+                    else if(msg.equalsIgnoreCase("END")){
+                        Log.i(TAG, "message for recording end");
+                        stopRecording();
+                    }
+
                 }
             }
         });
@@ -374,6 +424,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         if(writer != null) {
             try {
                 writer.flush();
+                fwriter.flush();
                 writer.close();
                 fwriter.close();
             } catch (IOException e) {
