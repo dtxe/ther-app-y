@@ -210,6 +210,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
      */
     public void getNextInstruction() {
         step++;
+        status.setText("Step " + step);
         if (step < NUM_STEPS){
             sendMessage(INSTRUCTION_MESSAGE_PATH, "NEXT");
         }
@@ -348,6 +349,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     status.setText("connected to wear");
                     Log.i(TAG, "connected to wear");
+                    btnWear.setVisibility(View.GONE);
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
