@@ -44,13 +44,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     /* UI variables */
     private Button btnWear;            // UI buttons
     private ImageView ivInstruction;
-    private TextView status;                                       // UI title
-    private RelativeLayout layout;                                // UI layout
+    private TextView status;            // UI title
+    private RelativeLayout layout;      // UI layout
+    private Intent intent;
 
     /* recording variables */
-    private boolean started = false;                      // whether or not the app is recording data or not
-    private int step = 0;
-    private int NUM_STEPS = 5;
+    private boolean started = false;                        // whether or not the app is recording data or not
+    private int step = 0;                                   // current step number
+    private int NUM_STEPS = 5;                              // number of steps
+    private long time = System.currentTimeMillis();         // timestamp for the long
 
     /* communication variables */
     private GoogleApiClient mGoogleApiClient;                                           // communications protocol with the watch
@@ -73,20 +75,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         Wearable.MessageApi.addListener(mGoogleApiClient, this);
 
         // get Intent from MainActivity
-        Intent intent = getIntent();
+        intent = getIntent();
 
         // set up UI elements
-        //btnStart = (Button) findViewById(R.id.btnStart);
-        //btnStop = (Button) findViewById(R.id.btnStop);
         btnWear = (Button) findViewById(R.id.wearButton);
         ivInstruction = (ImageView) findViewById(R.id.instruction);
-
-        //btnStart.setOnClickListener(this);
-        //btnStop.setOnClickListener(this);
         btnWear.setOnClickListener(this);
-
-        //btnStart.setEnabled(true);
-        //btnStop.setEnabled(false);
         btnWear.setEnabled(true);
 
         // create file in folder called therappy. if folder doesn't exist, create it
@@ -98,7 +92,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     finish();
                 }
             }
-            sensorFiles = new File(sensorFiles + "/therappy" + System.currentTimeMillis() + ".txt");
+            sensorFiles = new File(sensorFiles + "/therappy" + time + ".txt");
             // setup writers, using a nested writer in buffered writer
             fwriter = new FileWriter(sensorFiles, true);
             writer = new BufferedWriter(fwriter, bufferSize);
@@ -162,6 +156,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
         started = false;
+        intent.putExtra("time", sensorFiles);
+        setResult(RESULT_OK,intent);
         finish();
     }
 

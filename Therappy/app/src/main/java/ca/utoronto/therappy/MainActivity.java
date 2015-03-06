@@ -3,6 +3,7 @@ package ca.utoronto.therappy;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,6 +11,10 @@ import android.view.View.OnClickListener;
 
 public class MainActivity extends ActionBarActivity implements OnClickListener {
 
+    static final int GET_FILENAME_REQUEST = 1;
+
+    /* debug variables */
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +27,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
      */
     public void startSensorModule(View view)  {
         Intent intent = new Intent(this, SensorModule.class);
-        startActivity(intent);
+        startActivityForResult(intent, GET_FILENAME_REQUEST);
     }
 
     /*  startViewProgress
@@ -31,6 +36,20 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
     public void startViewProgress(View view) {
         Intent activityIntent = new Intent(this, DrawGraph.class);
         startActivity(activityIntent);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == GET_FILENAME_REQUEST){
+            if(resultCode == RESULT_OK){
+                Log.i(TAG, "calling SPM!");
+                /*
+                Intent signalsIntent = new Intent(this,SPM.class);
+                signalsIntent.putExtra("fileName",data.getStringExtra("time"));
+                startActivity(signalsIntent);*/
+            }
+        }
     }
 
     @Override
