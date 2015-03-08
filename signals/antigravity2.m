@@ -11,12 +11,14 @@ clear
 TIME_DIV = 1000;                % ms
 
 FLAG_ANIMATE        = false;
-FLAG_PLOTRESAMPLE   = true;
+FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
+FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linearly through.
+
 % Load data
-FILENAME = 'therappy1425162204831';
+FILENAME = 'therappy1425246813943';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 
@@ -60,6 +62,10 @@ temp_idx = find(diff(gyro_t) <= 0)+1;
 gyro_t(temp_idx) = [];
 gyro_data(temp_idx, :) = [];
 
+% CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
+% Flip X direction
+% accl_data(:,1) = -1*accl_data(:,1);
+% gyro_data(:,1) = -1*gyro_data(:,1);
 
 
 
@@ -78,6 +84,7 @@ ending_time = min([accl_t(end), gyro_t(end)]);
 data_re_t = (0:avg_diff:ending_time)';
 
 data_re_srate = TIME_DIV/avg_diff;
+data_re_dt = avg_diff/TIME_DIV;
 data_re_len = length(data_re_t);
 
 
@@ -148,7 +155,7 @@ if FLAG_PLOTFILTER
 
         ax(kk+3) = subplot(2,3,kk+3);
         plot(data_re_t, accl_re_filtd(:,kk));
-        ylabel('Accel (ms^-2)');
+        ylabel('Accel (ms^{-2})');
         xlabel('Time (ms)');
         title(pltitle{kk+3});
     end
@@ -166,7 +173,6 @@ rotate3dY = @(theta) [cos(theta), 0, sin(theta); 0, 1, 0; -1*sin(theta), 0, cos(
 rotate3dZ = @(theta) [cos(theta), -1*sin(theta), 0; sin(theta), cos(theta), 0; 0, 0, 1];
     
 rotatevec3d = @(x, rot) (rotate3dZ(rot(3)) * rotate3dY(rot(2)) * rotate3dX(rot(1)) * x')';
-% rotatevec3d = @(x, rot) x;        % no rotate. for debugging.
 
 
 
@@ -174,40 +180,45 @@ rotatevec3d = @(x, rot) (rotate3dZ(rot(3)) * rotate3dY(rot(2)) * rotate3dX(rot(1
 vel = zeros(data_re_len, 3);
 for kk = 1:3
     % initial velocity is zero
-    vel(1,kk) = accl_re_filtd(1,kk)*(avg_diff/TIME_DIV);
+    vel(1,kk) = accl_re_filtd(1,kk)*data_re_dt;
     
     for jj = 2:data_re_len
-        vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*(avg_diff/TIME_DIV);
+        vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*data_re_dt;
     end
 end
 
 pos = zeros(data_re_len, 3);
 for kk = 1:3
-    pos(1,kk) = vel(1,kk)*(avg_diff/TIME_DIV);
+    pos(1,kk) = vel(1,kk)*data_re_dt;
     
     for jj = 2:data_re_len
-        pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*(avg_diff/TIME_DIV);
+        pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*data_re_dt;
     end
 end
 
 %%%%% ROTATION CORRECTED
 % Keep track of rotation vector
 rot = zeros(data_re_len, 3);
-for kk = 1:3
-    % initial rotation is zero
-    rot(1,kk) = gyro_re_filtd(1,kk)*(avg_diff/TIME_DIV);
+
+% initial rotation is zero
+rot(1,:) = gyro_re_filtd(1,:)*data_re_dt;
+
+for jj = 2:data_re_len
+    % need to rotate the axis back to extrinsic frame of reference first
+    intrinsic_d_rot = gyro_re_filtd(jj,:)*data_re_dt;
+    extrinsic_d_rot = rotatevec3d(intrinsic_d_rot, rot(jj-1, :));
     
-    for jj = 2:data_re_len
-        rot(jj,kk) = rot(jj-1,kk) + gyro_re_filtd(jj,kk)*(avg_diff/TIME_DIV);
-    end
+    % integrate into current rotation
+    rot(jj,:) = rot(jj-1,:) + extrinsic_d_rot;
 end
+
 
 % Integrate with corrected direction
 vel_rt = zeros(data_re_len, 3);
 
-vel_rt(1,:) = accl_re_filtd(1,:)*(avg_diff/TIME_DIV);
+vel_rt(1,:) = accl_re_filtd(1,:)*data_re_dt;
 for jj = 2:data_re_len
-    accl_rtcor = accl_re_filtd(jj,:)*(avg_diff/TIME_DIV);
+    accl_rtcor = accl_re_filtd(jj,:)*data_re_dt;
     accl_rtcor = rotatevec3d(accl_rtcor, rot(jj,:));
     
     vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
@@ -215,13 +226,16 @@ end
 
 pos_rt = zeros(data_re_len, 3);
 for kk = 1:3
-    pos_rt(1,kk) = vel_rt(1,kk)*(avg_diff/TIME_DIV);
+    pos_rt(1,kk) = vel_rt(1,kk)*data_re_dt;
     
     for jj = 2:data_re_len
-        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*(avg_diff/TIME_DIV);
+        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*data_re_dt;
     end
 end
 
+if FLAG_LINEARCORRECT
+    pos = pos - [linspace(pos(1,1), pos(end,1), data_re_len)', linspace(pos(1,2), pos(end,2), data_re_len)', linspace(pos(1,3), pos(end,3), data_re_len)'];
+end
 
 % Plot integrated trace
 if FLAG_PLOTTRACE
@@ -238,7 +252,7 @@ if FLAG_PLOTTRACE
 
     subplot(1, 2, 2);
     
-    plot3(pos(:,1), pos(:,2), pos(:,3));
+    plot3(pos_rt(:,1), pos_rt(:,2), pos_rt(:,3));
     daspect([1 1 1]);
     title('Rotation-corrected integrated trace');
     xlabel('X distance (m)');
@@ -254,7 +268,7 @@ toc(t_begin);
 %% Animate
 
 if FLAG_ANIMATE
-    vidwriter = VideoWriter(['test.avi']);
+    vidwriter = VideoWriter([FILENAME '-trace.avi']);
     open(vidwriter);
     f = figure(50);
     for tt = 1:20:length(pos)

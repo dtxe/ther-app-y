@@ -16,10 +16,12 @@ ssimage = imread('./assets/therappy-menu-cropped.jpg');
 ssimage = imresize(ssimage, 100/length(ssimage));           % resize to 500px
 [ssimage, ssmap] = rgb2ind(ssimage, 8);
 
+ssimage = ssimage';
+
 ss_size = size(ssimage);
 
 % generate grid corresponding to image
-[ss_x, ss_y] = meshgrid(ss_size(1):-1:1, 1:ss_size(2));
+[ss_x, ss_y] = meshgrid(1:ss_size(1), ss_size(2):-1:1);
 
 % scale grid to a size of length 1 and centre at origin
 ss_x = (ss_x' / ss_size(1)) - 0.5;
@@ -31,7 +33,7 @@ ss_z = 0 * ones(size(ss_x));
 f = figure(50);
 hold on
 
-vidwriter = VideoWriter(['phonerotate.avi']);
+vidwriter = VideoWriter([FILENAME '-rotate.avi']);
 open(vidwriter);
 
 phone_vertices = [min(ss_y(:)) -0.5 0.2;
@@ -50,9 +52,8 @@ for kk = 1:5:length(rot)
     ss_x_tmp = zeros(size(ss_x));
     ss_y_tmp = zeros(size(ss_x));
     ss_z_tmp = zeros(size(ss_x));
-    
     parfor jj = 1:numel(ss_x)
-        outvec = rotatevec3d([ss_x(jj), ss_y(jj), ss_z(jj)], rot(kk,:));
+        outvec = rotatevec3d([ss_x(jj), ss_y(jj), ss_z(jj)], -1*rot(kk,:));
         ss_x_tmp(jj) = outvec(1);
         ss_y_tmp(jj) = outvec(2);
         ss_z_tmp(jj) = outvec(3);
@@ -77,7 +78,6 @@ for kk = 1:5:length(rot)
     quiver3(0, 0, 0, 0, 0.75, 0, 'g');
     quiver3(0, 0, 0, 0, 0, 0.75, 'b');
 
-    title(FILENAME);
     xlabel('X');
     ylabel('Y');
     zlabel('Z');
