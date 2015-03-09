@@ -10,15 +10,17 @@ clear
 % TIME_DIV = 1000 * 1000 * 1000;      % ns
 TIME_DIV = 1000;                % ms
 
-FLAG_ANIMATE        = false;
+FLAG_ANIMATE        = true;
+FLAG_ANIMATE360     = true;
 FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
 FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linearly through.
+FLAG_VELCORRECT     = true;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1425246813943';
+FILENAME = 'therappy1424922398062';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 
@@ -235,6 +237,17 @@ end
 
 if FLAG_LINEARCORRECT
     pos = pos - [linspace(pos(1,1), pos(end,1), data_re_len)', linspace(pos(1,2), pos(end,2), data_re_len)', linspace(pos(1,3), pos(end,3), data_re_len)'];
+elseif FLAG_VELCORRECT
+    % initialize correction dataset
+    pos_corr = zeros(size(pos));
+    
+    % divide amount of position correction needed based on absolute
+    % velocity
+    for kk = 1:3
+        pos_corr(:,kk) = abs(vel(:,kk)) .* ((pos(end,kk)-pos(1,kk)) ./ sum(abs(vel(:,kk))));
+    end
+    
+    pos = pos - cumsum(pos_corr);
 end
 
 % Plot integrated trace
@@ -283,6 +296,36 @@ if FLAG_ANIMATE
         clf(f);
     end
 
+    close(vidwriter);
+end
+
+% rotate the 3D trace around to help visualize
+if FLAG_ANIMATE360
+    vidwriter = VideoWriter([FILENAME '-rotatetrace.avi']);
+    vidwriter.FrameRate = 10;
+    open(vidwriter);
+    
+    f = figure();
+    
+    plot3(pos(:,1), pos(:,2), pos(:,3));
+    daspect([1 1 1]);
+    title('Raw integrated trace');
+    xlabel('X distance (m)');
+    ylabel('Y distance (m)');
+    zlabel('Z distance (m)');
+    
+    % set up rotation stuff
+    NFRAMES = 60;
+    az_steps = linspace(0,360,NFRAMES)-38;
+    el_steps = 14*sin(linspace(0,2*pi,NFRAMES))+14;
+    
+    axis vis3d
+    
+    for kk = 1:NFRAMES
+        view(az_steps(kk), el_steps(kk));
+        writeVideo(vidwriter, getframe(f));
+    end
+    
     close(vidwriter);
 end
 
