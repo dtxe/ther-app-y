@@ -25,12 +25,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/btnMain"
-            android:text="button"
             android:textSize="30sp"
             android:paddingTop="20dp"
             android:background="#280047"
             android:textColor="#FFFFFF"
-            android:drawableTop="@drawable/ic_stop"
             />
     </FrameLayout>
 </android.support.wearable.view.BoxInsetLayout>

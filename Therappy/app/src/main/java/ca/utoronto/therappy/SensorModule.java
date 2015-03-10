@@ -117,17 +117,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void onClick(View view) {
         switch(view.getId())
         {
-            /*case R.id.btnStart:
-                // when the start button is pressed, start recording (and notify the watch for debug)
-                startRecording();
-
-                break;
-            case R.id.btnStop:
-                // when stop button is pressed, stop recording
-                btnStart.setEnabled(true);
-                btnStop.setEnabled(false);
-                stopRecording();
-                break;*/
             case R.id.wearButton:
                 sendMessage(START_ACTIVITY, "");
                 Log.i(TAG, "calling wear");
@@ -156,7 +145,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
         started = false;
-        intent.putExtra("time", sensorFiles);
+        intent.putExtra("location", sensorFiles);
         setResult(RESULT_OK,intent);
         finish();
     }

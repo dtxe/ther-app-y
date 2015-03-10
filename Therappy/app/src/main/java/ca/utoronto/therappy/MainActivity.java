@@ -44,10 +44,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
         if(requestCode == GET_FILENAME_REQUEST){
             if(resultCode == RESULT_OK){
                 Log.i(TAG, "calling SPM!");
-                /*
                 Intent signalsIntent = new Intent(this,SPM.class);
-                signalsIntent.putExtra("fileName",data.getStringExtra("time"));
-                startActivity(signalsIntent);*/
+                signalsIntent.putExtra("fileName",data.getStringExtra("location"));
+                startActivity(signalsIntent);
             }
         }
     }

@@ -5,7 +5,8 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:theme="@style/AppTheme.Base.ActionBar">
 
 <!--
     <Button
@@ -14,6 +15,12 @@
         android:layout_height="wrap_content"
         android:text="@string/redraw_button_label" />
 -->
+
+    <Spinner
+        android:id="@+id/choice_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/choice_array"/>
 
     <view
         class="ca.utoronto.therappy.DrawShapes"

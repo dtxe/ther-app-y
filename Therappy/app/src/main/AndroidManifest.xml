@@ -28,7 +28,16 @@
             android:name=".SensorModule"
             android:label="@string/title_activity_sensor_module"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="landscape"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="ca.utoronto.therappy.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SPM"
+            android:label="@string/title_activity_spm"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
             >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

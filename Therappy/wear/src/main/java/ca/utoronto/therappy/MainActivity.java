@@ -96,8 +96,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
      */
     public void stopMeasuring() {
         mSensorManager.unregisterListener(this);
-        MessageBuffer.compact();
-        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
         MessageBuffer.clear();
         finish();
     }
@@ -157,7 +155,15 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnMain:
-                    sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                    if(currInstruction.equalsIgnoreCase("END")){
+                        MessageBuffer.compact();
+                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+                        MessageBuffer.clear();
+                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                        Log.i(TAG, "End of transmission");
+                    }
+                    else
+                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
                 break;
             default:
                 break;
@@ -225,10 +231,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         Log.i(TAG, "Recording has started");
                         started = true;
                     }
-                    else if (msg.equalsIgnoreCase("STOP")) {
+                    else if(msg.equalsIgnoreCase("STOP")) {
                         Log.i(TAG, "Recording has stopped");
                         started = false;
-                        stopMeasuring();
+                        finish();
                     }
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)) {

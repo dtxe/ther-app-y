@@ -46,8 +46,8 @@ public class DrawShapes extends View {
         /* Draw out the volume space values */
         drawGraphText(canvas, "Original Volume Space:", viewWidth/8, viewHeight/6, Color.BLACK, viewWidth/23);
         drawGraphText(canvas, "Current Volume Space:", viewWidth/8, viewHeight/5, Color.BLACK, viewWidth/23);
-        drawGraphText(canvas, volume[0], viewWidth*3/5, viewHeight/6, Color.BLACK, viewWidth/23);
-        drawGraphText(canvas, volume[4], viewWidth*3/5, viewHeight/5, Color.GREEN, viewWidth/23);
+        drawGraphText(canvas, volume[0] + "mL", viewWidth*3/5, viewHeight/6, Color.BLACK, viewWidth/23);
+        drawGraphText(canvas, volume[4] + "mL", viewWidth*3/5, viewHeight/5, Color.GREEN, viewWidth/23);
     }
 
     private void drawGraphLine(Canvas canvas, int viewWidth, int viewHeight) {
@@ -160,5 +160,11 @@ public class DrawShapes extends View {
             p.setTextSize(width);
         }
         return(p);
+    }
+
+    public void changeCoordinates(float[] coordinates) {
+        for (int i=0; i<yCoordinates.length; i++) {
+            yCoordinates[i] = coordinates[i];
+        }
     }
 }
