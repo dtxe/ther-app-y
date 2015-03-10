@@ -7,6 +7,8 @@
     <string name="title_activity_sensor_module">SensorModule</string>
     <string name="redraw_button_label">Reload Graph</string>
     <string name="title_activity_draw_graph">Progress Report</string>
+    <string name="status_title">Status</string>
+    <string name="connect">Connect</string>
 
     <string-array name="choice_array">
         <item>Volume Space</item>
