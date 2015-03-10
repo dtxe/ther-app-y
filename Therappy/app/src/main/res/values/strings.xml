@@ -8,4 +8,11 @@
     <string name="redraw_button_label">Reload Graph</string>
     <string name="title_activity_draw_graph">Progress Report</string>
 
+    <string-array name="choice_array">
+        <item>Volume Space</item>
+        <item>X-Y Space</item>
+        <item>X-Z Space</item>
+        <item>Y-Z Space</item>
+    </string-array>
+
 </resources>
