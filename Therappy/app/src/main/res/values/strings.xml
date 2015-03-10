@@ -5,6 +5,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_sensor_module">SensorModule</string>
+    <string name="title_activity_spm">Signals Processing Module</string>
     <string name="redraw_button_label">Reload Graph</string>
     <string name="title_activity_draw_graph">Progress Report</string>
     <string name="status_title">Status</string>
