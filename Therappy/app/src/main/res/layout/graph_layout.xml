@@ -15,6 +15,12 @@
         android:text="@string/redraw_button_label" />
 -->
 
+    <Spinner
+        android:id="@+id/choice_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/choice_array"/>
+
     <view
         class="ca.utoronto.therappy.DrawShapes"
         android:id="@+id/sketchSpace"
