@@ -10,17 +10,17 @@ clear
 % TIME_DIV = 1000 * 1000 * 1000;      % ns
 TIME_DIV = 1000;                % ms
 
-FLAG_ANIMATE        = true;
-FLAG_ANIMATE360     = true;
-FLAG_PLOTRESAMPLE   = false;
+FLAG_ANIMATE        = false;
+FLAG_ANIMATE360     = false;
+FLAG_PLOTRESAMPLE   = true;
 FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
 FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linearly through.
-FLAG_VELCORRECT     = true;      % assume same start/end, correct based on absolute velocity.
+FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1424922398062';
+FILENAME = 'therappy1425581389592';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 
