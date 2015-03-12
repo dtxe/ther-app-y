@@ -128,7 +128,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
-        long time = SystemClock.elapsedRealtimeNanos();
+        long time = event.timestamp;
         char type = 'x';
 
         switch (event.sensor.getType()) {
