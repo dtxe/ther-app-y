@@ -51,7 +51,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     /* recording variables */
     private boolean started = false;                        // whether or not the app is recording data or not
     private int step = 0;                                   // current step number
-    private int NUM_STEPS = 5;                              // number of steps
+    private int NUM_STEPS = 3;                              // number of steps
     private long time = System.currentTimeMillis();         // timestamp for the long
 
     /* communication variables */
@@ -145,7 +145,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
         started = false;
-        intent.putExtra("location", sensorFiles);
+        intent.putExtra("location", sensorFiles.toString());
         setResult(RESULT_OK,intent);
         finish();
     }
@@ -195,7 +195,18 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
      */
     public void getNextInstruction() {
         step++;
-        status.setText("Step " + step);
+        String STEPNAME = "ERROR";
+        switch(step){
+            case 1: STEPNAME = "Stir the cauldron";
+                break;
+            case 2: STEPNAME = "Paint the rainbow";
+                break;
+            case 3: STEPNAME = "Ninja chop";
+                break;
+            default:
+                break;
+        }
+        status.setText("Step " + step + "of" + NUM_STEPS + "\n" + STEPNAME);
         if (step < NUM_STEPS){
             sendMessage(INSTRUCTION_MESSAGE_PATH, "NEXT");
         }
