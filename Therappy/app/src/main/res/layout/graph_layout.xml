@@ -20,7 +20,8 @@
         android:id="@+id/choice_spinner"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/choice_array"/>
+        android:entries="@array/choice_array"
+        android:textColor="#000000"/>
 
     <view
         class="ca.utoronto.therappy.DrawShapes"
