@@ -17,7 +17,7 @@ x4 = sin(7*t);
 xout = x1 .* x2 .* x3 .* x4;
 
 f = figure(50);
-set(f, 'Color', [0.176,0.02,0.294], 'Position', [100 100 800 400]);
+set(f, 'Color', [0 0 0], 'Position', [100 100 800 400]);
 plot(xout, 'Color', 'white', 'LineWidth', 3);
 axis off
 
@@ -29,11 +29,11 @@ for kk = 1:NUM_WINDOWS
     
     frame = getframe(f);
     im = frame2im(frame);
-    [imind,cm] = rgb2ind(im,16);
+    [imind,cm] = rgb2ind(im,2);
     
     if kk == 1
-        imwrite(imind,cm,'loading.gif','gif', 'Loopcount',inf,'DelayTime',1/40);
+        imwrite(imind, cm,'loading.gif','gif', 'Loopcount',inf,'DelayTime',1/40, 'TransparentColor', 0);
     else
-        imwrite(imind,cm,'loading.gif','gif', 'WriteMode','append','DelayTime',1/40);
+        imwrite(imind, cm,'loading.gif','gif', 'WriteMode','append','DelayTime',1/40, 'TransparentColor', 0);
     end
 end
