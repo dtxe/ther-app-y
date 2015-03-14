@@ -12,7 +12,7 @@ TIME_DIV = 1000;                % ms
 
 FLAG_ANIMATE        = false;
 FLAG_ANIMATE360     = false;
-FLAG_PLOTRESAMPLE   = true;
+FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
 FLAG_PLOTTRACE      = true;
 
@@ -20,7 +20,7 @@ FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linea
 FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1425581389592';
+FILENAME = 'therappy1425162204831';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 
@@ -281,7 +281,7 @@ toc(t_begin);
 %% Animate
 
 if FLAG_ANIMATE
-    vidwriter = VideoWriter([FILENAME '-trace.avi']);
+    vidwriter = VideoWriter(['outout\' FILENAME '-trace.avi']);
     open(vidwriter);
     f = figure(50);
     for tt = 1:20:length(pos)
@@ -301,7 +301,7 @@ end
 
 % rotate the 3D trace around to help visualize
 if FLAG_ANIMATE360
-    vidwriter = VideoWriter([FILENAME '-rotatetrace.avi']);
+    vidwriter = VideoWriter(['outout\' FILENAME '-rotatetrace.avi']);
     vidwriter.FrameRate = 10;
     open(vidwriter);
     
