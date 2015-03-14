@@ -95,6 +95,13 @@ Recorded with Wear
 
 1m along positive z-axis
 
+====
+therappy1426221452163
+Andrew Wong
+Recorded with Wear
+
+1m along negative(?) x-axis
+
 
 ====
 therappy1426189936796
@@ -106,7 +113,6 @@ USING EVENT TIMESTAMP!! :D
 Origin to point => return to origin
 Forward, 45 left, 45 right, 90 left, 90 right, 90 up, 45 up
 
-
 ====
 therappy1426375203951
 Simeon Wong
@@ -114,5 +120,6 @@ Recorded with HTC One
 
 Rotation trace
 Face up, rotate 90 top of phone upwards, rotate 90 left, rotate 90 right.
+
 
 

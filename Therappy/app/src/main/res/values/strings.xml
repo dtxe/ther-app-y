@@ -8,7 +8,7 @@
     <string name="title_activity_spm">Signals Processing Module</string>
     <string name="redraw_button_label">Reload Graph</string>
     <string name="title_activity_draw_graph">Progress Report</string>
-    <string name="status_title">Status</string>
+    <string name="status_title">Status: </string>
     <string name="connect">Connect</string>
 
     <string-array name="choice_array">
