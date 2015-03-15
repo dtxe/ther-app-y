@@ -140,4 +140,12 @@ Face up on table, wait 5 seconds, rotate 90 degrees top of phone upwards, return
 Tried not to rock the phone during 5 second calibration period.
 
 
+=====
+therappy1426383802327
+Simeon Wong
+HTC One
+
+Rotation trace
+Face up on table, 5 second calibration, rotate in 90 degree increments in some random fashion, return to flat position, rotate again, return to flat position.
+
 
