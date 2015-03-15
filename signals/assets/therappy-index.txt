@@ -121,5 +121,12 @@ Recorded with HTC One
 Rotation trace
 Face up, rotate 90 top of phone upwards, rotate 90 left, rotate 90 right.
 
+====
+therappy1426382988925
+Simeon Wong
+Recorded with HTC One
+
+Rotation trace
+Face up on table, rotate 90 degrees top of phone upwards, put back on table.
 
 
