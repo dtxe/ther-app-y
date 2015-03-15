@@ -5,11 +5,7 @@
 % 2015 March 1
 
 %%%%% Rotation matrix
-rotate3dX = @(theta) [1, 0, 0; 0, cos(theta), -1*sin(theta); 0, sin(theta), cos(theta)];
-rotate3dY = @(theta) [cos(theta), 0, sin(theta); 0, 1, 0; -1*sin(theta), 0, cos(theta)];
-rotate3dZ = @(theta) [cos(theta), -1*sin(theta), 0; sin(theta), cos(theta), 0; 0, 0, 1];
-    
-rotatevec3d = @(x, rot) (rotate3dZ(rot(3)) * rotate3dY(rot(2)) * rotate3dX(rot(1)) * x')';
+tdsp_rotationmatrix;
 
 
 %%%%% Parameters %%%%%
@@ -61,6 +57,28 @@ quiver3(0, 0, 0, 0, 0, 1, 'b');
 linkprop(ax, 'CameraPosition', 'CameraUpVector', 'XLim', 'YLim', 'ZLim');
 
 title('Transformed');
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+daspect([1, 1, 1]);
+
+%%
+close all
+
+tdsp_rotationmatrix;
+
+testvector = [0 1 0];
+rotvector = rotatevec3d(testvector, [pi/4 0 0]);
+
+figure(7); clf(7);
+hold on
+quiver3(0, 0, 0, testvector(1), testvector(2), testvector(3), 'c', 'LineWidth', 5);
+quiver3(0, 0, 0, rotvector(1), rotvector(2), rotvector(3), 'm', 'LineWidth', 5);
+
+quiver3(0, 0, 0, 1, 0, 0, 'g');
+quiver3(0, 0, 0, 0, 1, 0, 'b');
+quiver3(0, 0, 0, 0, 0, 1, 'r');
+
 xlabel('X');
 ylabel('Y');
 zlabel('Z');
