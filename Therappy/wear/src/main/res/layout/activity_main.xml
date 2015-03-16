@@ -2,7 +2,7 @@
 <android.support.wearable.view.BoxInsetLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#280047"
+    android:background="@color/colorPrimaryDark"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:padding="10dp">
@@ -12,14 +12,18 @@
         android:layout_height="match_parent"
         android:padding="0dp"
         app:layout_box="all"
-        android:background="#280047">
+        android:background="@color/colorPrimaryDark">
 
-        <ImageView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/imgBackground"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_logo_white" />
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/btnLoading"
+            android:background="@color/colorPrimaryDark"
+            android:src="@drawable/ic_logo_white"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            />
 
         <Button
             android:layout_width="match_parent"
@@ -27,8 +31,8 @@
             android:id="@+id/btnMain"
             android:textSize="30sp"
             android:paddingTop="20dp"
-            android:background="#280047"
-            android:textColor="#FFFFFF"
+            android:background="@color/colorPrimaryDark"
+            android:textColor="@color/white"
             />
     </FrameLayout>
 </android.support.wearable.view.BoxInsetLayout>

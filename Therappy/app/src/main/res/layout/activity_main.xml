@@ -10,6 +10,7 @@
         android:src="@drawable/ic_logo"
         android:layout_alignParentTop="true"
         android:layout_marginTop="80dp"
+        android:tint="@color/colorPrimaryDark"
         android:layout_centerHorizontal="true" />
 
     <Button
@@ -23,7 +24,7 @@
         android:layout_alignParentStart="true"
         android:layout_marginLeft="30dp"
         android:layout_marginRight="30dp"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryDark"
         android:textColor="@color/white"
         android:textSize="22sp"
         android:textAllCaps="false"
@@ -42,7 +43,7 @@
         android:layout_marginRight="30dp"
         android:layout_above="@+id/btnSend"
         android:layout_marginBottom="15dp"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryDark"
         android:textColor="@color/white"
         android:textSize="22sp"
         android:textAllCaps="false"
@@ -63,7 +64,7 @@
         android:layout_marginLeft="30dp"
         android:layout_marginRight="30dp"
         android:enabled="true"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryDark"
         android:textColor="@color/white"
         android:textStyle="normal"
         android:textSize="22sp"

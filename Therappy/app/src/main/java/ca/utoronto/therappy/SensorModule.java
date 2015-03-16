@@ -46,9 +46,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private final File root = android.os.Environment.getExternalStorageDirectory();     // location of external directory
 
     /* UI variables */
-    private Button btnWear;            // UI buttons
+    private Button lButton;            // UI buttons
     private ImageView ivInstruction;
-    private TextView status, lstatus;            // UI title
+    private TextView status, lstatus, lhint;            // UI title
     private RelativeLayout layout;      // UI layout
     private Intent intent;
     private View vloading, vmain;
@@ -76,8 +76,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         setContentView(R.layout.sensor_layout);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);       // ensure screen (and app) stays on
 
-        vloading = (View)findViewById(R.id.loadingLayout);
-        vmain = (View)findViewById(R.id.sensorModuleLayout);
+        vloading = findViewById(R.id.loadingLayout);
+        vmain = findViewById(R.id.sensorModuleLayout);
 
         vloading.setVisibility(View.VISIBLE);
         vmain.setVisibility(View.GONE);
@@ -92,10 +92,10 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         // set up UI elements
         lstatus = (TextView) findViewById(R.id.load_status);
         loader = (ProgressBar) findViewById(R.id.progressBar);
-        //btnWear = (Button) findViewById(R.id.wearButton);
+        lhint = (TextView)findViewById(R.id.tvHint);
+        lButton = (Button)findViewById(R.id.load_button);
         ivInstruction = (ImageView) findViewById(R.id.instruction);
-        //btnWear.setOnClickListener(this);
-        //btnWear.setEnabled(true);
+        lButton.setOnClickListener(this);
 
         // create file in folder called therappy. if folder doesn't exist, create it
         try {
@@ -114,14 +114,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
 
-        // set layout
-        //layout = (RelativeLayout)findViewById(R.id.sensorModuleLayout);
-
         // setup UI text elements
         status=(TextView)findViewById(R.id.tvStatus);
         sendMessage(START_ACTIVITY, "");
+        Log.i(TAG, "calling wear");
         lstatus.setText("Searching for wear...\nPlease wait");
-
+        lhint.setText("Hint: try waking up the watch by tapping on it");
     }
 
     /*  onClick
@@ -134,10 +132,10 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void onClick(View view) {
         switch(view.getId())
         {
-            /*case R.id.wearButton:
+            case R.id.load_button:
                 sendMessage(START_ACTIVITY, "");
-                Log.i(TAG, "calling wear");
-                break;*/
+                Log.i(TAG, "calling wear manually");
+                break;
             default:
                 break;
         }
@@ -361,6 +359,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 // if it is connection data, set the label
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     vloading.setVisibility(View.GONE);
+                    lButton.setEnabled(false);
+                    lButton.setVisibility(View.GONE);
                     vmain.setVisibility(View.VISIBLE);
                     status.setText("connected to wear");
                     Log.i(TAG, "connected to wear");
@@ -433,22 +433,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(writer != null) {
-            try {
-                writer.flush();
-                fwriter.flush();
-                writer.close();
-                fwriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        mGoogleApiClient.disconnect();
     }
 
     @Override
