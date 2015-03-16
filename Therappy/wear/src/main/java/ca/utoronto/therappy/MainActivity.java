@@ -37,7 +37,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     /* sensor variables */
     private SensorManager mSensorManager;                   // sensor manager
-    private Sensor mAccelerometer, mGyroscope;              // accelerometer and gyroscope sensor variables
+    private Sensor mAccelerometer, mGyroscope, mRotation;              // accelerometer and gyroscope sensor variables
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -75,8 +75,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mRotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
 
         // initiate communication
         initGoogleApiClient();
@@ -140,6 +142,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 break;
             case Sensor.TYPE_GYROSCOPE:
                 type = 'g';
+                break;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                type = 'r';
                 break;
             default:
                 break;
@@ -322,6 +327,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         super.onResume();
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_FASTEST);
         mGoogleApiClient.connect();
     }
 
