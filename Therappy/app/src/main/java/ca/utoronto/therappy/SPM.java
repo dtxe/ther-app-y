@@ -34,10 +34,10 @@ public class SPM extends ActionBarActivity{
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.spm_layout);
+        setContentView(R.layout.loading_layout);
         intent = getIntent();
         spinner = (ProgressBar)findViewById(R.id.progressBar);
-        status = (TextView)findViewById(R.id.tvstatus);
+        status = (TextView)findViewById(R.id.load_status);
         fileName = intent.getStringExtra("fileName");
 
         new SPMCalculate().execute(fileName);

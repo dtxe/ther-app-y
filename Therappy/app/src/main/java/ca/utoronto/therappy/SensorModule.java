@@ -4,10 +4,12 @@ import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,7 +17,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -44,9 +48,11 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     /* UI variables */
     private Button btnWear;            // UI buttons
     private ImageView ivInstruction;
-    private TextView status;            // UI title
+    private TextView status, lstatus;            // UI title
     private RelativeLayout layout;      // UI layout
     private Intent intent;
+    private View vloading, vmain;
+    private ProgressBar loader;
 
     /* recording variables */
     private boolean started = false;                        // whether or not the app is recording data or not
@@ -67,8 +73,14 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sensor_module);
+        setContentView(R.layout.sensor_layout);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);       // ensure screen (and app) stays on
+
+        vloading = (View)findViewById(R.id.loadingLayout);
+        vmain = (View)findViewById(R.id.sensorModuleLayout);
+
+        vloading.setVisibility(View.VISIBLE);
+        vmain.setVisibility(View.GONE);
 
         // initiate comm protocol with watch
         initGoogleApiClient();
@@ -78,10 +90,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         intent = getIntent();
 
         // set up UI elements
-        btnWear = (Button) findViewById(R.id.wearButton);
+        lstatus = (TextView) findViewById(R.id.load_status);
+        loader = (ProgressBar) findViewById(R.id.progressBar);
+        //btnWear = (Button) findViewById(R.id.wearButton);
         ivInstruction = (ImageView) findViewById(R.id.instruction);
-        btnWear.setOnClickListener(this);
-        btnWear.setEnabled(true);
+        //btnWear.setOnClickListener(this);
+        //btnWear.setEnabled(true);
 
         // create file in folder called therappy. if folder doesn't exist, create it
         try {
@@ -101,10 +115,13 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         }
 
         // set layout
-        layout = (RelativeLayout)findViewById(R.id.sensorModuleLayout);
+        //layout = (RelativeLayout)findViewById(R.id.sensorModuleLayout);
 
         // setup UI text elements
         status=(TextView)findViewById(R.id.tvStatus);
+        sendMessage(START_ACTIVITY, "");
+        lstatus.setText("Searching for wear...\nPlease wait");
+
     }
 
     /*  onClick
@@ -117,10 +134,10 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void onClick(View view) {
         switch(view.getId())
         {
-            case R.id.wearButton:
+            /*case R.id.wearButton:
                 sendMessage(START_ACTIVITY, "");
                 Log.i(TAG, "calling wear");
-                break;
+                break;*/
             default:
                 break;
         }
@@ -343,9 +360,11 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 }
                 // if it is connection data, set the label
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
+                    vloading.setVisibility(View.GONE);
+                    vmain.setVisibility(View.VISIBLE);
                     status.setText("connected to wear");
                     Log.i(TAG, "connected to wear");
-                    btnWear.setVisibility(View.GONE);
+                    //btnWear.setVisibility(View.GONE);
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
