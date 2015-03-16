@@ -73,7 +73,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // start sensor manager and register sensors
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_GAME);
@@ -85,6 +85,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         btnMain.setOnClickListener(this);
         btnMain.setEnabled(false);
         btnMain.setVisibility(View.GONE);
+
+        MessageBuffer.clear();
+        sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
     /* stopMeasuring
@@ -132,7 +135,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         char type = 'x';
 
         switch (event.sensor.getType()) {
-            case Sensor.TYPE_LINEAR_ACCELERATION:
+            case Sensor.TYPE_ACCELEROMETER:
                 type = 'a';
                 break;
             case Sensor.TYPE_GYROSCOPE:
