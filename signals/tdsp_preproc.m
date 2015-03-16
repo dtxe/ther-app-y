@@ -1,6 +1,11 @@
 function [ out ] = tdsp_preproc( data, varargin )
 %TDSP_PREPROC parse csv file with IMU data, zero reference time, sort by
 %time values, remove samples with duplicate time stamps, resample data.
+%
+% Accepts an importData type struct in data.
+% 
+% Simeon Wong
+% 2015 March 15
 
 %% Parse function parameters
 p = inputParser;
@@ -12,7 +17,7 @@ parse(p, varargin{:});
 % Separate accelerometer and rotation
 % count number of a, r
 accl_idx = cellfun(@(c) strcmp(c, 'a'), data.textdata(:,2));
-out.accl_len = sum(accl_idx);
+accl_len = sum(accl_idx);
 
 % get accl data
 accl_t = str2double(data.textdata(accl_idx,1));
@@ -31,7 +36,7 @@ accl_t(temp_idx) = [];
 accl_data(temp_idx, :) = [];
 
 % gyroscope data
-gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
+gyro_idx = cellfun(@(c) strcmp(c, 'g'), data.textdata(:,2));
 gyro_len = sum(gyro_idx);
 gyro_data = data.data(gyro_idx,:);
 gyro_t = str2double(data.textdata(gyro_idx,1));
@@ -77,7 +82,7 @@ gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
 
 
 % Plot resampled things
-if FLAG_PLOTRESAMPLE
+if p.Results.plot
     pltitle = {'X-axis Raw Accl', 'Y-axis Raw Accl', 'Z-axis Raw Accl', 'X-axis Re Accl', 'Y-axis Re Accl', 'Z-axis Re Accl',};
 
     figure;
@@ -97,6 +102,18 @@ if FLAG_PLOTRESAMPLE
     
     linkaxes(ax);
 end
+
+%% output things
+out.accl_t = accl_t;
+out.accl_data = accl_data;
+out.accl_re_data = accl_re_data;
+
+out.gyro_t = gyro_t;
+out.gyro_data = gyro_data;
+out.gyro_re_data = gyro_re_data;
+
+out.data_re_srate = data_re_srate;
+out.data_re_dt = data_re_dt;
 
 
 end
