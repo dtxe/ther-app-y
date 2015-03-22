@@ -112,8 +112,8 @@ public class SPM extends ActionBarActivity{
             status.setText(progress);
         }
 
-        protected void onPostExecute(){
-            status.setText("Complete!");
+        protected void onPostExecute(Long result){
+
         }
 
         protected void onCancelled(){

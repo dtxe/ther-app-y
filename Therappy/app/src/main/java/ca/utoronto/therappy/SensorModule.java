@@ -4,8 +4,6 @@ import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.AnimationDrawable;
-import android.media.Image;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -55,7 +53,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private Intent intent;
     private View vloading, vmain;
     private ProgressBar loader;
-    private AnimationDrawable frameAnimation;
 
     /* recording variables */
     private boolean started = false;                        // whether or not the app is recording data or not
@@ -214,16 +211,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     public void getNextInstruction() {
         step++;
         String STEPNAME = "ERROR";
-        String source = null;
         switch(step){
             case 1: STEPNAME = "Stir the cauldron";
-               source = "xy_instruction";
                 break;
             case 2: STEPNAME = "Paint the rainbow";
-                source = "xz_instruction";
                 break;
             case 3: STEPNAME = "Ninja chop";
-                source = "yz_instruction";
                 break;
             default:
                 break;
@@ -235,11 +228,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         else if (step == NUM_STEPS){
             sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
         }
-        ivInstruction.setImageResource(getResources().getIdentifier(source,"drawable",getPackageName()));
-        frameAnimation = (AnimationDrawable)ivInstruction.getDrawable();
-        frameAnimation.setCallback(ivInstruction);
-        frameAnimation.setVisible(true, true);
-        frameAnimation.start();
+        String source = "drawable/instruction" + step;
+        ivInstruction.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(source, null, getPackageName())));
     }
 
     /* settings/option menu commands */
