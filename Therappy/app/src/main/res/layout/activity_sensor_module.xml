@@ -38,7 +38,6 @@
         android:adjustViewBounds="true"
         android:paddingTop="60dp"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
+        android:layout_centerHorizontal="true"        />
 
 </RelativeLayout>
