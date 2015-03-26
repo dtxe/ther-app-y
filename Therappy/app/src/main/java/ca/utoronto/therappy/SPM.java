@@ -173,7 +173,6 @@ public class SPM extends ActionBarActivity{
         }
 
         protected void onCancelled(){
-
         }
     }
 

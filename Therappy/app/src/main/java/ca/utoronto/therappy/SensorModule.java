@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public class SensorModule extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, MessageApi.MessageListener{
 
@@ -194,12 +195,23 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             Log.i(TAG, "Data is: " + time + "," + type + "," + x + "," + y + "," + z);
 
             if (started) {      // save data only if the recording has started
+                switch(type){
+                    case 'a':
+                        break;
+                    case 'r':
+                        break;
+                    case 'g':
+                        break;
+                    default:
+                        break;
+                }
+                /*
                 try {
                     writer.write(time + "," + type + "," + x + "," + y + "," + z);
                     writer.newLine();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
         }
     }
