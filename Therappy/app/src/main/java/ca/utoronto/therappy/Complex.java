@@ -28,6 +28,11 @@ public class Complex {
     public Complex times(Complex z){
         return new Complex(this.re * z.re - this.im * z.im, this.re * z.im + this.im * z.re);
     }
+
+    public Complex times(double a){
+        return new Complex(this.re * a, this.im * a);
+    }
+
     public Complex conjugate(){
         return new Complex(this.re, -this.im);
     }
