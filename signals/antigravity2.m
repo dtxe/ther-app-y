@@ -51,18 +51,18 @@ accl_t(temp_idx) = [];
 accl_data(temp_idx, :) = [];
 
 % gyroscope data
-gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
-gyro_len = sum(gyro_idx);
-gyro_data = data.data(gyro_idx,:);
-gyro_t = str2double(data.textdata(gyro_idx,1));
-gyro_t = gyro_t - gyro_t(1);
-
-[gyro_t, temp_idx] = sort(gyro_t);
-gyro_data = gyro_data(temp_idx, :);
-
-temp_idx = find(diff(gyro_t) <= 0)+1;
-gyro_t(temp_idx) = [];
-gyro_data(temp_idx, :) = [];
+% gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
+% gyro_len = sum(gyro_idx);
+% gyro_data = data.data(gyro_idx,:);
+% gyro_t = str2double(data.textdata(gyro_idx,1));
+% gyro_t = gyro_t - gyro_t(1);
+% 
+% [gyro_t, temp_idx] = sort(gyro_t);
+% gyro_data = gyro_data(temp_idx, :);
+% 
+% temp_idx = find(diff(gyro_t) <= 0)+1;
+% gyro_t(temp_idx) = [];
+% gyro_data(temp_idx, :) = [];
 
 % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
 % Flip X direction
@@ -80,7 +80,8 @@ avg_diff = mean(diff(accl_t));
 avg_diff = round(avg_diff)/4;
 
 % get ending time of accl and gyro recordings, whichever ends first
-ending_time = min([accl_t(end), gyro_t(end)]);
+% ending_time = min([accl_t(end), gyro_t(end)]);
+ending_time = accl_t(end);
 
 % form time vector
 data_re_t = (0:avg_diff:ending_time)';
@@ -96,7 +97,7 @@ accl_re_data = interp1(accl_t, accl_data, data_re_t);
 
 %%%% GYROSCOPE
 % create new time vector & interpolate
-gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
+% gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
 
 
 % Plot resampled things
@@ -134,10 +135,10 @@ fq_gain(data_re_len:-1:ceil(data_re_len/2)+1) = fq_gain(1:floor(data_re_len/2));
 
 % filter using fft/ifft
 accl_re_filtd = zeros(data_re_len, 3);
-gyro_re_filtd = zeros(data_re_len, 3);
+% gyro_re_filtd = zeros(data_re_len, 3);
 for kk = 1:3
     accl_re_filtd(:,kk) = real(ifft(fq_gain .* fft(accl_re_data(:,kk))));
-    gyro_re_filtd(:,kk) = real(ifft(fq_gain .* fft(gyro_re_data(:,kk))));
+%     gyro_re_filtd(:,kk) = real(ifft(fq_gain .* fft(gyro_re_data(:,kk))));
 end
 
 
@@ -192,42 +193,42 @@ for kk = 1:3
     end
 end
 
-%%%%% ROTATION CORRECTED
-% Keep track of rotation vector
-rot = zeros(data_re_len, 3);
-
-% initial rotation is zero
-rot(1,:) = gyro_re_filtd(1,:)*data_re_dt;
-
-for jj = 2:data_re_len
-    % need to rotate the axis back to extrinsic frame of reference first
-    intrinsic_d_rot = gyro_re_filtd(jj,:)*data_re_dt;
-    extrinsic_d_rot = rotatevec3d(intrinsic_d_rot, rot(jj-1, :));
-    
-    % integrate into current rotation
-    rot(jj,:) = rot(jj-1,:) + extrinsic_d_rot;
-end
-
-
-% Integrate with corrected direction
-vel_rt = zeros(data_re_len, 3);
-
-vel_rt(1,:) = accl_re_filtd(1,:)*data_re_dt;
-for jj = 2:data_re_len
-    accl_rtcor = accl_re_filtd(jj,:)*data_re_dt;
-    accl_rtcor = rotatevec3d(accl_rtcor, rot(jj,:));
-    
-    vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
-end
-
-pos_rt = zeros(data_re_len, 3);
-for kk = 1:3
-    pos_rt(1,kk) = vel_rt(1,kk)*data_re_dt;
-    
-    for jj = 2:data_re_len
-        pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*data_re_dt;
-    end
-end
+% %%%%% ROTATION CORRECTED
+% % Keep track of rotation vector
+% rot = zeros(data_re_len, 3);
+% 
+% % initial rotation is zero
+% rot(1,:) = gyro_re_filtd(1,:)*data_re_dt;
+% 
+% for jj = 2:data_re_len
+%     % need to rotate the axis back to extrinsic frame of reference first
+%     intrinsic_d_rot = gyro_re_filtd(jj,:)*data_re_dt;
+%     extrinsic_d_rot = rotatevec3d(intrinsic_d_rot, rot(jj-1, :));
+%     
+%     % integrate into current rotation
+%     rot(jj,:) = rot(jj-1,:) + extrinsic_d_rot;
+% end
+% 
+% 
+% % Integrate with corrected direction
+% vel_rt = zeros(data_re_len, 3);
+% 
+% vel_rt(1,:) = accl_re_filtd(1,:)*data_re_dt;
+% for jj = 2:data_re_len
+%     accl_rtcor = accl_re_filtd(jj,:)*data_re_dt;
+%     accl_rtcor = rotatevec3d(accl_rtcor, rot(jj,:));
+%     
+%     vel_rt(jj,:) = vel_rt(jj-1,:) + accl_rtcor;
+% end
+% 
+% pos_rt = zeros(data_re_len, 3);
+% for kk = 1:3
+%     pos_rt(1,kk) = vel_rt(1,kk)*data_re_dt;
+%     
+%     for jj = 2:data_re_len
+%         pos_rt(jj,kk) = pos_rt(jj-1,kk) + vel_rt(jj,kk)*data_re_dt;
+%     end
+% end
 
 if FLAG_LINEARCORRECT
     pos = pos - [linspace(pos(1,1), pos(end,1), data_re_len)', linspace(pos(1,2), pos(end,2), data_re_len)', linspace(pos(1,3), pos(end,3), data_re_len)'];
