@@ -4,7 +4,7 @@ package ca.utoronto.therappy;
  * Created by Cindy on 03-26-15.
  *
  * Based on: http://introcs.cs.princeton.edu/java/97data/FFT.java.html
- * - removed all the functions except ftt and ifft
+ * - removed all the functions except ftt and ifft (AKA: convolve, cconvolve, show)
  * - commented out a RuntimeException
  *
  *  Compilation:  javac FFT.java
@@ -18,7 +18,6 @@ package ca.utoronto.therappy;
  *  Limitations
  *  -----------
  *   -  assumes N is a power of 2
- *
  *   -  not the most memory efficient algorithm (because it uses
  *      an object type for representing complex numbers and because
  *      it re-allocates memory for the subarray, instead of doing
@@ -35,12 +34,12 @@ public class FFT {
 
         // base case
         if (N == 1) return new Complex[]{x[0]};
-
+/*
         // radix 2 Cooley-Tukey FFT
         if (N % 2 != 0) {
-//            throw new RuntimeException("N is not a power of 2");
+            throw new RuntimeException("N is not a power of 2");
         }
-
+*/
         // fft of even terms
         Complex[] even = new Complex[N / 2];
         for (int k = 0; k < N / 2; k++) {
