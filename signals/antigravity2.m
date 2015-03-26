@@ -124,7 +124,7 @@ end
 %% Filter
 
 % get frequency vector corresponding to FFT
-fq = linspace(0, data_re_srate/2, data_re_len);
+fq = linspace(0, data_re_srate, data_re_len);
 fq_gain = ones(data_re_len, 1);
 
 % frequency ranges to cut + invert for -ve freqs
