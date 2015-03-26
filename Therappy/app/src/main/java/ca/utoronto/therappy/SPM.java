@@ -55,7 +55,7 @@ public class SPM extends ActionBarActivity{
         private BufferedReader reader;
         private final int bufferSize = 2048;    // size of write buffer
 
-        private ArrayList<sensorPoint> ax, ay, az, rx, ry, rz;
+        private ArrayList<sensorPoint> ax, ay, az;
 
         protected void onPreExecute(){
             super.onPreExecute();
@@ -67,7 +67,6 @@ public class SPM extends ActionBarActivity{
             String nextLine;
             long time = 0;
             double t0 = 0;
-            char type = 'x';
             float x = 0, y = 0, z = 0;
             boolean open = false;
 
@@ -98,7 +97,6 @@ public class SPM extends ActionBarActivity{
                     String sensorData[] = nextLine.split(",");
                     try {
                         time = Long.parseLong(sensorData[0]);
-                        type = sensorData[1].charAt(0);
                         x = Float.parseFloat(sensorData[2]);
                         y = Float.parseFloat(sensorData[3]);
                         z = Float.parseFloat(sensorData[4]);
@@ -109,21 +107,10 @@ public class SPM extends ActionBarActivity{
                         t0 = (double)time;
                         open = true;
                     }
-                    switch(type){
-                        case 'a':
-                            ax.add(new sensorPoint(time-t0, x));
-                            ax.add(new sensorPoint(time-t0, y));
-                            ax.add(new sensorPoint(time-t0, z));
-                            break;
-                        case 'r':
-                            rx.add(new sensorPoint(time-t0, x));
-                            rx.add(new sensorPoint(time-t0, y));
-                            rx.add(new sensorPoint(time-t0, z));
-                            break;
-                        default: publishProgress("Issue parsing data");
-                            Log.i(TAG, "Error opening dataset: type not found");
-                            break;
-                    }
+                    ax.add(new sensorPoint(time-t0, x));
+                    ax.add(new sensorPoint(time-t0, y));
+                    ax.add(new sensorPoint(time-t0, z));
+                    break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -132,9 +119,6 @@ public class SPM extends ActionBarActivity{
             Collections.sort(ax);
             Collections.sort(ay);
             Collections.sort(az);
-            Collections.sort(rx);
-            Collections.sort(ry);
-            Collections.sort(rz);
 
             publishProgress("doing something");
             return null;

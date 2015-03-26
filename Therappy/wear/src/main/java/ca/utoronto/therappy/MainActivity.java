@@ -77,10 +77,14 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // start sensor manager and register sensors
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mRotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
+
+        for(int i = 0; i < 16; i++){
+            rotmatrix[i] = 0;
+        }
 
         // initiate communication
         initGoogleApiClient();
@@ -141,11 +145,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         data[2] = event.values[2];
         data[3] = 0;
         long time = event.timestamp;
-        char type = 'x';
 
         switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                type = 'a';
+            case Sensor.TYPE_LINEAR_ACCELERATION:
                 Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
@@ -155,9 +157,11 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
-        if(type == 'a' && started) {
-            MessageBuffer.putLong(time).putChar(type).putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            cycle++;
+        if(started) {
+            MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
+            MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
+            //cycle++;
+            cycle = cycle + 2;
             if(cycle == COUNT){
                 sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                 MessageBuffer.clear();
