@@ -13,6 +13,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     /* sensor variables */
     private SensorManager mSensorManager;                   // sensor manager
     private Sensor mAccelerometer, mRotation;              // accelerometer and rotation vector sensor variables
+    private float[] rotmatrix = new float[16];
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -133,24 +135,28 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Many sensors return 3 values, one for each axis.
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
+        float[] data = new float[4];
+        data[0] = event.values[0];
+        data[1] = event.values[1];
+        data[2] = event.values[2];
+        data[3] = 0;
         long time = event.timestamp;
         char type = 'x';
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 type = 'a';
+                Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
-                type = 'r';
+                SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
+                Matrix.invertM(rotmatrix, 0, rotmatrix, 0);
                 break;
             default:
                 break;
         }
-        if(type != 'x' && started) {
-            MessageBuffer.putLong(time).putChar(type).putFloat(x).putFloat(y).putFloat(z).array();
+        if(type == 'a' && started) {
+            MessageBuffer.putLong(time).putChar(type).putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
             cycle++;
             if(cycle == COUNT){
                 sendMessage(DATA_MESSAGE_PATH, MessageBuffer);

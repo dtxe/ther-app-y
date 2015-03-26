@@ -68,7 +68,7 @@ public class SPM extends ActionBarActivity{
             long time = 0;
             double t0 = 0;
             char type = 'x';
-            float x, y, z;
+            float x = 0, y = 0, z = 0;
             boolean open = false;
 
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
@@ -139,7 +139,7 @@ public class SPM extends ActionBarActivity{
             publishProgress("doing something");
             return null;
         }
-
+        /*
         protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
             // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
             // components above the specified hicutoff
@@ -194,7 +194,7 @@ public class SPM extends ActionBarActivity{
             // ***************
 
             return output;
-        }
+        }*/
 
         protected void onProgressUpdate(String progress) {
             status.setText(progress);
