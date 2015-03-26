@@ -144,11 +144,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         data[1] = event.values[1];
         data[2] = event.values[2];
         data[3] = 0;
+        char type = 'x';
         long time = event.timestamp;
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
+                type = 'a';
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
@@ -157,7 +159,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
-        if(started) {
+        if(started && type == 'a') {
             MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
             MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
             //cycle++;
