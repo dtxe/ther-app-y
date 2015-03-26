@@ -64,6 +64,8 @@ temp_idx = find(diff(rota_t) <= 0)+1;
 rota_t(temp_idx) = [];
 rota_data(temp_idx, :) = [];
 
+
+
 %% Axis correction
 % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
 % Flip X direction
@@ -75,6 +77,9 @@ rota_data(temp_idx, :) = [];
 % find average sampling period, divide by 5 (increase sample rate by 5x)
 avg_diff = mean(diff(accl_t));
 avg_diff = round(avg_diff)/5;
+
+% Guess the time division (either 10^3 or 10^9)
+TIME_DIV = 10.^(round((log10(avg_diff)-3)/6)*6 + 3);
 
 % get ending time of accl and gyro recordings, whichever ends first
 ending_time = min([accl_t(end), gyro_t(end), rota_t(end)]);
