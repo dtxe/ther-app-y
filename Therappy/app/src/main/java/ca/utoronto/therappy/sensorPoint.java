@@ -1,55 +1,33 @@
 package ca.utoronto.therappy;
 
 /**
- * Created by Andrew on 09/03/2015.
+ * Created by Andrew on 26/03/2015.
  */
-public class sensorPoint {
-    public Long time;
-    public char type;
-    public float x, y, z;
+public class sensorPoint implements Comparable<sensorPoint> {
+    private final double time;
+    private final double value;
 
-    public sensorPoint(String id){
-        String sensorData[] = id.split(",");
-        try {
-            this.time = Long.parseLong(sensorData[0]);
-            this.type = sensorData[1].charAt(0);
-            this.x = Float.parseFloat(sensorData[2]);
-            this.y = Float.parseFloat(sensorData[3]);
-            this.z = Float.parseFloat(sensorData[4]);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public sensorPoint(Long time, char type, float x, float y, float z){
+    public sensorPoint(double time, double val) {
         this.time = time;
-        this.type = type;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.value = val;
     }
 
-    public Long getTime(){
+    public double getTime() {
         return this.time;
     }
 
-    public char getType(){
-        return this.type;
+    public double getValue() {
+        return this.value;
     }
 
-    public float getX(){
-        return this.x;
+    @Override
+    public int compareTo(sensorPoint p) {
+        return (int) (this.time - p.time);
     }
 
-    public float getY(){
-        return this.y;
+    @Override
+    public String toString() {
+        return time + "," + value;
     }
 
-    public float getZ(){
-        return this.z;
-    }
-
-    public String toString(){
-        return time + "," + type + "," + x + "," + y + "," + z;
-    }
 }

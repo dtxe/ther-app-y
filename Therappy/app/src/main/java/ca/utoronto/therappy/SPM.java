@@ -15,6 +15,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.StringTokenizer;
 
 /**
@@ -53,7 +55,7 @@ public class SPM extends ActionBarActivity{
         private BufferedReader reader;
         private final int bufferSize = 2048;    // size of write buffer
 
-        private sensorPoint[] points;
+        private ArrayList<sensorPoint> ax, ay, az, rx, ry, rz;
 
         protected void onPreExecute(){
             super.onPreExecute();
@@ -61,11 +63,14 @@ public class SPM extends ActionBarActivity{
         }
 
         protected Void doInBackground(String... params){
-            /*
             String fileName = params[0];
             String nextLine;
-            int size = 0;
-            int temp;
+            long time = 0;
+            double t0 = 0;
+            char type = 'x';
+            float x, y, z;
+            boolean open = false;
+
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
             try {
                 sensorFiles = new File(fileName + ".txt");
@@ -90,21 +95,48 @@ public class SPM extends ActionBarActivity{
             publishProgress("Opening file");
             try{
                 while((nextLine = reader.readLine()) != null) {
-                    size++;
+                    String sensorData[] = nextLine.split(",");
+                    try {
+                        time = Long.parseLong(sensorData[0]);
+                        type = sensorData[1].charAt(0);
+                        x = Float.parseFloat(sensorData[2]);
+                        y = Float.parseFloat(sensorData[3]);
+                        z = Float.parseFloat(sensorData[4]);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(!open){
+                        t0 = (double)time;
+                        open = true;
+                    }
+                    switch(type){
+                        case 'a':
+                            ax.add(new sensorPoint(time-t0, x));
+                            ax.add(new sensorPoint(time-t0, y));
+                            ax.add(new sensorPoint(time-t0, z));
+                            break;
+                        case 'r':
+                            rx.add(new sensorPoint(time-t0, x));
+                            rx.add(new sensorPoint(time-t0, y));
+                            rx.add(new sensorPoint(time-t0, z));
+                            break;
+                        default: publishProgress("Issue parsing data");
+                            Log.i(TAG, "Error opening dataset: type not found");
+                            break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            points = new sensorPoint[size];
-            try{
-                temp = 0;
-                while((nextLine = reader.readLine()) != null) {
-                    points[temp] = new sensorPoint(nextLine);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-            publishProgress("going");
+            // ensure arrays are sorted properly
+            Collections.sort(ax);
+            Collections.sort(ay);
+            Collections.sort(az);
+            Collections.sort(rx);
+            Collections.sort(ry);
+            Collections.sort(rz);
+
+            publishProgress("doing something");
             return null;
         }
 

@@ -2,6 +2,7 @@ package ca.utoronto.therappy;
 
 /**
  * Created by Andrew on 26/03/2015.
+ * Object class for a complex number. Note object is immutable after creation
  */
 public class Complex {
 
