@@ -51,7 +51,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private String currInstruction;
 
     /* for recording */
-    private static final int COUNT = 32;                                                        // size of buffer (in number of samples)
+    private static final int COUNT = 64;                                                        // size of buffer (in number of samples)
     private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
     private static int cycle = 0;                                                               // current number of items in buffer
     private boolean started = false;

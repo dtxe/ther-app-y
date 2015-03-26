@@ -235,6 +235,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         else if (step == NUM_STEPS){
             sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
         }
+
+        // setup the animations
         ivInstruction.setImageResource(getResources().getIdentifier(source,"drawable",getPackageName()));
         frameAnimation = (AnimationDrawable)ivInstruction.getDrawable();
         frameAnimation.setCallback(ivInstruction);
