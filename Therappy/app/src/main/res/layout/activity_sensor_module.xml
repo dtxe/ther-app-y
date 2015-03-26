@@ -13,7 +13,7 @@
         android:id="@+id/tvStatusName"
         android:textSize="20sp"
         android:text="@string/status_title"
-        android:textColor="#280047"
+        android:textColor="@color/colorPrimaryDark"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 
@@ -23,26 +23,11 @@
         android:id="@+id/tvStatus"
         android:textSize="20sp"
         android:text="updating status..."
-        android:textColor="#280047"
+        android:textColor="@color/colorPrimaryDark"
         android:layout_alignParentTop="true"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
         android:layout_toEndOf="@+id/tvStatusName" />
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="200dp"
-        android:text="@string/connect"
-        android:id="@+id/wearButton"
-        android:layout_gravity="center_horizontal"
-        android:background="#280047"
-        android:textSize="60sp"
-        android:drawableTop="@drawable/ic_connect"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:layout_alignParentBottom="false"
-        android:layout_alignParentEnd="false"
-        android:layout_centerInParent="true" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -53,7 +38,6 @@
         android:adjustViewBounds="true"
         android:paddingTop="60dp"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
+        android:layout_centerHorizontal="true"        />
 
 </RelativeLayout>

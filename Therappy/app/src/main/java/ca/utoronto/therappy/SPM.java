@@ -34,10 +34,10 @@ public class SPM extends ActionBarActivity{
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.spm_layout);
+        setContentView(R.layout.loading_layout);
         intent = getIntent();
         spinner = (ProgressBar)findViewById(R.id.progressBar);
-        status = (TextView)findViewById(R.id.tvstatus);
+        status = (TextView)findViewById(R.id.load_status);
         fileName = intent.getStringExtra("fileName");
 
         new SPMCalculate().execute(fileName);
@@ -108,16 +108,71 @@ public class SPM extends ActionBarActivity{
             return null;
         }
 
+        protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
+            // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
+            // components above the specified hicutoff
+            //      hicutoff should be provided as normalized frequency
+            //
+            // Essentially, this function will:
+            //   - transform the signal into frequency space (using FFT)
+            //   - create a vector of multiplication ratios
+            //   - zero out the multiplication ratio vectors that we want to filter out
+            //   - element-wise multiply the ratio vector with the frequency space of signal
+            //   - do inverse FFT to recover filtered signal
+
+            int num_samples = datain.length;
+
+            // find corresponding index
+            int hicutoffidx = (int) Math.ceil(num_samples * hicutoff);
+
+            // FFT MAGICKS HAPPENS HERE
+            // ***************
+            Complex fftoutput = fft(datain);
+            // ***************
+
+            // create a vector of things to zero out, set everything to 1
+            double[] zeroidx = Array(num_samples);
+            for (int kk = 0; kk < num_samples; kk++) {
+                zeroidx[kk] = 1;
+            }
+
+            // zero out DC component
+            zeroidx[0] = 0;
+
+            // zero out high frequency components above the hicutoff
+            int vecmiddle = (int) Math.ceil(num_samples/2);
+            for(int kk = hicutoffidx; kk < vecmiddle; kk++) {
+                zeroidx[kk] = 0;
+            }
+
+            // mirror the zero-out vector (since FFT is mirrored)
+            for(int kk = 0; kk < vecmiddle; kk++) {
+                zeroidx[num_samples - kk - 1] = zeroidx[kk];
+            }
+
+            // actually zero out the components that need to be zeroed out
+            for(int kk = 0; kk < num_samples; kk++) {
+                fftoutput[kk] = fftoutput[kk] * zeroidx[kk];
+            }
+
+
+            // INVERSE FFT MAGICKS HAPPENS HERE
+            // ***************
+            double[] output  = real(ifft(fftoutput));
+            // ***************
+
+            return output;
+        }
+
         protected void onProgressUpdate(String progress) {
             status.setText(progress);
         }
 
-        protected void onPostExecute(Long result){
-
+        protected void onPostExecute(){
+            status.setText("Complete!");
         }
 
         protected void onCancelled(){
-
         }
     }
 

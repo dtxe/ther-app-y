@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -50,12 +51,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private String currInstruction;
 
     /* for recording */
-    private static final int COUNT = 32;                                                        // size of buffer (in number of samples)
+    private static final int COUNT = 64;                                                        // size of buffer (in number of samples)
     private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
     private static int cycle = 0;                                                               // current number of items in buffer
     private boolean started = false;
 
     private Button btnMain;
+    private ImageButton btnLoad;
 
     /*  onCreate
      *  Input:  Bundle savedInstanceState - previous saved state
@@ -84,7 +86,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         initGoogleApiClient();
 
         btnMain = (Button)findViewById(R.id.btnMain);
+        btnLoad = (ImageButton)findViewById(R.id.btnLoading);
         btnMain.setOnClickListener(this);
+        btnLoad.setOnClickListener(this);
+        btnLoad.setEnabled(true);
         btnMain.setEnabled(false);
         btnMain.setVisibility(View.GONE);
 
@@ -173,6 +178,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     else
                         sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
                 break;
+            case R.id.btnLoading:
+                sendMessage(WEAR_MESSAGE_PATH, "");
+                break;
             default:
                 break;
 
@@ -250,6 +258,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     if(msg.equalsIgnoreCase("READY")){
                         btnMain.setVisibility(View.VISIBLE);
                         btnMain.setEnabled(true);
+                        btnLoad.setEnabled(false);
+                        btnLoad.setVisibility(View.GONE);
                         btnMain.setText("START");
                         currInstruction = "START";
                         btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_start), null, null);
