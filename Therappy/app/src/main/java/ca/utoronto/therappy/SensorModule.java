@@ -192,8 +192,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             y = buffer.getFloat();
             z = buffer.getFloat();
 
-            Log.i(TAG, "Data is: " + time + "," + type + "," + x + "," + y + "," + z);
-
             if (started) {      // save data only if the recording has started
                 try {
                     writer.write(time + "," + type + "," + x + "," + y + "," + z);
