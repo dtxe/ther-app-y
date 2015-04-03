@@ -5,9 +5,9 @@ package ca.utoronto.therappy;
  */
 public class sensorPoint implements Comparable<sensorPoint> {
     private final double time;
-    private final double value;
+    private final double[] value;
 
-    public sensorPoint(double time, double val) {
+    public sensorPoint(double time, double[] val) {
         this.time = time;
         this.value = val;
     }
@@ -16,7 +16,7 @@ public class sensorPoint implements Comparable<sensorPoint> {
         return this.time;
     }
 
-    public double getValue() {
+    public double[] getValue() {
         return this.value;
     }
 
@@ -27,7 +27,7 @@ public class sensorPoint implements Comparable<sensorPoint> {
 
     @Override
     public String toString() {
-        return time + "," + value;
+        return time + "," + value.toString();
     }
 
 }
