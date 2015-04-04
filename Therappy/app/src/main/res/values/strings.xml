@@ -9,12 +9,14 @@
     <string name="title_activity_draw_graph">Progress Report</string>
     <string name="status_title">Status</string>
     <string name="connect">Connect</string>
-
-    <string-array name="choice_array">
-        <item>Volume Space</item>
-        <item>X-Y Space</item>
-        <item>X-Z Space</item>
-        <item>Y-Z Space</item>
-    </string-array>
+    <string name="first_date">Starting Date</string>
+    <string name="last_date">End Date</string>
+    <string name="general">General</string>
+    <string name="specific">Specific</string>
+    <color name="grey">#CCCCCC</color>
+    <color name="magenta">#FF00FF</color>
+    <color name="magentaTransparent">#3CFF00FF</color>
+    <color name="Transparent">#00FFFFFF</color>
+    <color name="darkPurple">#4A0D3B</color>
 
 </resources>
