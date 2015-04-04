@@ -55,7 +55,7 @@ public class SPM extends ActionBarActivity{
         private BufferedReader reader;
         private final int bufferSize = 2048;    // size of write buffer
 
-        private ArrayList<sensorPoint> ax, ay, az;
+        private ArrayList<sensorPoint> data_accl,data_rota;
 
         protected void onPreExecute(){
             super.onPreExecute();
@@ -92,7 +92,10 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
             publishProgress("Opening file");
+
+            
             try{
+                // read all lines in data file
                 while((nextLine = reader.readLine()) != null) {
                     String sensorData[] = nextLine.split(",");
                     try {
@@ -103,13 +106,20 @@ public class SPM extends ActionBarActivity{
                     } catch (Exception e){
                         e.printStackTrace();
                     }
+
+                    // if this is the first line read, set initial time
                     if(!open){
                         t0 = (double)time;
                         open = true;
                     }
-                    ax.add(new sensorPoint(time-t0, x));
-                    ax.add(new sensorPoint(time-t0, y));
-                    ax.add(new sensorPoint(time-t0, z));
+
+                    // parse sensor type then add to corresponding arrayList
+                    if(sensorData[1].compareTo("a") == 0) {
+                        data_accl.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
+                    } else if (sensorData[1].compareTo("r") == 0) {
+                        data_rota.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ROTATIONVEC));
+                    }
+
                     break;
                 }
             } catch (Exception e) {
