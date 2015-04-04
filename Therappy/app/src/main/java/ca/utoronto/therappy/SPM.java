@@ -93,7 +93,7 @@ public class SPM extends ActionBarActivity{
             }
             publishProgress("Opening file");
 
-            
+
             try{
                 // read all lines in data file
                 while((nextLine = reader.readLine()) != null) {
@@ -126,11 +126,18 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
             // ensure arrays are sorted properly
-            Collections.sort(ax);
-            Collections.sort(ay);
-            Collections.sort(az);
+            Collections.sort(data_accl);
+            Collections.sort(data_rota);
 
             publishProgress("doing something");
+
+            // CALL SENSOR MODULE HERE
+            SignalsMagic sigProcInstance = new SignalsMagic(data_accl, data_rota);
+            sigProcInstance.doChurnData();
+
+            // retrieve results
+
+
             return null;
         }
 

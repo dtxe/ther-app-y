@@ -1,14 +1,39 @@
 package ca.utoronto.therappy;
 
+import java.util.ArrayList;
+
 /**
  * Created by simeon on 2015-03-14.
  */
 
 public class SignalsMagic {
 
-    public SignalsMagic () {
-        // pass the loaded acceleration and rotation data here
+    private ArrayList<sensorPoint> data_accl, data_rota;
 
+    public SignalsMagic (ArrayList<sensorPoint> data_accl, ArrayList<sensorPoint> data_rota) {
+        // pass the loaded acceleration and rotation data here
+        this.data_accl = data_accl;
+        this.data_rota = data_rota;
+    }
+
+    public void doChurnData () {
+        // do the whole signals processing thing here.
+
+    }
+
+    public double getWorkspaceVolume () {
+
+        return 0;
+    }
+
+    public double getXYplane() {
+
+        return 0;
+    }
+
+    public double getYZplane() {
+
+        return 0;
     }
 
     protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
