@@ -53,7 +53,7 @@ public class SPM extends ActionBarActivity{
         private BufferedReader reader;
         private final int bufferSize = 2048;    // size of write buffer
 
-        private ArrayList<sensorPoint> data_accl,data_rota;
+        private ArrayList<sensorPoint> data_accl, data_rota;
 
         protected void onPreExecute(){
             super.onPreExecute();
@@ -72,7 +72,7 @@ public class SPM extends ActionBarActivity{
             try {
                 sensorFiles = new File(fileName + ".txt");
                 if (!sensorFiles.exists()) {
-                    Log.i(TAG, "Problem opening file...exiting");        // if we can't create the folder, exit
+                    Log.i(TAG, "Problem opening file...exiting");
                     publishProgress("File not found");
                     cancel(true);
                 }
@@ -134,7 +134,12 @@ public class SPM extends ActionBarActivity{
             sigProcInstance.doChurnData();
 
             // retrieve results
+            double xyarea = sigProcInstance.getXYplane();
+            double xzarea = sigProcInstance.getXZplane();
+            double yzarea = sigProcInstance.getYZplane();
+            double fwvol = sigProcInstance.getWorkspaceVolume();
 
+            // now onto Joel's stuff!
 
             return null;
         }

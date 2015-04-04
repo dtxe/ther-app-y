@@ -36,6 +36,15 @@ public class SPM_FunctionalWorkspace {
         return 0;
     }
 
+    public double getXZplane() {
+
+        return 0;
+    }
+
+    protected double[] doInterpl(double [] newTime, double[] oldTime, double[] oldX) {
+
+    }
+
     protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
         // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
         // components above the specified hicutoff
