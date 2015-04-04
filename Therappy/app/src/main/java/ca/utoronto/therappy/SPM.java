@@ -14,10 +14,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.StringTokenizer;
 
 /**
  * Created by Andrew on 09/03/2015.
@@ -132,7 +130,7 @@ public class SPM extends ActionBarActivity{
             publishProgress("doing something");
 
             // CALL SENSOR MODULE HERE
-            SignalsMagic sigProcInstance = new SignalsMagic(data_accl, data_rota);
+            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl, data_rota);
             sigProcInstance.doChurnData();
 
             // retrieve results
