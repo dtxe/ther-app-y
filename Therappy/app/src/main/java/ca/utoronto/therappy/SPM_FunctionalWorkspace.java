@@ -1,6 +1,8 @@
 package ca.utoronto.therappy;
 
 import java.util.ArrayList;
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
 /**
  * Created by simeon on 2015-03-14.
@@ -14,11 +16,6 @@ public class SPM_FunctionalWorkspace {
         // pass the loaded acceleration and rotation data here
         this.data_accl = data_accl;
         this.data_rota = data_rota;
-    }
-
-    public void doChurnData () {
-        // do the whole signals processing thing here.
-
     }
 
     public double getWorkspaceVolume () {
@@ -41,10 +38,31 @@ public class SPM_FunctionalWorkspace {
         return 0;
     }
 
-    protected double[] doInterpl(double [] newTime, double[] oldTime, double[] oldX) {
+    public void doChurnData () {
+        // do the whole signals processing thing here.
+
 
     }
 
+    // do 1D linear interpolation of data, similar to matlab interp1 command
+    protected double[] interp1(double [] newTime, double[] oldTime, double[] oldX) {
+        // fit linear interpolator model to provided data
+        PolynomialSplineFunction psfmodel = (new LinearInterpolator()).interpolate(oldTime, oldX);
+
+        // allocate new data vector of same length
+        int num_samples = newTime.length;
+        double[] newX = new double[num_samples];
+
+        // get new data values using model
+        for(int tt = 0; tt < num_samples; tt++) {
+            newX[tt] = psfmodel.value(newTime[tt]);
+        }
+
+        // return
+        return newX;
+    }
+
+    // low pass filter data using an FFT, and removing DC components
     protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
         // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
         // components above the specified hicutoff
