@@ -14,10 +14,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.StringTokenizer;
 
 /**
  * Created by Andrew on 09/03/2015.
@@ -55,7 +53,7 @@ public class SPM extends ActionBarActivity{
         private BufferedReader reader;
         private final int bufferSize = 2048;    // size of write buffer
 
-        private ArrayList<sensorPoint> ax, ay, az;
+        private ArrayList<sensorPoint> data_accl, data_rota;
 
         protected void onPreExecute(){
             super.onPreExecute();
@@ -74,7 +72,7 @@ public class SPM extends ActionBarActivity{
             try {
                 sensorFiles = new File(fileName + ".txt");
                 if (!sensorFiles.exists()) {
-                    Log.i(TAG, "Problem opening file...exiting");        // if we can't create the folder, exit
+                    Log.i(TAG, "Problem opening file...exiting");
                     publishProgress("File not found");
                     cancel(true);
                 }
@@ -92,7 +90,10 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
             publishProgress("Opening file");
+
+
             try{
+                // read all lines in data file
                 while((nextLine = reader.readLine()) != null) {
                     String sensorData[] = nextLine.split(",");
                     try {
@@ -103,82 +104,48 @@ public class SPM extends ActionBarActivity{
                     } catch (Exception e){
                         e.printStackTrace();
                     }
+
+                    // if this is the first line read, set initial time
                     if(!open){
                         t0 = (double)time;
                         open = true;
                     }
-                    ax.add(new sensorPoint(time-t0, x));
-                    ax.add(new sensorPoint(time-t0, y));
-                    ax.add(new sensorPoint(time-t0, z));
+
+                    // parse sensor type then add to corresponding arrayList
+                    if(sensorData[1].compareTo("a") == 0) {
+                        data_accl.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
+                    } else if (sensorData[1].compareTo("r") == 0) {
+                        data_rota.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ROTATIONVEC));
+                    }
+
                     break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             // ensure arrays are sorted properly
-            Collections.sort(ax);
-            Collections.sort(ay);
-            Collections.sort(az);
+            Collections.sort(data_accl);
+            Collections.sort(data_rota);
 
             publishProgress("doing something");
+
+            // CALL SENSOR MODULE HERE
+            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl, data_rota);
+            sigProcInstance.doChurnData();
+
+            // retrieve results
+            double xyarea = sigProcInstance.getXYplane();
+            double xzarea = sigProcInstance.getXZplane();
+            double yzarea = sigProcInstance.getYZplane();
+            double fwvol = sigProcInstance.getWorkspaceVolume();
+
+            // now onto Joel's stuff!
+
             return null;
         }
-        /*
-        protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
-            // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
-            // components above the specified hicutoff
-            //      hicutoff should be provided as normalized frequency
-            //
-            // Essentially, this function will:
-            //   - transform the signal into frequency space (using FFT)
-            //   - create a vector of multiplication ratios
-            //   - zero out the multiplication ratio vectors that we want to filter out
-            //   - element-wise multiply the ratio vector with the frequency space of signal
-            //   - do inverse FFT to recover filtered signal
-
-            int num_samples = datain.length;
-
-            // find corresponding index
-            int hicutoffidx = (int) Math.ceil(num_samples * hicutoff);
-
-            // FFT MAGICKS HAPPENS HERE
-            // ***************
-            Complex fftoutput = fft(datain);
-            // ***************
-
-            // create a vector of things to zero out, set everything to 1
-            double[] zeroidx = Array(num_samples);
-            for (int kk = 0; kk < num_samples; kk++) {
-                zeroidx[kk] = 1;
-            }
-
-            // zero out DC component
-            zeroidx[0] = 0;
-
-            // zero out high frequency components above the hicutoff
-            int vecmiddle = (int) Math.ceil(num_samples/2);
-            for(int kk = hicutoffidx; kk < vecmiddle; kk++) {
-                zeroidx[kk] = 0;
-            }
-
-            // mirror the zero-out vector (since FFT is mirrored)
-            for(int kk = 0; kk < vecmiddle; kk++) {
-                zeroidx[num_samples - kk - 1] = zeroidx[kk];
-            }
-
-            // actually zero out the components that need to be zeroed out
-            for(int kk = 0; kk < num_samples; kk++) {
-                fftoutput[kk] = fftoutput[kk] * zeroidx[kk];
-            }
 
 
-            // INVERSE FFT MAGICKS HAPPENS HERE
-            // ***************
-            double[] output  = real(ifft(fftoutput));
-            // ***************
 
-            return output;
-        }*/
 
         protected void onProgressUpdate(String progress) {
             status.setText(progress);

@@ -6,14 +6,14 @@ package ca.utoronto.therappy;
  */
 public class Complex {
 
-    private final double re, im;
+    public final double re, im;
 
     public Complex(double re, double im){
         this.re = re;
         this.im = im;
     }
 
-    public Complex(int re){
+    public Complex(double re){
         this.re = re;
         this.im = 0;
     }
