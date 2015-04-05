@@ -65,10 +65,14 @@ public class SPM_FunctionalWorkspace {
         // STEP: do linear interpolation of the data
         //  - find sampling frequency
         double meandiff = StatUtils.mean(diff(thetime));
-        meandiff = meandiff / 5;                            // oversample by 5x
+        meandiff = meandiff / 5;                            // aim for oversample by 5x
+        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
+
+        //  - turn resampled_length into closest higher power of 2
+        resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
+        meandiff = thetime[thetime.length-1] / (resampled_length-1);
 
         //  - generate new time vector
-        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
         double[] resampled_time = new double[resampled_length];
 
         for(int kk = 0; kk < resampled_length; kk++) {
