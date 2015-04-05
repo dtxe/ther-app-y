@@ -59,7 +59,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private static int cycle;                                                               // current number of items in buffer
     private boolean started;
 
-    private Button btnMain;
     private ImageButton btnLoad;
 
     /*  onCreate
@@ -95,13 +94,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         initGoogleApiClient();
 
         // set up UI elements
-        btnMain = (Button)findViewById(R.id.btnMain);
         btnLoad = (ImageButton)findViewById(R.id.btnLoading);
-        btnMain.setOnClickListener(this);
         btnLoad.setOnClickListener(this);
         btnLoad.setEnabled(true);
-        btnMain.setEnabled(false);
-        btnMain.setVisibility(View.GONE);
 
         sendMessage(WEAR_MESSAGE_PATH, "");
     }
@@ -189,9 +184,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.btnMain:
-                    // something...probably remove
-                break;
             case R.id.btnLoading:
                 sendMessage(WEAR_MESSAGE_PATH, "");
                 break;
@@ -200,7 +192,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         }
     }
-
 
     /* Communications Protocols */
 
@@ -270,29 +261,15 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)) {
                     // do something
                     if(msg.equalsIgnoreCase("READY")){
-                        btnMain.setVisibility(View.VISIBLE);
-                        btnMain.setEnabled(true);
                         btnLoad.setEnabled(false);
-                        btnLoad.setVisibility(View.GONE);
                         currInstruction = "START";
-                        /*btnMain.setText("START");
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_start), null, null);*/
-                    }
-                    else if (msg.equalsIgnoreCase("NEXT")){
-                        /*btnMain.setText("NEXT");
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_next), null, null);*/
-                        currInstruction = "NEXT";
-                    }
-                    else if(msg.equalsIgnoreCase("END")) {
-                        /*btnMain.setText("DONE");
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_stop), null, null);*/
-                        currInstruction = "END";
+                        Log.i(TAG, "Recording!");
                     }
                     else if(msg.equalsIgnoreCase("FLUSH")){
                         MessageBuffer.compact();
                         sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                         MessageBuffer.clear();
-                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                        sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
                         Log.i(TAG, "End of transmission");
                     }
                 }
