@@ -28,11 +28,11 @@ public class SPM_FunctionalWorkspace {
     }
 
     // do the whole signals processing thing here.
-    public void doChurnData () {
+    public double[][] doChurnData () {
         // do signals processing stuff
         double[][] position;
         position = doDeadReckoning();
-
+        return position;
         // fit areas to get metrics
 
     }

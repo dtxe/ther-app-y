@@ -65,9 +65,11 @@ public class SPM extends ActionBarActivity{
             String nextLine;
             long time = 0;
             double t0 = 0;
+            char type = 'x';
             float x = 0, y = 0, z = 0;
             boolean open = false;
             double[][] results;
+            data_accl = new ArrayList<>();
 
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
             try {
@@ -81,7 +83,7 @@ public class SPM extends ActionBarActivity{
                 if(!spmFile.exists()){
                     Log.i(TAG, "Problem creating output file...exiting");
                     publishProgress("Cannot create new file");
-                    cancel(true);
+                    //cancel(true);
                 }
                 fwriter = new FileWriter(spmFile, true);
                 writer = new BufferedWriter(fwriter, bufferSize);
@@ -91,7 +93,6 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
             publishProgress("Opening file");
-
 
             try{
                 // read all lines in data file
@@ -115,23 +116,21 @@ public class SPM extends ActionBarActivity{
                     // parse sensor type then add to corresponding arrayList
                     if(sensorData[1].compareTo("a") == 0) {
                         data_accl.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
-                    } else if (sensorData[1].compareTo("r") == 0) {
+                    } /*else if (sensorData[1].compareTo("r") == 0) {
                         data_rota.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ROTATIONVEC));
-                    }
-
-                    break;
+                    }*/
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             // ensure arrays are sorted properly
             Collections.sort(data_accl);
-            Collections.sort(data_rota);
+            //Collections.sort(data_rota);
 
             publishProgress("file read. processing signals.");
 
             // CALL SENSOR MODULE HERE
-            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl, data_rota);
+            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl);
             results = sigProcInstance.doChurnData();
             /*
             // retrieve results
@@ -164,9 +163,6 @@ public class SPM extends ActionBarActivity{
 
             return null;
         }
-
-
-
 
         protected void onProgressUpdate(String progress) {
             status.setText(progress);
