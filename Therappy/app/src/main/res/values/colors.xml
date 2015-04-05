@@ -22,6 +22,30 @@
     <item name="colorAccentPinkDark" type="color">#5D002C</item>
     <item name="white" type="color">#FFFFFF</item>
     <item name="black" type="color">#000000</item>
+    <item name="grey" type="color">#CCCCCC</item>
+
+    <item name="transparent" type="color">#00FFFFFF</item>
+    <item name="transpPrimaryWhite" type="color">#3CBE85EA</item>
+    <item name="transpPrimaryBright" type="color">#3C9C4FD8</item>
+    <item name="transpPrimaryLight" type="color">#3C8227C7</item>
+    <item name="transpPrimary" type="color">#3C500A86</item>
+    <item name="transpPrimaryDark" type="color">#3C2D054B</item>
+    <item name="transpAccentGreenWhite" type="color">#3CCCFA86</item>
+    <item name="transpAccentGreenBright" type="color">#3CB4F64F</item>
+    <item name="transpAccentGreenLight" type="color">#3CA0F222</item>
+    <item name="transpAccentGreen" type="color">#3C70B702</item>
+    <item name="transpAccentGreenDark" type="color">#3C3E6700</item>
+    <item name="transpAccentYellowWhite" type="color">#3CFFFB89</item>
+    <item name="transpAccentYellowBright" type="color">#3CFFFA52</item>
+    <item name="transpAccentYellowLight" type="color">#3CFFF824</item>
+    <item name="transpAccentYellow" type="color">#3CC7C102</item>
+    <item name="transpAccentYellowDark" type="color">#3C706C00</item>
+    <item name="transpAccentPinkWhite" type="color">#3CF483B9</item>
+    <item name="transpAccentPinkBright" type="color">#3CEB4C97</item>
+    <item name="transpAccentPinkLight" type="color">#3CE3207C</item>
+    <item name="transpAccentPink" type="color">#3CA6024F</item>
+    <item name="transpAccentPinkDark" type="color">#3C5D002C</item>
+
 
 
 </resources>

@@ -32,7 +32,15 @@ public class sensorPoint implements Comparable<sensorPoint> {
     // allows for sorting of sensorPoint data using native libraries.
     @Override
     public int compareTo(sensorPoint p) {
-        return (int) (this.time - p.time);
+        double ptime = p.time;
+        if(this.time < ptime){
+            return 1;
+        } else if (this.time == ptime){
+            return 0;
+        } else if(this.time < ptime){
+            return -1;
+        }
+        return 0;
     }
 
     @Override

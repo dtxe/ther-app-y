@@ -5,8 +5,6 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
-import android.media.Image;
-import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -21,7 +19,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -143,8 +140,10 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 Log.i(TAG, "calling wear manually");
                 break;
             case R.id.sm_button:
-                // next instruction?
-                if(step == NUM_STEPS){
+                if(step == 0){
+                    startRecording();
+                }
+                else if(step == NUM_STEPS){
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "flush");
                 }
                 else {
@@ -240,14 +239,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 break;
         }
         status.setText("Step " + step + "of" + NUM_STEPS + "\n" + STEPNAME);
-
-        if (step < NUM_STEPS){
-            sendMessage(INSTRUCTION_MESSAGE_PATH, "NEXT");
-        }
-        else if (step == NUM_STEPS){
-            sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
-        }
-
+        Log.i(TAG, "Next step!");
         // setup the animations
         ivInstruction.setImageResource(getResources().getIdentifier(source,"drawable",getPackageName()));
         frameAnimation = (AnimationDrawable)ivInstruction.getDrawable();
@@ -385,7 +377,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     lButton.setEnabled(false);
                     lButton.setVisibility(View.GONE);
                     vmain.setVisibility(View.VISIBLE);
-                    status.setText("connected to wear");
+                    status.setText("Ready!");
                     Log.i(TAG, "connected to wear");
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
                 }
@@ -393,17 +385,12 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     // do something
                     if(msg.equalsIgnoreCase("START")){
                         Log.i(TAG, "message for recording start");
-                        startRecording();
-                    }
-                    else if (msg.equalsIgnoreCase("NEXT")){
-                        Log.i(TAG, "message for next instruction");
-                        getNextInstruction();
+                        //startRecording();
                     }
                     else if(msg.equalsIgnoreCase("END")){
                         Log.i(TAG, "message for recording end");
                         stopRecording();
                     }
-
                 }
             }
         });
