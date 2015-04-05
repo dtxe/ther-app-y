@@ -39,8 +39,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     /* sensor variables */
     private SensorManager mSensorManager;                   // sensor manager
-    private Sensor mAccelerometer, mRotation;              // accelerometer and rotation vector sensor variables
-    private float[] rotmatrix = new float[16];
+    private Sensor mAccelerometer, mRotation;               // accelerometer and rotation vector sensor variables
+    private float[] rotmatrix = new float[16];              // rotation matrix
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -55,8 +55,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     /* for recording */
     private static final int COUNT = 64;                                                        // size of buffer (in number of samples)
     private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 2 + 4*3)*COUNT);         // message buffer
-    private static int cycle = 0;                                                               // current number of items in buffer
-    private boolean started = false;
+    //private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 4*3)*COUNT);         // message buffer
+    private static int cycle;                                                               // current number of items in buffer
+    private boolean started;
 
     private Button btnMain;
     private ImageButton btnLoad;
@@ -82,13 +83,18 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
 
+        // pre-clear variables
         for(int i = 0; i < 16; i++){
             rotmatrix[i] = 0;
         }
+        MessageBuffer.clear();
+        cycle = 0;
+        started = false;
 
         // initiate communication
         initGoogleApiClient();
 
+        // set up UI elements
         btnMain = (Button)findViewById(R.id.btnMain);
         btnLoad = (ImageButton)findViewById(R.id.btnLoading);
         btnMain.setOnClickListener(this);
@@ -97,7 +103,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         btnMain.setEnabled(false);
         btnMain.setVisibility(View.GONE);
 
-        MessageBuffer.clear();
         sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
@@ -144,13 +149,22 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         data[1] = event.values[1];
         data[2] = event.values[2];
         data[3] = 0;
-        char type = 'x';
+        //char type = 'x';
         long time = event.timestamp;
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
-                type = 'a';
+                //type = 'a';
+                if(started){
+                    MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
+                    cycle++;
+                    if(cycle == COUNT){
+                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+                        MessageBuffer.clear();
+                        cycle = 0;
+                    }
+                }
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
@@ -159,31 +173,24 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
-        if(started && type == 'a') {
-            MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
-            MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            //cycle++;
-            cycle = cycle + 2;
+        /*if(started && type == 'a') {
+            //MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
+            //MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
+            MessageBuffer.putLong(time).putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
+            cycle++;
+            //cycle = cycle + 2;
             if(cycle == COUNT){
                 sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                 MessageBuffer.clear();
                 cycle = 0;
             }
-        }
+        }*/
     }
 
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnMain:
-                    if(currInstruction.equalsIgnoreCase("END")){
-                        MessageBuffer.compact();
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
-                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
-                        Log.i(TAG, "End of transmission");
-                    }
-                    else
-                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                    // something...probably remove
                 break;
             case R.id.btnLoading:
                 sendMessage(WEAR_MESSAGE_PATH, "");
@@ -267,19 +274,26 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         btnMain.setEnabled(true);
                         btnLoad.setEnabled(false);
                         btnLoad.setVisibility(View.GONE);
-                        btnMain.setText("START");
                         currInstruction = "START";
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_start), null, null);
+                        /*btnMain.setText("START");
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_start), null, null);*/
                     }
                     else if (msg.equalsIgnoreCase("NEXT")){
-                        btnMain.setText("NEXT");
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_next), null, null);
+                        /*btnMain.setText("NEXT");
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_next), null, null);*/
                         currInstruction = "NEXT";
                     }
                     else if(msg.equalsIgnoreCase("END")) {
-                        btnMain.setText("DONE");
-                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_stop), null, null);
+                        /*btnMain.setText("DONE");
+                        btnMain.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.ic_stop), null, null);*/
                         currInstruction = "END";
+                    }
+                    else if(msg.equalsIgnoreCase("FLUSH")){
+                        MessageBuffer.compact();
+                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+                        MessageBuffer.clear();
+                        sendMessage(INSTRUCTION_MESSAGE_PATH, currInstruction);
+                        Log.i(TAG, "End of transmission");
                     }
                 }
             }

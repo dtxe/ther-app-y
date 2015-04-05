@@ -7,6 +7,7 @@
     android:id="@+id/sensorModuleLayout"
     android:orientation="vertical"
     tools:context="ca.utoronto.therappy.SensorModule">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,6 +39,13 @@
         android:adjustViewBounds="true"
         android:paddingTop="60dp"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"        />
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@android:color/transparent"
+        android:id="@+id/sm_button"
+        android:layout_below="@id/tvStatusName" />
 
 </RelativeLayout>

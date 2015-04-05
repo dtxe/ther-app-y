@@ -49,7 +49,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private final File root = android.os.Environment.getExternalStorageDirectory();     // location of external directory
 
     /* UI variables */
-    private Button lButton;            // UI buttons
+    private Button lButton, bNext;            // UI buttons
     private ImageView ivInstruction;
     private TextView status, lstatus, lhint;            // UI title
     private RelativeLayout layout;      // UI layout
@@ -100,6 +100,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         lButton = (Button)findViewById(R.id.load_button);
         ivInstruction = (ImageView) findViewById(R.id.instruction);
         lButton.setOnClickListener(this);
+        bNext = (Button)findViewById(R.id.sm_button);
+        bNext.setOnClickListener(this);
 
         // create file in folder called therappy. if folder doesn't exist, create it
         try {
@@ -139,6 +141,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             case R.id.load_button:
                 sendMessage(START_ACTIVITY, "");
                 Log.i(TAG, "calling wear manually");
+                break;
+            case R.id.sm_button:
+                // next instruction?
+                if(step == NUM_STEPS){
+                    sendMessage(INSTRUCTION_MESSAGE_PATH, "flush");
+                }
+                else {
+                    getNextInstruction();
+                }
                 break;
             default:
                 break;
@@ -194,6 +205,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
             if (started) {      // save data only if the recording has started
                 try {
+                    //writer.write(time + "," + x + "," + y + "," + z);
                     writer.write(time + "," + type + "," + x + "," + y + "," + z);
                     writer.newLine();
                 } catch (IOException e) {
@@ -228,6 +240,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 break;
         }
         status.setText("Step " + step + "of" + NUM_STEPS + "\n" + STEPNAME);
+
         if (step < NUM_STEPS){
             sendMessage(INSTRUCTION_MESSAGE_PATH, "NEXT");
         }
@@ -375,7 +388,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     vmain.setVisibility(View.VISIBLE);
                     status.setText("connected to wear");
                     Log.i(TAG, "connected to wear");
-                    //btnWear.setVisibility(View.GONE);
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
