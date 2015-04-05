@@ -67,6 +67,7 @@ public class SPM extends ActionBarActivity{
             double t0 = 0;
             float x = 0, y = 0, z = 0;
             boolean open = false;
+            double[][] results;
 
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
             try {
@@ -131,15 +132,35 @@ public class SPM extends ActionBarActivity{
 
             // CALL SENSOR MODULE HERE
             SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl, data_rota);
-            sigProcInstance.doChurnData();
-
+            results = sigProcInstance.doChurnData();
+            /*
             // retrieve results
             double xyarea = sigProcInstance.getXYplane();
             double xzarea = sigProcInstance.getXZplane();
             double yzarea = sigProcInstance.getYZplane();
             double fwvol = sigProcInstance.getWorkspaceVolume();
-
+            */
             // now onto Joel's stuff!
+            try {
+                int len = results.length;
+                for (int i = 0; i < len; i++) {
+                    writer.write(results[i][0] + "," + results[i][1] + "," + results[i][2]);
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+            // close writing and reading.
+            try {
+                writer.flush();
+                writer.close();
+                fwriter.flush();
+                writer.close();
+                reader.close();
+                freader.close();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
 
             return null;
         }
