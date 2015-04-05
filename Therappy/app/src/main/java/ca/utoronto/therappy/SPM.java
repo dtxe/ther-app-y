@@ -41,6 +41,7 @@ public class SPM extends ActionBarActivity{
         fileName = intent.getStringExtra("fileName");
 
         new SPMCalculate().execute(fileName);
+        finish();
     }
 
     private class SPMCalculate extends AsyncTask<String, String, Void> {
@@ -144,6 +145,7 @@ public class SPM extends ActionBarActivity{
                 int len = results[0].length;
                 for (int i = 0; i < len; i++) {
                     writer.write(results[0][i] + "," + results[1][i] + "," + results[2][i]);
+                    writer.newLine();
                 }
             }catch(Exception e){
                 e.printStackTrace();
@@ -174,12 +176,13 @@ public class SPM extends ActionBarActivity{
             return null;
         }
 
-        protected void onProgressUpdate(String progress) {
-            status.setText(progress);
+        protected void onProgressUpdate(String... progress) {
+            status.setText(progress[0]);
         }
 
         protected void onPostExecute(){
             status.setText("Complete!");
+            finish();
         }
 
         protected void onCancelled(){
