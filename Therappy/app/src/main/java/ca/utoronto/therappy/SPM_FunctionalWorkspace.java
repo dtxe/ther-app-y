@@ -60,14 +60,19 @@ public class SPM_FunctionalWorkspace {
         }
         this.data_accl.clear();
         this.data_accl = null;
+        // *****************************************
 
         // STEP: do linear interpolation of the data
         //  - find sampling frequency
         double meandiff = StatUtils.mean(diff(thetime));
-        meandiff = meandiff / 5;                            // oversample by 5x
+        meandiff = meandiff / 5;                            // aim for oversample by 5x
+        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
+
+        //  - turn resampled_length into closest higher power of 2
+        resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
+        meandiff = thetime[thetime.length-1] / (resampled_length-1);
 
         //  - generate new time vector
-        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
         double[] resampled_time = new double[resampled_length];
 
         for(int kk = 0; kk < resampled_length; kk++) {
@@ -83,6 +88,7 @@ public class SPM_FunctionalWorkspace {
         //  - free for garbage collect
         thedata = null;
         thetime = null;
+        // *****************************************
 
         // STEP: filter data
         for(int kk = 0; kk < 3; kk++) {
@@ -91,6 +97,7 @@ public class SPM_FunctionalWorkspace {
         }
 
         double meandiff_inseconds = meandiff / time_div;
+        // *****************************************
 
         // STEP: integrate acceleration twice to get position
         //  - integrate accl to get velocity
@@ -116,6 +123,7 @@ public class SPM_FunctionalWorkspace {
                 position[kk][tt] = position[kk][tt-1] + (meandiff_inseconds * velocity[kk][tt]);
             }
         }
+        // *****************************************
 
         return position;
     }
@@ -124,11 +132,11 @@ public class SPM_FunctionalWorkspace {
     // TODO: perhaps consider averaging.
     protected ArrayList<sensorPoint> removeDuplicates(ArrayList<sensorPoint> input) {
 
-        ArrayList<Integer> duplicatedTimes = new ArrayList<Integer>();
+        ArrayList<Integer> duplicatedTimes = new ArrayList<>();
 
         // loop through sensor points and mark duplicated time stamps for removal
         for(int kk = 1; kk < input.size(); kk++) {
-            if(input.get(kk).compareTo(input.get(kk-1)) == 0) {
+            if(input.get(kk).getTime() == input.get(kk-1).getTime()) {
                 // if the timestamps are equal, then mark it for dropping
                 duplicatedTimes.add(kk);
             }
