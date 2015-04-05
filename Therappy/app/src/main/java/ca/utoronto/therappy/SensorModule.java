@@ -350,7 +350,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
                             mGoogleApiClient, node.getId(), path, text.getBytes() ).await();
                 }
-
                 runOnUiThread( new Runnable() {
                     @Override
                     public void run() {
