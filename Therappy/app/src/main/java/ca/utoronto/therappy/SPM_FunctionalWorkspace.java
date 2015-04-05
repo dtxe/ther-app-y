@@ -59,7 +59,7 @@ public class SPM_FunctionalWorkspace {
             sensorPoint tempsp = this.data_accl.get(kk);
 
             // store the timestamp in a vector
-            thetime[kk] = tempsp.getTime();
+            thetime[kk] = tempsp.getTime() * time_div;      // convert to seconds
 
             // store the values in respective accl vector
             double[] tempdata = tempsp.getValue();
@@ -105,7 +105,6 @@ public class SPM_FunctionalWorkspace {
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
 
-        double meandiff_inseconds = meandiff * time_div;
         // *****************************************
 
         // STEP: integrate acceleration twice to get position
@@ -113,11 +112,11 @@ public class SPM_FunctionalWorkspace {
         double[][] velocity = new double[3][resampled_length];
         for(int kk = 0; kk < 3; kk++) {
             // initial velocity is zero + change in first time step
-            velocity[kk][0] = (meandiff_inseconds * resampled_data[kk][0]);
+            velocity[kk][0] = (meandiff * resampled_data[kk][0]);
 
             // loop through time steps and add changes
             for(int tt = 1; tt < resampled_length; tt++) {
-                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff_inseconds * resampled_data[kk][tt]);
+                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff * resampled_data[kk][tt]);
             }
         }
 
@@ -126,10 +125,10 @@ public class SPM_FunctionalWorkspace {
         for(int kk = 0; kk < 3; kk++) {
 
             // initial position is zero + change in first time step
-            position[kk][0] = (meandiff_inseconds * velocity[kk][0]);
+            position[kk][0] = (meandiff * velocity[kk][0]);
 
             for(int tt = 1; tt < resampled_length; tt++) {
-                position[kk][tt] = position[kk][tt-1] + (meandiff_inseconds * velocity[kk][tt]);
+                position[kk][tt] = position[kk][tt-1] + (meandiff * velocity[kk][tt]);
             }
         }
         // *****************************************
