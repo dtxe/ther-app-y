@@ -7,45 +7,100 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.stat.StatUtils;
 
 /**
  * Created by simeon on 2015-03-14.
  */
 
 public class SPM_FunctionalWorkspace {
+    private ArrayList<sensorPoint> data_accl;
+    double fwvol, xyarea, yzarea, xzarea;
 
-    private ArrayList<sensorPoint> data_accl, data_rota;
-
-    public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl, ArrayList<sensorPoint> data_rota) {
-        // pass the loaded acceleration and rotation data here
+    // when creating the signal processing module, must provide acceleration data
+    public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl) {
+        // pass the loaded acceleration data here
+        // the vector is prerotated
         this.data_accl = data_accl;
-        this.data_rota = data_rota;
     }
 
-    public double getWorkspaceVolume () {
-
-        return 0;
-    }
-
-    public double getXYplane() {
-
-        return 0;
-    }
-
-    public double getYZplane() {
-
-        return 0;
-    }
-
-    public double getXZplane() {
-
-        return 0;
-    }
-
+    // do the whole signals processing thing here.
     public void doChurnData () {
-        // do the whole signals processing thing here.
+        // STEP: remove duplicated acceleration values
+        this.data_accl = removeDuplicates(this.data_accl);
 
+        // take data out of arraylist/sensorpoint
+        double[][] thedata = new double[3][this.data_accl.size()];
+        double[] thetime = new double[this.data_accl.size()];
 
+        for(int kk = 0; kk < this.data_accl.size(); kk++) {
+            // retrieve sensorPoint from the ArrayList
+            sensorPoint tempsp = this.data_accl.get(kk);
+
+            // store the timestamp in a vector
+            thetime[kk] = tempsp.getTime();
+
+            // store the values in respective accl vector
+            double[] tempdata = tempsp.getValue();
+            thedata[0][kk] = tempdata[0];
+            thedata[1][kk] = tempdata[1];
+            thedata[2][kk] = tempdata[2];
+        }
+        this.data_accl.clear();
+        this.data_accl = null;
+
+        // STEP: do linear interpolation of the data
+        //  - find sampling frequency
+        double meandiff = StatUtils.mean(diff(thetime));
+        meandiff = meandiff / 5;                            // oversample by 5x
+
+        //  - generate new time vector
+        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
+        double[] resampled_time = new double[resampled_length];
+
+        for(int kk = 0; kk < resampled_length; kk++) {
+            resampled_time[kk] = meandiff * kk;
+        }
+
+        //  - resample each acceleration dimension
+        double[][] resampled_data = new double[3][];
+        for(int kk = 0; kk < 3; kk++) {
+            resampled_data[kk] = interp1(resampled_time, thetime, thedata[kk]);
+        }
+
+        //  - free for garbage collect
+        thedata = null;
+        thetime = null;
+
+        // STEP: filter data
+        for(int kk = 0; kk < 3; kk++) {
+            double normalized_hicutoff = 30 * meandiff / 2;
+            resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
+        }
+    }
+
+    // remove values with duplicated time stamps
+    // TODO: perhaps consider averaging.
+    protected ArrayList<sensorPoint> removeDuplicates(ArrayList<sensorPoint> input) {
+
+        ArrayList<Integer> duplicatedTimes = new ArrayList<Integer>();
+
+        // loop through sensor points and mark duplicated time stamps for removal
+        for(int kk = 1; kk < input.size(); kk++) {
+            if(input.get(kk).compareTo(input.get(kk-1)) == 0) {
+                // if the timestamps are equal, then mark it for dropping
+                duplicatedTimes.add(kk);
+            }
+        }
+
+        // remove all items marked for removal
+        // we can't remove while searching, because then the size of the arraylist would change, that that makes things complicated.
+        // - search backwards and delete, so that it doesn't upset the indexing
+        for(int kk = duplicatedTimes.size()-1; kk >= 0; kk--) {
+            input.remove((int) duplicatedTimes.get(kk));
+        }
+
+        return input;
     }
 
     // do 1D linear interpolation of data, similar to matlab interp1 command
@@ -127,5 +182,38 @@ public class SPM_FunctionalWorkspace {
         }
 
         return output;
+    }
+
+    // imitates MATLAB diff command. takes the difference between elements of a vector
+    protected double[] diff(double[] input) {
+        double[] output = new double[input.length - 1];
+
+        for(int kk = 0; kk < input.length - 1; kk++) {
+            output[kk] = input[kk+1] - input[kk];
+        }
+
+        return output;
+    }
+
+    // return the computed workspace volume
+    public double getWorkspaceVolume () {
+
+        return this.fwvol;
+    }
+
+    // return the computed XY plane area
+    public double getXYplane() {
+
+        return this.xyarea;
+    }
+
+    public double getYZplane() {
+
+        return this.yzarea;
+    }
+
+    public double getXZplane() {
+
+        return this.xzarea;
     }
 }
