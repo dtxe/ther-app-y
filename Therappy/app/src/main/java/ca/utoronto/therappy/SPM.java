@@ -149,6 +149,17 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
 
+            /*
+             * line 1: timestamp
+             * line 2: FW volume
+             * line 3: X-Y area
+             * line 4: X,Y coordinates for X-Y area
+             * line 5: X-Z area
+             * line 6: X,Y coordinates for X-Z area
+             * line 7: Y-Z area
+             * line 8: X,Y coordinates for Y-Z area
+             */
+
             // close writing and reading.
             try {
                 writer.flush();
