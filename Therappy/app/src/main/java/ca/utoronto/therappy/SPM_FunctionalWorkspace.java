@@ -15,7 +15,7 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class SPM_FunctionalWorkspace {
 
-    private final static double time_div = 10^-9;       // timestamp is in nanoseconds
+    private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     private ArrayList<sensorPoint> data_accl;
     double fwvol, xyarea, yzarea, xzarea;
@@ -105,8 +105,11 @@ public class SPM_FunctionalWorkspace {
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
 
+        return resampled_data;
+
         // *****************************************
 
+        /*
         // STEP: integrate acceleration twice to get position
         //  - integrate accl to get velocity
         double[][] velocity = new double[3][resampled_length];
@@ -133,7 +136,7 @@ public class SPM_FunctionalWorkspace {
         }
         // *****************************************
 
-        return position;
+        return position;*/
     }
 
     // remove values with duplicated time stamps
