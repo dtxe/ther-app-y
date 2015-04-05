@@ -130,7 +130,7 @@ public class SPM extends ActionBarActivity{
             publishProgress("file read. processing signals.");
 
             // CALL SENSOR MODULE HERE
-            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl, data_rota);
+            SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl);
             sigProcInstance.doChurnData();
 
             // retrieve results
