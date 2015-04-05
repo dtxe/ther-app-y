@@ -66,7 +66,6 @@ public class SPM extends ActionBarActivity{
             String nextLine;
             long time = 0;
             double t0 = 0;
-            char type = 'x';
             float x = 0, y = 0, z = 0;
             boolean open = false;
             double[][] results;
@@ -74,14 +73,17 @@ public class SPM extends ActionBarActivity{
 
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
             try {
+                // check if the raw data file exists...
                 sensorFiles = new File(fileName + ".txt");
                 if (!sensorFiles.exists()) {
                     Log.i(TAG, "Problem opening file...exiting");
                     publishProgress("File not found");
                     cancel(true);
                 }
+                // create the new output file
                 spmFile = new File(fileName + "-output.txt");
                 if(!spmFile.exists()){
+                    // for some reason, this is always called...
                     Log.i(TAG, "Problem creating output file...exiting");
                     publishProgress("Cannot create new file");
                     //cancel(true);
@@ -182,7 +184,6 @@ public class SPM extends ActionBarActivity{
 
         protected void onPostExecute(){
             status.setText("Complete!");
-            finish();
         }
 
         protected void onCancelled(){
