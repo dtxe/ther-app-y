@@ -47,5 +47,14 @@
         android:background="@color/transparent"
         android:id="@+id/sm_button"
         android:layout_below="@id/tvStatusName" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/nextText"
+        android:textSize="20sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>
