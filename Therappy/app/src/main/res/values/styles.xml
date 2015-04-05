@@ -5,6 +5,11 @@
         <!-- Customize your theme here. -->
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
+        <item name="android:spinnerDropDownItemStyle">@style/spinnerStyle</item>
+    </style>
+
+    <style name="spinnerStyle" parent="Widget.AppCompat.DropDownItem.Spinner">
+        <item name="android:textColor">@color/black</item>
     </style>
 
 </resources>
