@@ -1,17 +1,34 @@
 package ca.utoronto.therappy;
 
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by joel on 02-Mar-15.
  */
 public class DrawGraph extends Activity {
+    private Button button;
+    private Button button2;
+    private int buttonCount1 = 1;
     private DrawShapes mDrawingArea;
     private Spinner spinner;
-    private CustomOnItemSelectedListener listener;
+    private CustomOnItemSelectedListener listener1;
+    private CustomOnItemSelectedListener listener2;
+    private Spinner spinnerDate1;
+    private Spinner spinnerDate2;
+    // Have to read the actual dates that were tested from a string here.
+    private String dates[] = {"05/02/15","07/02/15", "08/02/15", "09/02/15", "10/02/15",
+            "11/02/15", "13/02/15", "14/02/15", "15/02/15", "16/02/15", "17/02/15", "19/02/15"};
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -19,31 +36,104 @@ public class DrawGraph extends Activity {
         setContentView(R.layout.graph_layout);
         mDrawingArea =
                 (DrawShapes)findViewById(R.id.sketchSpace);
+        addItemsOnSpinner();
+        addItemsOnSpinner2();
         addListenerOnSpinnerItemSelection();
-        listener.setView(mDrawingArea);
-    }
-    /** Handles events for the button. Redraws the ShapeView. */
-    public void redraw(View view) {
-        mDrawingArea.invalidate();
+        listener1.setView(mDrawingArea);
+        listener2.setView(mDrawingArea);
+
+        Drawable dr2 = getResources().getDrawable(R.drawable.button_pressed);
+        dr2.setColorFilter(Color.parseColor("#70CCCCCC"), PorterDuff.Mode.SRC_ATOP);
+        button2 = (Button) findViewById(R.id.left_button);
+        button2.setBackgroundResource(R.drawable.button_pressed);
+        button2.setBackgroundDrawable(dr2);
     }
 
-    /*    // add items into spinner dynamically
+    // add items into spinner dynamically
     public void addItemsOnSpinner() {
 
-        choice_spinner = (Spinner) findViewById(R.id.choice_spinner);
+        spinnerDate1 = (Spinner) findViewById(R.id.spinner_date1);
         List<String> list = new ArrayList<String>();
-        list.add("list 1");
-        list.add("list 2");
-        list.add("list 3");
+        for (int i=0; i<dates.length; i++) {
+            list.add(dates[i]);
+        }
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner2.setAdapter(dataAdapter);
-    }*/
+        spinnerDate1.setAdapter(dataAdapter);
+        // Sets the default value to 10 before the most recent measurement
+        if (dates.length >= 10) {
+            spinnerDate1.setSelection(dates.length - 10);
+        }
+        else {
+            spinnerDate1.setSelection(0);
+        }
+    }
+
+    // add items into spinner dynamically
+    public void addItemsOnSpinner2() {
+
+        spinnerDate2 = (Spinner) findViewById(R.id.spinner_date2);
+        List<String> list = new ArrayList<String>();
+        for (int i=0; i<dates.length; i++) {
+            list.add(dates[i]);
+        }
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDate2.setAdapter(dataAdapter);
+        // Sets the default value to the most recent measurement
+        spinnerDate2.setSelection(dates.length-1);
+    }
 
     public void addListenerOnSpinnerItemSelection() {
-        listener = new CustomOnItemSelectedListener();
-        spinner = (Spinner) findViewById(R.id.choice_spinner);
-        spinner.setOnItemSelectedListener(listener);
+        listener1 = new CustomOnItemSelectedListener();
+        listener2 = new CustomOnItemSelectedListener();
+        spinnerDate1.setOnItemSelectedListener(listener1);
+        spinnerDate2.setOnItemSelectedListener(listener2);
+    }
+
+    public void setGeneral(View view) {
+        mDrawingArea.setPage("General");
+        mDrawingArea.invalidate();
+
+        if(buttonCount1 == 0) {
+            // Need to set the left_button to the on state
+            Drawable dr = getResources().getDrawable(R.drawable.button_pressed);
+            dr.setColorFilter(Color.parseColor("#70CCCCCC"), PorterDuff.Mode.SRC_ATOP);
+            button = (Button) findViewById(view.getId());
+            button.setBackgroundResource(R.drawable.button_pressed);
+            button.setBackgroundDrawable(dr);
+
+            // Need to set the right_button to the off state as well
+            Drawable dr2 = getResources().getDrawable(R.drawable.button_pressed);
+            dr2.setColorFilter(Color.parseColor("#00CCCCCC"), PorterDuff.Mode.SRC_ATOP);
+            button2 = (Button) findViewById(R.id.right_button);
+            button2.setBackgroundResource(R.drawable.button_pressed);
+            button2.setBackgroundDrawable(dr2);
+            buttonCount1 = 1;
+        }
+    }
+
+    public void setSpecific(View view) {
+        mDrawingArea.setPage("Specific");
+        mDrawingArea.invalidate();
+
+        if(buttonCount1 == 1) {
+            // Need to set the right_button to the on state
+            Drawable dr = getResources().getDrawable(R.drawable.button_pressed);
+            dr.setColorFilter(Color.parseColor("#70CCCCCC"), PorterDuff.Mode.SRC_ATOP);
+            button = (Button) findViewById(view.getId());
+            button.setBackgroundResource(R.drawable.button_pressed);
+            button.setBackgroundDrawable(dr);
+
+            // Need to set the left_button to the off state as well
+            Drawable dr2 = getResources().getDrawable(R.drawable.button_pressed);
+            dr2.setColorFilter(Color.parseColor("#00CCCCCC"), PorterDuff.Mode.SRC_ATOP);
+            button2 = (Button) findViewById(R.id.left_button);
+            button2.setBackgroundResource(R.drawable.button_pressed);
+            button2.setBackgroundDrawable(dr2);
+            buttonCount1 = 0;
+        }
     }
 }
