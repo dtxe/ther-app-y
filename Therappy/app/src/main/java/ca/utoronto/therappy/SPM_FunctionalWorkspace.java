@@ -33,10 +33,19 @@ public class SPM_FunctionalWorkspace {
         double[][] position;
         position = doDeadReckoning();
         return position;
+
+
         // fit areas to get metrics
 
     }
 
+    protected double[] doFitTargets(double[][] position) {
+
+        return null;
+    }
+
+    // this is the bulk of the signals processing code. It removes duplicated time points,
+    // resamples the data, filters using FFT, then integrates acceleration to get position.
     protected double[][] doDeadReckoning() {
         // STEP: remove duplicated acceleration values
         this.data_accl = removeDuplicates(this.data_accl);
@@ -96,7 +105,7 @@ public class SPM_FunctionalWorkspace {
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
 
-        double meandiff_inseconds = meandiff / time_div;
+        double meandiff_inseconds = meandiff * time_div;
         // *****************************************
 
         // STEP: integrate acceleration twice to get position
