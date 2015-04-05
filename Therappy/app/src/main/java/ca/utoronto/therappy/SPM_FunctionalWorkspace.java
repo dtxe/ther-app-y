@@ -3,6 +3,10 @@ package ca.utoronto.therappy;
 import java.util.ArrayList;
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 
 /**
  * Created by simeon on 2015-03-14.
@@ -80,15 +84,10 @@ public class SPM_FunctionalWorkspace {
         // find corresponding index
         int hicutoffidx = (int) Math.ceil(num_samples * hicutoff);
 
-        // convert datain to complex format
-        Complex [] cpx_datain = new Complex[num_samples];
-        for(int kk = 0; kk < num_samples; kk++) {
-            cpx_datain[kk] = new Complex(datain[kk]);
-        }
-
         // FFT MAGICKS HAPPENS HERE
         // ***************
-        Complex [] fftoutput = FFT.fft(cpx_datain);
+        FastFourierTransformer fftengine = new FastFourierTransformer(DftNormalization.STANDARD);
+        Complex [] fftoutput = fftengine.transform(datain, TransformType.FORWARD);
         // ***************
 
         // create a vector of things to zero out, set everything to 1
@@ -113,18 +112,18 @@ public class SPM_FunctionalWorkspace {
 
         // actually zero out the components that need to be zeroed out
         for(int kk = 0; kk < num_samples; kk++) {
-            fftoutput[kk] = fftoutput[kk].times(zeroidx[kk]);
+            fftoutput[kk] = fftoutput[kk].multiply(zeroidx[kk]);
         }
 
         // INVERSE FFT MAGICKS HAPPENS HERE
         // ***************
-        Complex[] cpx_output = FFT.ifft(fftoutput);
+        Complex[] cpx_output = fftengine.transform(fftoutput, TransformType.INVERSE);
         // ***************
 
         // get real part of the FFT output.
         double[] output = new double[num_samples];
         for(int kk = 0; kk < num_samples; kk++) {
-            output[kk] = cpx_output[kk].re;
+            output[kk] = cpx_output[kk].getReal();
         }
 
         return output;
