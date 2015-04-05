@@ -14,6 +14,9 @@ import org.apache.commons.math3.stat.StatUtils;
  */
 
 public class SPM_FunctionalWorkspace {
+
+    private final static double time_div = 10^-9;       // timestamp is in nanoseconds
+
     private ArrayList<sensorPoint> data_accl;
     double fwvol, xyarea, yzarea, xzarea;
 
@@ -26,6 +29,10 @@ public class SPM_FunctionalWorkspace {
 
     // do the whole signals processing thing here.
     public void doChurnData () {
+
+    }
+
+    protected double[][] doDeadReckoning() {
         // STEP: remove duplicated acceleration values
         this.data_accl = removeDuplicates(this.data_accl);
 
@@ -77,6 +84,35 @@ public class SPM_FunctionalWorkspace {
             double normalized_hicutoff = 30 * meandiff / 2;
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
+
+        double meandiff_inseconds = meandiff / time_div;
+
+        // STEP: integrate acceleration twice to get position
+        //  - integrate accl to get velocity
+        double[][] velocity = new double[3][resampled_length];
+        for(int kk = 0; kk < 3; kk++) {
+            // initial velocity is zero + change in first time step
+            velocity[kk][0] = (meandiff_inseconds * resampled_data[kk][0]);
+
+            // loop through time steps and add changes
+            for(int tt = 1; tt < resampled_length; tt++) {
+                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff_inseconds * resampled_data[kk][tt]);
+            }
+        }
+
+        //  - integrate velocity to get position
+        double[][] position = new double[3][resampled_length];
+        for(int kk = 0; kk < 3; kk++) {
+
+            // initial position is zero + change in first time step
+            position[kk][0] = (meandiff_inseconds * velocity[kk][0]);
+
+            for(int tt = 1; tt < resampled_length; tt++) {
+                position[kk][tt] = position[kk][tt-1] + (meandiff_inseconds * velocity[kk][tt]);
+            }
+        }
+
+        return position;
     }
 
     // remove values with duplicated time stamps
