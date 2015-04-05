@@ -33,7 +33,7 @@ public class sensorPoint implements Comparable<sensorPoint> {
     @Override
     public int compareTo(sensorPoint p) {
         double ptime = p.time;
-        if(this.time < ptime){
+        if(this.time > ptime){
             return 1;
         } else if (this.time == ptime){
             return 0;

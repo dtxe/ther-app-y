@@ -141,13 +141,24 @@ public class SPM extends ActionBarActivity{
             */
             // now onto Joel's stuff!
             try {
-                int len = results.length;
+                int len = results[0].length;
                 for (int i = 0; i < len; i++) {
-                    writer.write(results[i][0] + "," + results[i][1] + "," + results[i][2]);
+                    writer.write(results[0][i] + "," + results[1][i] + "," + results[2][i]);
                 }
             }catch(Exception e){
                 e.printStackTrace();
             }
+
+            /*
+             * line 1: timestamp
+             * line 2: FW volume
+             * line 3: X-Y area
+             * line 4: X,Y coordinates for X-Y area
+             * line 5: X-Z area
+             * line 6: X,Y coordinates for X-Z area
+             * line 7: Y-Z area
+             * line 8: X,Y coordinates for Y-Z area
+             */
 
             // close writing and reading.
             try {
@@ -160,7 +171,6 @@ public class SPM extends ActionBarActivity{
             }catch(Exception e){
                 e.printStackTrace();
             }
-
             return null;
         }
 

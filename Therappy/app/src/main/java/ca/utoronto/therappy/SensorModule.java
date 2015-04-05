@@ -48,7 +48,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     /* UI variables */
     private Button lButton, bNext;            // UI buttons
     private ImageView ivInstruction;
-    private TextView status, lstatus, lhint;            // UI title
+    private TextView status, lstatus, lhint, tapNext;            // UI title
     private RelativeLayout layout;      // UI layout
     private Intent intent;
     private View vloading, vmain;
@@ -91,14 +91,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         intent = getIntent();
 
         // set up UI elements
-        lstatus = (TextView) findViewById(R.id.load_status);
-        loader = (ProgressBar) findViewById(R.id.progressBar);
+        lstatus = (TextView)findViewById(R.id.load_status);
+        loader = (ProgressBar)findViewById(R.id.progressBar);
         lhint = (TextView)findViewById(R.id.tvHint);
         lButton = (Button)findViewById(R.id.load_button);
-        ivInstruction = (ImageView) findViewById(R.id.instruction);
+        ivInstruction = (ImageView)findViewById(R.id.instruction);
         lButton.setOnClickListener(this);
         bNext = (Button)findViewById(R.id.sm_button);
         bNext.setOnClickListener(this);
+        tapNext = (TextView)findViewById(R.id.nextText);
 
         // create file in folder called therappy. if folder doesn't exist, create it
         try {
@@ -239,6 +240,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 break;
         }
         status.setText("Step " + step + "of" + NUM_STEPS + "\n" + STEPNAME);
+        tapNext.setText("Tap screen to continue...");
         Log.i(TAG, "Next step!");
         // setup the animations
         ivInstruction.setImageResource(getResources().getIdentifier(source,"drawable",getPackageName()));
@@ -380,6 +382,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     status.setText("Ready!");
                     Log.i(TAG, "connected to wear");
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
+                    tapNext.setText("Tap to start");
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
                     // do something
