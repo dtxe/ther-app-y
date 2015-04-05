@@ -69,8 +69,8 @@ rota_data(temp_idx, :) = [];
 %% Axis correction
 % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
 % Flip X direction
-% accl_data(:,1) = -1*accl_data(:,1);
-% gyro_data(:,1) = -1*gyro_data(:,1);
+accl_data(:,1) = -1*accl_data(:,1);
+gyro_data(:,1) = -1*gyro_data(:,1);
 
 % Need to resample, since std-dev is +/- 20% of mean time difference
 
@@ -178,6 +178,7 @@ out.rota_t = rota_t;
 out.rota_data = rota_data;
 out.rota_re_data = rota_re_data;
 
+out.data_re_t = data_re_t;
 out.data_re_srate = data_re_srate;
 out.data_re_dt = data_re_dt;
 

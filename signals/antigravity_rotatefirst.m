@@ -23,7 +23,7 @@ FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linea
 FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1426383802327';
+FILENAME = 'therappy1427388439057';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 

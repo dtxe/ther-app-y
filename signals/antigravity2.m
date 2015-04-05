@@ -7,10 +7,8 @@ close all
 clear
 
 % Parameters
-% TIME_DIV = 1000 * 1000 * 1000;      % ns
-TIME_DIV = 1000;                % ms
 
-FLAG_ANIMATE        = false;
+FLAG_ANIMATE        = true;
 FLAG_ANIMATE360     = false;
 FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
@@ -20,7 +18,7 @@ FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linea
 FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1426375203951';
+FILENAME = 'therappy1427411340412';
 data = importdata(['./assets/' FILENAME '.txt']);
 
 
@@ -51,18 +49,18 @@ accl_t(temp_idx) = [];
 accl_data(temp_idx, :) = [];
 
 % gyroscope data
-% gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'g'), data.textdata(:,2));
-% gyro_len = sum(gyro_idx);
-% gyro_data = data.data(gyro_idx,:);
-% gyro_t = str2double(data.textdata(gyro_idx,1));
-% gyro_t = gyro_t - gyro_t(1);
-% 
-% [gyro_t, temp_idx] = sort(gyro_t);
-% gyro_data = gyro_data(temp_idx, :);
-% 
-% temp_idx = find(diff(gyro_t) <= 0)+1;
-% gyro_t(temp_idx) = [];
-% gyro_data(temp_idx, :) = [];
+gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'b'), data.textdata(:,2));
+gyro_len = sum(gyro_idx);
+gyro_data = data.data(gyro_idx,:);
+gyro_t = str2double(data.textdata(gyro_idx,1));
+gyro_t = gyro_t - gyro_t(1);
+
+[gyro_t, temp_idx] = sort(gyro_t);
+gyro_data = gyro_data(temp_idx, :);
+
+temp_idx = find(diff(gyro_t) <= 0)+1;
+gyro_t(temp_idx) = [];
+gyro_data(temp_idx, :) = [];
 
 % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
 % Flip X direction
@@ -79,6 +77,9 @@ accl_data(temp_idx, :) = [];
 avg_diff = mean(diff(accl_t));
 avg_diff = round(avg_diff)/4;
 
+% Guess the time division (either 10^3 or 10^9)
+time_div = 10.^(round((log10(avg_diff)-3)/6)*6 + 3);
+
 % get ending time of accl and gyro recordings, whichever ends first
 % ending_time = min([accl_t(end), gyro_t(end)]);
 ending_time = accl_t(end);
@@ -86,8 +87,8 @@ ending_time = accl_t(end);
 % form time vector
 data_re_t = (0:avg_diff:ending_time)';
 
-data_re_srate = TIME_DIV/avg_diff;
-data_re_dt = avg_diff/TIME_DIV;
+data_re_srate = time_div/avg_diff;
+data_re_dt = avg_diff/time_div;
 data_re_len = length(data_re_t);
 
 
@@ -97,7 +98,7 @@ accl_re_data = interp1(accl_t, accl_data, data_re_t);
 
 %%%% GYROSCOPE
 % create new time vector & interpolate
-% gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
+gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
 
 
 % Plot resampled things
@@ -129,8 +130,8 @@ fq = linspace(0, data_re_srate, data_re_len);
 fq_gain = ones(data_re_len, 1);
 
 % frequency ranges to cut + invert for -ve freqs
-fq_gain((fq < 0.02)) = 0;
-fq_gain((fq > 30)) = 0;
+fq_gain(1) = 0;     % kill DC
+fq_gain((fq > 100)) = 0;
 fq_gain(data_re_len:-1:ceil(data_re_len/2)+1) = fq_gain(1:floor(data_re_len/2));
 
 % filter using fft/ifft
@@ -258,14 +259,14 @@ if FLAG_PLOTTRACE
     zlabel('Z distance (m)');
     
 
-    subplot(1, 2, 2);
-    
-    plot3(pos_rt(:,1), pos_rt(:,2), pos_rt(:,3));
-    daspect([1 1 1]);
-    title('Rotation-corrected integrated trace');
-    xlabel('X distance (m)');
-    ylabel('Y distance (m)');
-    zlabel('Z distance (m)');
+%     subplot(1, 2, 2);
+%     
+%     plot3(pos_rt(:,1), pos_rt(:,2), pos_rt(:,3));
+%     daspect([1 1 1]);
+%     title('Rotation-corrected integrated trace');
+%     xlabel('X distance (m)');
+%     ylabel('Y distance (m)');
+%     zlabel('Z distance (m)');
 end
 
 
@@ -276,7 +277,7 @@ toc(t_begin);
 %% Animate
 
 if FLAG_ANIMATE
-    vidwriter = VideoWriter(['outout\' FILENAME '-trace.avi']);
+    vidwriter = VideoWriter(['output\' FILENAME '-trace.avi']);
     open(vidwriter);
     f = figure(50);
     for tt = 1:20:length(pos)
@@ -296,7 +297,7 @@ end
 
 % rotate the 3D trace around to help visualize
 if FLAG_ANIMATE360
-    vidwriter = VideoWriter(['outout\' FILENAME '-rotatetrace.avi']);
+    vidwriter = VideoWriter(['output\' FILENAME '-rotatetrace.avi']);
     vidwriter.FrameRate = 10;
     open(vidwriter);
     
