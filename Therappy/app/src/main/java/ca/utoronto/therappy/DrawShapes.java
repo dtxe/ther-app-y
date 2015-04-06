@@ -6,8 +6,17 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by joel on 02-Mar-15.
@@ -16,6 +25,14 @@ public class DrawShapes extends View {
 
     // yCoor gives the magnitude of the volume space, will need to normalize it later
     // Most of this data will be read from a file instead.
+    List<Float> xYRangeSpaceList = new ArrayList<Float>();
+    List<Float> xZRangeSpaceList = new ArrayList<Float>();
+    List<Float> yZRangeSpaceList = new ArrayList<Float>();
+    List<Float> volumeSpaceList = new ArrayList<Float>();
+    List<Float> xYDetailedSpaceList = new ArrayList<Float>();
+    List<Float> xZDetailedSpaceList = new ArrayList<Float>();
+    List<Float> yZDetailedSpaceList = new ArrayList<Float>();
+    List<String> dateString = new ArrayList<String>();
     private float[] yCoordinates = {300, 350, 500, 600, 620, 640, 600, 700, 720, 750, 740, 755};
     //x and y store the actual coordinates
     private float[] xActualCoor = new float[12];
@@ -30,13 +47,18 @@ public class DrawShapes extends View {
             6.66f, 7.21f, 7.87f, 8.88f, 9.34f, 9.7f, 9.21f, 9.11f, 8.43f, 8.10f, 7.52f, 6.45f, 5.83f, 5.12f, 4.23f, 3.67f,
             3.01f, 2.33f, 1.87f, 1.23f, 0.56f, 0f};
     // To potentially store dates that they performed the task
-    private String[] dates = {"05/02/15","07/02/15", "08/02/15", "09/02/15", "10/02/15",
-            "11/02/15", "13/02/15", "14/02/15", "15/02/15", "16/02/15", "17/02/15", "19/02/15"};
+    private String[] dates = {"Feb 05, 2015","Feb 07, 2015", "Feb 08, 2015", "Feb 09, 2015", "Feb 10, 2015",
+            "Feb 11, 2015", "Feb 13, 2015", "Feb 14, 2015", "Feb 15, 2015", "Feb 16, 2015", "Feb 17, 2015", "Feb 19, 2015"};
+    private final File root = android.os.Environment.getExternalStorageDirectory();
     // Storing the variables that tells what dates to show
     private String firstDate = "";
     private String lastDate = "";
     private int firstPosition = -1;
     private int lastPosition = -1;
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private FileReader freader;
+    private File sensorFiles;
+    private BufferedReader reader;
 
     // Stores the value of the current graph that is being shown
     private int graphCounter = 0;
@@ -60,47 +82,49 @@ public class DrawShapes extends View {
         super.onDraw(canvas);
         canvas.drawColor(Color.WHITE);
 
+        readFile("values0001");
+
         if (currentPage.equals("General")) {
             if (graphCounter == 0) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yCoordinates, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(volumeSpaceList, firstPosition, lastPosition));
                 drawGraphText(canvas, " Volume Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 1) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xYRangeSpace, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xYRangeSpaceList, firstPosition, lastPosition));
                 drawGraphText(canvas, "     X-Y Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 2) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xZRangeSpace, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xZRangeSpaceList, firstPosition, lastPosition));
                 drawGraphText(canvas, "     X-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 3) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yZRangeSpace, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yZRangeSpaceList, firstPosition, lastPosition));
                 drawGraphText(canvas, "     Y-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             }
         }
         else {
             if (graphCounter == 0) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yCoordinates, firstPosition, lastPosition));
-                drawGraphText(canvas, " Volume Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
+                drawSpecificVolume(canvas, viewWidth, viewHeight);
+                drawGraphText(canvas, "Summary Page", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 1) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY);
+                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "X-Range(cm)", "Y-Range(cm)");
                 drawGraphText(canvas, "     X-Y Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 2) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY);
+                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "X-Range(cm)", "Z-Range(cm)");
                 drawGraphText(canvas, "     X-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 3) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY);
+                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "Y-Range(cm)", "Z-Range(cm)");
                 drawGraphText(canvas, "     Y-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             }
 
         }
     }
 
-    private float[] getRangeArray(float[] array, int firstPos, int lastPos){
+    private float[] getRangeArray(List<Float> list, int firstPos, int lastPos){
         int length = lastPos - firstPos;
         int count = 0;
         if(firstPos == -1 || lastPos == -1 || length<1){
             // Set the default view
             float[] tempArray = new float[10];
             for(int i=0; i<10; i++) {
-                tempArray[i] = array[array.length+i-10];
+                tempArray[i] = list.get(list.size()+i-10);
             }
             // Have to reset the last position if we are setting it to default
             lastPosition = dates.length - 1;
@@ -109,7 +133,7 @@ public class DrawShapes extends View {
         else {
             float[] tempArray = new float[length+1];
             for(int i=firstPos; i<lastPos+1; i++) {
-                tempArray[count] = array[i];
+                tempArray[count] = list.get(i);
                 count++;
             }
             return tempArray;
@@ -118,10 +142,9 @@ public class DrawShapes extends View {
     }
 
     private void drawGeneralGraph(Canvas canvas, int viewWidth, int viewHeight, float[] coordinates) {
-        //Paint graphColor = makePaint("Line", Color.MAGENTA, viewWidth / 120);
         float[] tempCoorNorm = new float[coordinates.length];
         Path path = new Path();
-        Paint pathPaint = makePaint("Path", Color.MAGENTA, 255);
+        Paint pathPaint = makePaint("Path", getResources().getColor(R.color.colorPrimary), 255);
 
         drawChangeSpace(canvas, viewWidth, viewHeight);
 
@@ -161,6 +184,37 @@ public class DrawShapes extends View {
         drawAxis(canvas, viewWidth, viewHeight, dates, coordinates[maxIndex], interXValue, coordinates.length);
     }
 
+    private void drawSpecificVolume(Canvas canvas, int viewWidth, int viewHeight){
+        int unitSize = viewWidth/25;
+        Paint paint = makePaint("Path", getResources().getColor(R.color.colorPrimary), 255);
+        Paint paint2 = makePaint("Path", getResources().getColor(R.color.colorPrimaryBright), 150);
+        drawChangeSpace(canvas, viewWidth, viewHeight);
+        canvas.drawRect(viewWidth*27/72, viewHeight*2/24, viewWidth*46/72, viewHeight*16/24, paint);
+        canvas.drawRect(viewWidth*47/72, viewHeight*2/24, viewWidth*66/72, viewHeight*16/24, paint2);
+
+        drawGraphText(canvas, "Vol Space(mL)", viewWidth/15, viewHeight*6/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "X-Y Space(mL)", viewWidth/15, viewHeight*9/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "X-Z Space(mL)", viewWidth/15, viewHeight*12/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "Y-Z Space(mL)", viewWidth/15, viewHeight*15/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, firstDate, viewWidth*7/18, viewHeight*3/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, lastDate, viewWidth*2/3, viewHeight*3/24, Color.WHITE, unitSize);
+        // Volume Space values
+        drawGraphText(canvas, String.valueOf(yCoordinates[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(yCoordinates[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
+
+        // X-Y Space values
+        drawGraphText(canvas, String.valueOf(xYRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xYRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
+
+        // X-Z Space values
+        drawGraphText(canvas, String.valueOf(xZRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xZRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
+
+        // Y-Z Space values
+        drawGraphText(canvas, String.valueOf(yZRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(yZRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
+    }
+
     private void drawChangeSpace(Canvas canvas, int viewWidth, int viewHeight){
         Path path = new Path();
         Paint pathPaint = makePaint("Path", Color.BLACK, 255);
@@ -188,7 +242,7 @@ public class DrawShapes extends View {
         canvas.drawPath(path, pathPaint);
     }
 
-    private void drawDetailed2DSpace(Canvas canvas, float[] xCoor, float[] yCoor) {
+    private void drawDetailed2DSpace(Canvas canvas, float[] xCoor, float[] yCoor, String xAxis, String yAxis) {
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         // Need to find whether |xMin| or |xMax| is bigger
@@ -206,7 +260,7 @@ public class DrawShapes extends View {
 
         // Store the number of axis points you want
         String[] tempString = new String[5];
-        Paint graphColor = makePaint("Line", Color.MAGENTA, viewWidth / 120);
+        Paint graphColor = makePaint("Line", getResources().getColor(R.color.colorPrimary), viewWidth / 120);
 
         if (xCoor[xMax] > -xCoor[xMin]) {
             xGreatest = xCoor[xMax];
@@ -249,8 +303,8 @@ public class DrawShapes extends View {
         Path path2 = new Path();
 
         // Last property is to set transparency
-        Paint pathPaint = makePaint("Path", Color.MAGENTA, 255);
-        Paint pathPaint2 = makePaint("Path", Color.MAGENTA, 60);
+        Paint pathPaint = makePaint("Path", getResources().getColor(R.color.colorPrimary), 255);
+        Paint pathPaint2 = makePaint("Path", getResources().getColor(R.color.colorPrimaryBright), 150);
         // For first point, have to make sure it starts from the axis
         path.moveTo(viewWidth/6, viewHeight*23/36);
         path2.moveTo(viewWidth/6, viewHeight*23/36);
@@ -269,10 +323,11 @@ public class DrawShapes extends View {
                 path2.close();
             }
         }
-        canvas.drawPath(path, pathPaint);
+        // Assume the new is bigger
         canvas.drawPath(path2, pathPaint2);
+        canvas.drawPath(path, pathPaint);
 
-        draw2DAxis(canvas, viewWidth, viewHeight, tempString, yMax);
+        draw2DAxis(canvas, viewWidth, viewHeight, tempString, yMax, xAxis, yAxis);
     }
 
     private void drawAxis(Canvas canvas, int viewWidth, int viewHeight, String[] xValues,
@@ -303,9 +358,18 @@ public class DrawShapes extends View {
         for (int i = 0; i < numValues; i++) {
             canvas.save();
             canvas.rotate(-45f, (float) (viewWidth / 7 + ((length-1-(i*mulTen)) * interXValue)),
-                    (float) (viewHeight * 103 / 144));
-            drawGraphText(canvas, xValues[lastPosition-((i)*mulTen)], viewWidth / 7 +
-                    ((length-1-(i*mulTen)) * interXValue) - viewWidth / 20, viewHeight * 103 / 144, Color.BLACK, unitSize);
+                    (float) (viewHeight * 100 / 144));
+            char temp = xValues[lastPosition-((i)*mulTen)].charAt(0);
+            char temp2 = xValues[lastPosition-((i)*mulTen)].charAt(1);
+            char temp3 = xValues[lastPosition-((i)*mulTen)].charAt(2);
+            String month = String.valueOf(temp) + String.valueOf(temp2) + String.valueOf(temp3);
+            temp = xValues[lastPosition-((i)*mulTen)].charAt(4);
+            temp2 = xValues[lastPosition-((i)*mulTen)].charAt(5);
+            String day = String.valueOf(temp) + String.valueOf(temp2);
+            String date = month + " " + day;
+
+            drawGraphText(canvas, date, viewWidth / 7 +
+                    ((length-1-(i*mulTen)) * interXValue) - viewWidth / 20, viewHeight * 100 / 144, Color.BLACK, unitSize);
             canvas.restore();
         }
 
@@ -320,7 +384,8 @@ public class DrawShapes extends View {
         // drawGraphText(canvas, "Date", viewWidth * 3 / 7, viewHeight * 25 / 33, Color.BLACK, titleSize);
     }
 
-    private void draw2DAxis(Canvas canvas, int viewWidth, int viewHeight, String[] xValues, float maxYScale) {
+    private void draw2DAxis(Canvas canvas, int viewWidth, int viewHeight, String[] xValues,
+                            float maxYScale, String xAxis, String yAxis) {
         Paint axisColor = makePaint("Line", Color.BLACK, viewWidth / 86);
 
         int titleSize = viewWidth/30;
@@ -350,8 +415,8 @@ public class DrawShapes extends View {
         }
 
         /* Draw the Volume and Date Axis Titles */
-        drawGraphText(canvas, "X-Range(cm)", viewWidth * 3 / 7, viewHeight * 24 / 33, Color.BLACK, titleSize);
-        drawGraphText(canvas, "Y-Range(cm)", viewWidth * 3 / 7, viewHeight / 9, Color.BLACK, titleSize);
+        drawGraphText(canvas, xAxis, viewWidth * 3 / 7, viewHeight * 24 / 33, Color.BLACK, titleSize);
+        drawGraphText(canvas, yAxis, viewWidth * 3 / 7, viewHeight / 9, Color.BLACK, titleSize);
     }
 
     private void drawGraphText(Canvas canvas, String text, float xCoor, float yCoor, int color, int size) {
@@ -443,4 +508,72 @@ public class DrawShapes extends View {
     public void setPage(String page) {
         currentPage = page;
     }
+
+    private void readFile(String fileName) {
+        final int bufferSize = 2048;
+        String nextLine;
+        // To keep track of what line I'm in
+        int count = 0;
+
+        fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        try {
+            sensorFiles = new File(root, fileName + ".csv");
+            if (!sensorFiles.exists()) {
+                Log.i(TAG, "Problem opening file...exiting");
+            }
+            freader = new FileReader(sensorFiles);
+            reader = new BufferedReader(freader, bufferSize);
+        } catch(IOException e){
+            e.printStackTrace();
+        }
+
+        try{
+            // read all lines in data file
+            while((nextLine = reader.readLine()) != null) {
+                String sensorData[] = nextLine.split(",");
+                try {
+                    if (count == 0) {
+                        // This is the date of the measurement
+                        dateString.add(sensorData[0]);
+                    }
+                    else if (count == 1) {
+                        volumeSpaceList.add(Float.parseFloat(sensorData[0]));
+                    }
+                    else if (count == 2) {
+                        xYRangeSpaceList.add(Float.parseFloat(sensorData[0]));
+                    }
+                    else if (count > 2 && count < 8) {
+                        xYDetailedSpaceList.add(Float.parseFloat(sensorData[0]));
+                        xYDetailedSpaceList.add(Float.parseFloat(sensorData[1]));
+                    }
+                    else if (count == 8) {
+                        xZRangeSpaceList.add(Float.parseFloat(sensorData[0]));
+                    }
+                    else if (count > 8 && count < 14) {
+                        xZDetailedSpaceList.add(Float.parseFloat(sensorData[0]));
+                        xZDetailedSpaceList.add(Float.parseFloat(sensorData[2]));
+                    }
+                    else if (count == 14) {
+                        yZRangeSpaceList.add(Float.parseFloat(sensorData[0]));
+                    }
+                    else if (count > 14 && count < 18) {
+                        yZDetailedSpaceList.add(Float.parseFloat(sensorData[1]));
+                        yZDetailedSpaceList.add(Float.parseFloat(sensorData[2]));
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                count++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            freader.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
 }

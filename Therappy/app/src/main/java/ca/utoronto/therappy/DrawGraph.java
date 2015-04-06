@@ -27,8 +27,8 @@ public class DrawGraph extends Activity {
     private Spinner spinnerDate1;
     private Spinner spinnerDate2;
     // Have to read the actual dates that were tested from a string here.
-    private String dates[] = {"05/02/15","07/02/15", "08/02/15", "09/02/15", "10/02/15",
-            "11/02/15", "13/02/15", "14/02/15", "15/02/15", "16/02/15", "17/02/15", "19/02/15"};
+    private String[] dates = {"Feb 05, 2015","Feb 07, 2015", "Feb 08, 2015", "Feb 09, 2015", "Feb 10, 2015",
+            "Feb 11, 2015", "Feb 13, 2015", "Feb 14, 2015", "Feb 15, 2015", "Feb 16, 2015", "Feb 17, 2015", "Feb 19, 2015"};
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
