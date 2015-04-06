@@ -362,6 +362,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             mGoogleApiClient.unregisterConnectionCallbacks(this);
             mGoogleApiClient.disconnect();
         }
+        watcher.onDestroy();
     }
 
     @Override
