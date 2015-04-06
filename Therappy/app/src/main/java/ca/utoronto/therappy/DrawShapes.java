@@ -265,27 +265,37 @@ public class DrawShapes extends View {
         // Need to find whether |xMin| or |xMax| is bigger
         int xMax = 0;
         int xMin = 0;
+
+        //First have to know what arrays I'm actually displaying
+        float[] tempXValues = new float[10];
+        float[] tempYValues = new float[10];
+
+        for (int i=0; i<5; i++){
+            tempXValues[i] = xCoor.get(i+(firstPosition*5));
+            tempYValues[i] = yCoor.get(i+(firstPosition*5));
+            tempXValues[i+5] = xCoor.get(i+(lastPosition*5));
+            tempYValues[i+5] = yCoor.get(i+(lastPosition*5));
+        }
+
         // Store the biggest number from the array
         float xGreatest = 0;
         // Only need yMax since assumed that only x-axis has negative values
         int yMax = 0;
         float yGreatest = 0;
-        xMax = findMax(xCoor);
-        xMin = findMin(xCoor);
-        yMax = findMax(yCoor);
-        yGreatest = yCoor.get(yMax);
+        xMax = findMax(tempXValues);
+        xMin = findMin(tempXValues);
+        yMax = findMax(tempYValues);
+        yGreatest = tempYValues[yMax];
 
         drawChangeSpace(canvas, viewWidth, viewHeight);
 
         // Store the number of axis points you want
         String[] tempString = new String[5];
-        Paint graphColor = makePaint("Line", getResources().getColor(R.color.colorPrimary), viewWidth / 120);
-
-        if (xCoor.get(xMax) > -xCoor.get(xMin)) {
-            xGreatest = xCoor.get(xMax);
+        if (tempXValues[xMax] > -tempXValues[xMin]) {
+            xGreatest = tempXValues[xMax];
         }
         else{
-            xGreatest = -xCoor.get(xMin);
+            xGreatest = -tempXValues[xMin];
         }
         // I have to change this to make it more streamlined
         // Max i value is depending on the number of axis variables you want
@@ -294,13 +304,11 @@ public class DrawShapes extends View {
         }
 
         // Calculate the actual coordinates for the graph
-        float[] tempActualX = new float[5];
-        float[] tempActualY = new float[5];
-        float[] tempActualX2 = new float[5];
-        float[] tempActualY2 = new float[5];
+        float[] tempActualX = new float[10];
+        float[] tempActualY = new float[10];
 
         // Getting the Actual X and Y coordinates
-        for (int i=0; i<5; i++){
+        for (int i=0; i<tempActualX.length; i++){
             // min length is viewWidth/6, max length is view Width*5/6
             // min height is viewHeight/3, max height is viewHeight*5/6
             if (yCoor.get(i) < 0){
@@ -308,16 +316,12 @@ public class DrawShapes extends View {
                 yCoor.set(i, Float.valueOf(0));
             }
             if (xCoor.get(i) < 0){
-                tempActualX[i] = viewWidth/2 - Math.abs(xCoor.get(i))/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight*3/7;
-                tempActualX2[i] = tempActualX[i];
-                tempActualY2[i] = tempActualY[i] * 25/36;
+                tempActualX[i] = viewWidth/2 - Math.abs(tempXValues[i])/xGreatest*viewWidth/3;
+                tempActualY[i] = viewHeight*23/36 - tempYValues[i]/yGreatest*viewHeight*3/7;
             }
             else{
-                tempActualX[i] = viewWidth/2 + xCoor.get(i)/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight*3/7;
-                tempActualX2[i] = tempActualX[i];
-                tempActualY2[i] = tempActualY[i] * 25/36;
+                tempActualX[i] = viewWidth/2 + tempXValues[i]/xGreatest*viewWidth/3;
+                tempActualY[i] = viewHeight*23/36 - tempYValues[i]/yGreatest*viewHeight*3/7;
             }
         }
 
@@ -334,21 +338,21 @@ public class DrawShapes extends View {
 
         for (int i=1; i<5; i++) {
             path.lineTo(tempActualX[i-1], tempActualY[i-1]);
-            path2.lineTo(tempActualX2[i-1], tempActualY2[i-1]);
+            path2.lineTo(tempActualX[i+5-1], tempActualY[i+5-1]);
             // If its the last point, close the path
             if (i == 4){
                 // Have to make sure if hits the axis at 0
                 path.lineTo(tempActualX[i], tempActualY[i]);
                 path.lineTo(tempActualX[i], viewHeight*23/36);
                 path.close();
-                path2.lineTo(tempActualX2[i], tempActualY2[i]);
-                path2.lineTo(tempActualX2[i], viewHeight*23/36);
+                path2.lineTo(tempActualX[i+5], tempActualY[i+5]);
+                path2.lineTo(tempActualX[i+5], viewHeight*23/36);
                 path2.close();
             }
         }
         // Assume the new is bigger
-        canvas.drawPath(path2, pathPaint2);
         canvas.drawPath(path, pathPaint);
+        canvas.drawPath(path2, pathPaint2);
 
         draw2DAxis(canvas, viewWidth, viewHeight, tempString, yMax, xAxis, yAxis);
     }
@@ -432,7 +436,7 @@ public class DrawShapes extends View {
                     viewHeight * 49 / 72, Color.BLACK, unitSize);
             /* y-axis label */
             if (i>0) {
-                drawGraphText(canvas, String.valueOf((int) (maxYScale * i / 4)), viewWidth * 4 / 9,
+                drawGraphText(canvas, String.valueOf((maxYScale * i / 4)), viewWidth * 4 / 9,
                         viewHeight * 23 / 36 - viewHeight * i * 3 / 28, Color.BLACK, unitSize);
             }
         }
@@ -472,6 +476,16 @@ public class DrawShapes extends View {
         int indexOfMin = 0;
         for (int i = 0; i < array.size(); i++) {
             if (array.get(i) < array.get(indexOfMin)) {
+                indexOfMin = i;
+            }
+        }
+        return indexOfMin;
+    }
+
+    public static int findMin(float[] array) {
+        int indexOfMin = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] < array[indexOfMin]) {
                 indexOfMin = i;
             }
         }
