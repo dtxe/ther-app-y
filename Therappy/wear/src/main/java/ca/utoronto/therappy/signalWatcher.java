@@ -11,7 +11,7 @@ import java.util.TimerTask;
 
 public class signalWatcher {
 
-    private double lastTimestamp;               // last onSensorChanged timestamp
+    private long lastTimestamp;               // last onSensorChanged timestamp
     private double[] position, velocity;        // current position and velocity
 
     private double furthestPosition;            // keep track of furthest position to return (ie. target position)
@@ -65,7 +65,11 @@ public class signalWatcher {
         return this.furthestPosition;
     }
 
-    public void onSensorChanged(float[] acceleration, double eventTimestamp) {
+    public void onSensorChanged(float[] acceleration, long eventTimestamp) {
+        if(this.lastTimestamp == 0) {
+            this.lastTimestamp = eventTimestamp;
+        }
+
         // update velocity accumulator
         this.velocity[0] += acceleration[0] * (eventTimestamp - this.lastTimestamp) * 1E-9;
         this.velocity[1] += acceleration[1] * (eventTimestamp - this.lastTimestamp) * 1E-9;

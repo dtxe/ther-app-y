@@ -161,7 +161,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         MessageBuffer.clear();
                         cycle = 0;
                     }*/
-                    watcher.onSensorChanged(data,time);
+                    watcher.onSensorChanged(data, time);
                     if(watcher.isBackToOrigin()){
                         Log.i(TAG, "Back to origin!");
                         sendMessage(DATA_MESSAGE_PATH, watcher.getFurthestPosition() + "");
