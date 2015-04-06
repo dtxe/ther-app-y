@@ -137,7 +137,7 @@ public class signalWatcher {
             Log.i(TAG, "backToOrigin");
         }
 
-        if(this.counter == 50) {
+        if(this.counter == 100) {
             Log.i(TAG, "avgvelocity: " + this.avgVelocity[0] + ", " + this.avgVelocity[1] + ", " + this.avgVelocity[2]);
             Log.i(TAG, "position: " + this.position[0] + ", " + this.position[1] + ", " + this.position[2]);
 
