@@ -138,7 +138,6 @@ public class DrawShapes extends View {
             }
             return tempArray;
         }
-
     }
 
     private void drawGeneralGraph(Canvas canvas, int viewWidth, int viewHeight, float[] coordinates) {
