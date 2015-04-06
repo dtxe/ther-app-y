@@ -12,10 +12,10 @@ import java.util.TimerTask;
 public class signalWatcher {
 
     private long lastTimestamp;               // last onSensorChanged timestamp
-    private double[] position, velocity;        // current position and velocity
+    private float[] position, velocity;        // current position and velocity
 
     private double furthestPosition;            // keep track of furthest position to return (ie. target position)
-    private double[] avgVelocity;
+    private float[] avgVelocity;
 
     private Timer positionTimer;                // integrate position every so often...
     private static final int positionTimerPeriod = 5;       // this is the so often...
@@ -31,12 +31,15 @@ public class signalWatcher {
 
     private int counter;
 
+    private final static float event_timediv = (float) 1E-9, timer_timediv = (float) 1E-3;
+
+
     public signalWatcher() {
         this.lastTimestamp = 0;
 
-        this.position = new double[] {0, 0, 0};
-        this.velocity = new double[] {0, 0, 0};
-        this.avgVelocity = new double[] {0, 0, 0};
+        this.position = new float[] {0, 0, 0};
+        this.velocity = new float[] {0, 0, 0};
+        this.avgVelocity = new float[] {0, 0, 0};
 
         this.furthestPosition = 0;
 
@@ -75,24 +78,24 @@ public class signalWatcher {
         }
 
         // update velocity accumulator
-        this.velocity[0] += acceleration[0] * (eventTimestamp - this.lastTimestamp) * 1E-9;
-        this.velocity[1] += acceleration[1] * (eventTimestamp - this.lastTimestamp) * 1E-9;
-        this.velocity[2] += acceleration[2] * (eventTimestamp - this.lastTimestamp) * 1E-9;
+        this.velocity[0] = this.velocity[0] + (acceleration[0] * (eventTimestamp - this.lastTimestamp) * event_timediv);
+        this.velocity[1] = this.velocity[1] + (acceleration[1] * (eventTimestamp - this.lastTimestamp) * event_timediv);
+        this.velocity[2] = this.velocity[2] + (acceleration[2] * (eventTimestamp - this.lastTimestamp) * event_timediv);
 
         // update event timestamp
         this.lastTimestamp = eventTimestamp;
 
         // keep track of rolling average
-        this.avgVelocity[0] = 0.99*this.avgVelocity[0] + 0.01*this.velocity[0];
-        this.avgVelocity[1] = 0.99*this.avgVelocity[1] + 0.01*this.velocity[1];
-        this.avgVelocity[2] = 0.99*this.avgVelocity[2] + 0.01*this.velocity[2];
+        this.avgVelocity[0] = (float)0.99*this.avgVelocity[0] + (float)0.01*this.velocity[0];
+        this.avgVelocity[1] = (float)0.99*this.avgVelocity[1] + (float)0.01*this.velocity[1];
+        this.avgVelocity[2] = (float)0.99*this.avgVelocity[2] + (float)0.01*this.velocity[2];
     }
 
-    public double[] getPosition() {
+    public float[] getPosition() {
         return this.position;
     }
 
-    public double[] getVelocity() {
+    public float[] getVelocity() {
         return this.velocity;
     }
 
@@ -107,17 +110,17 @@ public class signalWatcher {
 
     // every so often... integrate the velocity to update position vector
     // check if a full "tap" has been completed
-    public void onPositionTimerTick(double interval) {
-        this.position[0] += this.velocity[0] * interval * 1E-3;
-        this.position[1] += this.velocity[1] * interval * 1E-3;
-        this.position[2] += this.velocity[2] * interval * 1E-3;
+    public void onPositionTimerTick(float interval) {
+        this.position[0] = this.position[0] + (this.velocity[0] * interval * timer_timediv);
+        this.position[1] = this.position[1] + (this.velocity[1] * interval * timer_timediv);
+        this.position[2] = this.position[2] + (this.velocity[2] * interval * timer_timediv);
 
         // update furthest position
-        double absposition = vectornorm(this.position);
+        float absposition = vectornorm(this.position);
         this.furthestPosition = absposition > this.furthestPosition ? absposition : this.furthestPosition;
 
-        double absvelocity = vectornorm(this.velocity);
-        double absavgvelocity = vectornorm(this.avgVelocity);
+        float absvelocity = vectornorm(this.velocity);
+        float absavgvelocity = vectornorm(this.avgVelocity);
 
         // check status
         if(this.currentStatus == BEGIN_AT_ORIGIN && absvelocity > 2) {
@@ -144,17 +147,17 @@ public class signalWatcher {
     }
 
     // get the magnitude of the vector in 3d space.
-    protected double vectornorm(double[] vector) {
-        return Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
+    protected float vectornorm(float[] vector) {
+        return (float) Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
     }
 
     // this is a TimerTask for whenever
     private class MyTask extends TimerTask {
 
         signalWatcher theclass;
-        double interval;
+        long interval;
 
-        public MyTask(signalWatcher theclass, double interval) {
+        public MyTask(signalWatcher theclass, long interval) {
             this.theclass = theclass;
             this.interval = interval;
         }
