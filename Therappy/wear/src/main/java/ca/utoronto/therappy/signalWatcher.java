@@ -15,7 +15,7 @@ public class signalWatcher {
     private float[] position, velocity, acceleration;        // current position and velocity
 
     private int avgAccleration_ctr;
-    private final static int avgAccleration_ctr_max = 5;       // TODO: verify the width of accl peak
+    private final static int avgAccleration_ctr_max = 20;       // TODO: verify the width of accl peak
     private float[][] avgAcceleration;
 
     private double furthestPosition;            // keep track of furthest position to return (ie. target position)
@@ -84,9 +84,10 @@ public class signalWatcher {
     }
 
     public void onSensorChanged(float[] acceleration, long eventTimestamp) {
-        this.acceleration[0] = acceleration[0];
-        this.acceleration[1] = acceleration[1];
-        this.acceleration[2] = acceleration[2];
+        final float threshold = (float) 0.02;
+        this.acceleration[0] = acceleration[0] < threshold ? 0 : acceleration[0];
+        this.acceleration[1] = acceleration[1] < threshold ? 0 : acceleration[1];
+        this.acceleration[2] = acceleration[2] < threshold ? 0 : acceleration[2];
 
         this.avgAcceleration[this.avgAccleration_ctr] = this.acceleration;
         this.avgAccleration_ctr++;
