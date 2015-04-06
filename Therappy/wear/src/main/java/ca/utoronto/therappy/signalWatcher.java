@@ -30,34 +30,35 @@ public class signalWatcher {
                              HAS_HIT_ORIGIN     = 4;
 
     public signalWatcher() {
-        lastTimestamp = 0;
-        position = new double[] {0, 0, 0};
-        velocity = new double[] {0, 0, 0};
+        this.lastTimestamp = 0;
 
-        furthestPosition = 0;
-        avgVelocity = new double[] {0, 0, 0};
+        this.position = new double[] {0, 0, 0};
+        this.velocity = new double[] {0, 0, 0};
+        this.avgVelocity = new double[] {0, 0, 0};
 
-        positionTimer = new Timer();
-        positionTimer.scheduleAtFixedRate(new MyTask(this, positionTimerPeriod), 0, positionTimerPeriod);
+        this.furthestPosition = 0;
 
-        currentStatus = 0;
+        this.positionTimer = new Timer();
+        this.positionTimer.scheduleAtFixedRate(new MyTask(this, positionTimerPeriod), 0, positionTimerPeriod);
+
+        this.currentStatus = BEGIN_AT_ORIGIN;
     }
 
     // stop the position integration timer
     public void onDestroy() {
-        positionTimer.cancel();
+        this.positionTimer.cancel();
     }
 
     // assume the watch returns to a marked "origin"
     // reset accumulators to zero at the origin to deal with integration drift
     public void resetToZero() {
-        position[0] = 0;
-        position[1] = 0;
-        position[2] = 0;
+        this.position[0] = 0;
+        this.position[1] = 0;
+        this.position[2] = 0;
 
-        velocity[0] = 0;
-        velocity[1] = 0;
-        velocity[2] = 0;
+        this.velocity[0] = 0;
+        this.velocity[1] = 0;
+        this.velocity[2] = 0;
     }
 
     public double getFurthestPosition() {
@@ -66,9 +67,9 @@ public class signalWatcher {
 
     public void onSensorChanged(float[] acceleration, double eventTimestamp) {
         // update velocity accumulator
-        this.velocity[0] += acceleration[0] * (eventTimestamp - this.lastTimestamp) * 10E-9;
-        this.velocity[1] += acceleration[1] * (eventTimestamp - this.lastTimestamp) * 10E-9;
-        this.velocity[2] += acceleration[2] * (eventTimestamp - this.lastTimestamp) * 10E-9;
+        this.velocity[0] += acceleration[0] * (eventTimestamp - this.lastTimestamp) * 1E-9;
+        this.velocity[1] += acceleration[1] * (eventTimestamp - this.lastTimestamp) * 1E-9;
+        this.velocity[2] += acceleration[2] * (eventTimestamp - this.lastTimestamp) * 1E-9;
 
         // update event timestamp
         this.lastTimestamp = eventTimestamp;
@@ -99,9 +100,9 @@ public class signalWatcher {
     // every so often... integrate the velocity to update position vector
     // check if a full "tap" has been completed
     public void onPositionTimerTick(double interval) {
-        this.position[0] += this.velocity[0] * interval;
-        this.position[1] += this.velocity[1] * interval;
-        this.position[2] += this.velocity[2] * interval;
+        this.position[0] += this.velocity[0] * interval * 1E-3;
+        this.position[1] += this.velocity[1] * interval * 1E-3;
+        this.position[2] += this.velocity[2] * interval * 1E-3;
 
         // update furthest position
         double absposition = vectornorm(this.position);
