@@ -130,7 +130,7 @@ public class signalWatcher {
         avgAccl[1] = avgAccl[1] / avgAccleration_ctr_max;
         avgAccl[2] = avgAccl[2] / avgAccleration_ctr_max;
 
-        thresholdByValue(avgAccl, (float) 0.03);
+        thresholdByValue(avgAccl, (float) 0.1);
 
         // STEP: integrate acceleration and velocity
         this.velocity[0] = this.velocity[0] + (avgAccl[0] * interval * timer_timediv);
