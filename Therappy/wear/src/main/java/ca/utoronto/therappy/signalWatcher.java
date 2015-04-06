@@ -126,7 +126,7 @@ public class signalWatcher {
             Log.i(TAG, "backToOrigin");
         }
 
-        Log.i(TAG, "avgvelocity: "+avgVelocity.toString());
+        Log.i(TAG, "avgvelocity: "+avgVelocity[0]+","+avgVelocity[1]+","+avgVelocity[2]);
     }
 
     // get the magnitude of the vector in 3d space.
