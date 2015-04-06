@@ -215,6 +215,25 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
+    public void setPoint(byte[] message) {
+        ByteBuffer buffer;
+        double furthestPosition;
+        buffer = ByteBuffer.wrap(message);
+        buffer.rewind();
+        furthestPosition = buffer.getDouble();
+
+        status.setText("Furthest position: " + furthestPosition);
+        if(started) {
+            try {
+                writer.write(furthestPosition + "");
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        getNextInstruction();
+    }
+
     /*  getNextInstruction
      *  Input:  void
      *  Output: void
@@ -371,7 +390,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 // if the message is sensor data, send it to be recorded
                 if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
                     Log.i(TAG, "data rec'd: " + msg);
-                    setData(messageEvent.getData());
+                    /*
+                    setData(messageEvent.getData()); */
+                    setPoint(messageEvent.getData());
                 }
                 // if it is connection data, set the label
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {

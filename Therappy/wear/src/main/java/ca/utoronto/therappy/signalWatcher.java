@@ -17,6 +17,9 @@ public class signalWatcher {
     private Timer positionTimer;
     private static final int positionTimerPeriod = 5;
 
+    private boolean leftOrigin, hitTarget, backToOrigin;
+
+
     public signalWatcher() {
         lastTimestamp = 0;
         position = new double[] {0, 0, 0};
@@ -44,7 +47,7 @@ public class signalWatcher {
         return this.furthestPosition;
     }
 
-    public void onSensorChanged(double[] acceleration, double eventTimestamp) {
+    public void onSensorChanged(float[] acceleration, double eventTimestamp) {
         this.velocity[0] += acceleration[0] * (eventTimestamp - this.lastTimestamp) * 10E-9;
         this.velocity[1] += acceleration[1] * (eventTimestamp - this.lastTimestamp) * 10E-9;
         this.velocity[2] += acceleration[2] * (eventTimestamp - this.lastTimestamp) * 10E-9;
@@ -60,10 +63,31 @@ public class signalWatcher {
         return this.velocity;
     }
 
+    public boolean isBackToOrigin() {
+        return backToOrigin;
+    }
+
     public void onPositionTimerTick(double interval) {
         this.position[0] += this.velocity[0] * interval;
         this.position[1] += this.velocity[1] * interval;
         this.position[2] += this.velocity[2] * interval;
+
+        // update furthest position
+        double absposition = Math.sqrt(Math.pow(this.position[0], 2) + Math.pow(this.position[1], 2) + Math.pow(this.position[2], 2));
+        this.furthestPosition = absposition > this.furthestPosition ? absposition : this.furthestPosition;
+
+        double absvelocity = Math.sqrt(Math.pow(this.velocity[0], 2) + Math.pow(this.velocity[1], 2) + Math.pow(this.velocity[2], 2));
+
+        // check status
+        if(!leftOrigin && absvelocity > 0.5) {
+            leftOrigin = true;
+        }
+        if(leftOrigin && !hitTarget && absvelocity < 0.5) {     // TODO: these need to be tweaked
+            hitTarget = true;
+        }
+        if(leftOrigin && hitTarget && !backToOrigin && absposition < 0.03) {
+            backToOrigin = true;
+        }
     }
 
     private class MyTask extends TimerTask {
