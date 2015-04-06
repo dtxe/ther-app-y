@@ -14,6 +14,10 @@ public class signalWatcher {
     private long lastTimestamp;               // last onSensorChanged timestamp
     private float[] position, velocity, acceleration;        // current position and velocity
 
+    private int avgAccleration_ctr;
+    private final static int avgAccleration_ctr_max = 5;       // TODO: verify the width of accl peak
+    private float[][] avgAcceleration;
+
     private double furthestPosition;            // keep track of furthest position to return (ie. target position)
     private float[] avgVelocity;
 
@@ -41,6 +45,8 @@ public class signalWatcher {
         this.velocity = new float[] {0, 0, 0};
         this.acceleration = new float[] {0, 0, 0};
         this.avgVelocity = new float[] {0, 0, 0};
+
+        this.avgAcceleration = new float[avgAccleration_ctr_max][];
 
         this.furthestPosition = 0;
 
@@ -82,6 +88,12 @@ public class signalWatcher {
         this.acceleration[1] = acceleration[1];
         this.acceleration[2] = acceleration[2];
 
+        this.avgAcceleration[this.avgAccleration_ctr] = this.acceleration;
+        this.avgAccleration_ctr++;
+        if(this.avgAccleration_ctr == avgAccleration_ctr_max) {
+            this.avgAccleration_ctr = 0;
+        }
+
         // update event timestamp
         this.lastTimestamp = eventTimestamp;
     }
@@ -106,9 +118,19 @@ public class signalWatcher {
     // every so often... integrate the velocity to update position vector
     // check if a full "tap" has been completed
     public void onPositionTimerTick(float interval) {
-        this.velocity[0] = this.velocity[0] + (this.acceleration[0] * interval * timer_timediv);
-        this.velocity[1] = this.velocity[1] + (this.acceleration[1] * interval * timer_timediv);
-        this.velocity[2] = this.velocity[2] + (this.acceleration[2] * interval * timer_timediv);
+        float[] avgAccl = new float[3];
+        for(int kk = 0; kk < avgAccleration_ctr_max; kk++) {
+            avgAccl[0] += avgAcceleration[kk][0];
+            avgAccl[1] += avgAcceleration[kk][1];
+            avgAccl[2] += avgAcceleration[kk][2];
+        }
+        avgAccl[0] = avgAccl[0] / avgAccleration_ctr_max;
+        avgAccl[1] = avgAccl[1] / avgAccleration_ctr_max;
+        avgAccl[2] = avgAccl[2] / avgAccleration_ctr_max;
+
+        this.velocity[0] = this.velocity[0] + (avgAccl[0] * interval * timer_timediv);
+        this.velocity[1] = this.velocity[1] + (avgAccl[1] * interval * timer_timediv);
+        this.velocity[2] = this.velocity[2] + (avgAccl[2] * interval * timer_timediv);
 
         this.position[0] = this.position[0] + (this.velocity[0] * interval * timer_timediv);
         this.position[1] = this.position[1] + (this.velocity[1] * interval * timer_timediv);
@@ -130,7 +152,7 @@ public class signalWatcher {
         if(this.currentStatus == BEGIN_AT_ORIGIN && absvelocity > 2) {
             this.currentStatus = HAS_LEFT_ORIGIN;
             Log.i(TAG, "left origin");
-        } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 1) {     // TODO: these need to be tweaked
+        } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 0.5) {     // TODO: these need to be tweaked
             this.currentStatus = HAS_HIT_TARGET;
             Log.i(TAG, "hit target");
         } else if(this.currentStatus == HAS_HIT_TARGET && absvelocity > 2) {

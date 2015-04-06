@@ -168,10 +168,12 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     }
                 }
                 break;
+
             case Sensor.TYPE_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
                 Matrix.invertM(rotmatrix, 0, rotmatrix, 0);
                 break;
+
             default:
                 break;
         }
