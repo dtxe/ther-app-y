@@ -91,7 +91,7 @@ public class DrawShapes extends View {
             while (readFile("values" + String.valueOf(fileNumber))) {
                 fileNumber++;
             }
-            fileNotYetRead = true;
+            fileNotYetRead = false;
         }
 
         if (currentPage.equals("General")) {
@@ -268,10 +268,12 @@ public class DrawShapes extends View {
         // Store the biggest number from the array
         float xGreatest = 0;
         // Only need yMax since assumed that only x-axis has negative values
-        float yMax = 0;
+        int yMax = 0;
+        float yGreatest = 0;
         xMax = findMax(xCoor);
         xMin = findMin(xCoor);
         yMax = findMax(yCoor);
+        yGreatest = yCoor.get(yMax);
 
         drawChangeSpace(canvas, viewWidth, viewHeight);
 
@@ -307,13 +309,13 @@ public class DrawShapes extends View {
             }
             if (xCoor.get(i) < 0){
                 tempActualX[i] = viewWidth/2 - Math.abs(xCoor.get(i))/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yMax*viewHeight/2;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight/2;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
             else{
                 tempActualX[i] = viewWidth/2 + xCoor.get(i)/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yMax*viewHeight/2;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight/2;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
