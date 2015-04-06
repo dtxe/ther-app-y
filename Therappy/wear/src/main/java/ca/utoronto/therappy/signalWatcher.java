@@ -84,10 +84,9 @@ public class signalWatcher {
     }
 
     public void onSensorChanged(float[] acceleration, long eventTimestamp) {
-        final float threshold = (float) 0.02;
-        this.acceleration[0] = acceleration[0] < threshold ? 0 : acceleration[0];
-        this.acceleration[1] = acceleration[1] < threshold ? 0 : acceleration[1];
-        this.acceleration[2] = acceleration[2] < threshold ? 0 : acceleration[2];
+        this.acceleration[0] = acceleration[0];
+        this.acceleration[1] = acceleration[1];
+        this.acceleration[2] = acceleration[2];
 
         this.avgAcceleration[this.avgAccleration_ctr] = this.acceleration;
         this.avgAccleration_ctr++;
@@ -130,6 +129,8 @@ public class signalWatcher {
         avgAccl[0] = avgAccl[0] / avgAccleration_ctr_max;
         avgAccl[1] = avgAccl[1] / avgAccleration_ctr_max;
         avgAccl[2] = avgAccl[2] / avgAccleration_ctr_max;
+
+        thresholdByValue(avgAccl, (float) 0.03);
 
         // STEP: integrate acceleration and velocity
         this.velocity[0] = this.velocity[0] + (avgAccl[0] * interval * timer_timediv);
@@ -175,6 +176,12 @@ public class signalWatcher {
             this.counter = 0;
         }
         this.counter++;
+    }
+
+    protected void thresholdByValue(float[] vector, float threshold) {
+        vector[0] = vector[0] < threshold ? 0 : vector[0];
+        vector[1] = vector[1] < threshold ? 0 : vector[1];
+        vector[2] = vector[2] < threshold ? 0 : vector[2];
     }
 
     // get the magnitude of the vector in 3d space.
