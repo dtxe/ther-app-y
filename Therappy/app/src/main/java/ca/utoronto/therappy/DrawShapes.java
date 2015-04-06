@@ -25,14 +25,17 @@ public class DrawShapes extends View {
 
     // yCoor gives the magnitude of the volume space, will need to normalize it later
     // Most of this data will be read from a file instead.
-    List<Float> xYRangeSpaceList = new ArrayList<Float>();
-    List<Float> xZRangeSpaceList = new ArrayList<Float>();
-    List<Float> yZRangeSpaceList = new ArrayList<Float>();
-    List<Float> volumeSpaceList = new ArrayList<Float>();
-    List<Float> xYDetailedSpaceList = new ArrayList<Float>();
-    List<Float> xZDetailedSpaceList = new ArrayList<Float>();
-    List<Float> yZDetailedSpaceList = new ArrayList<Float>();
-    List<String> dateString = new ArrayList<String>();
+    private List<Float> xYRangeSpaceList = new ArrayList<Float>();
+    private List<Float> xZRangeSpaceList = new ArrayList<Float>();
+    private List<Float> yZRangeSpaceList = new ArrayList<Float>();
+    private List<Float> volumeSpaceList = new ArrayList<Float>();
+    private List<Float> xYDetailedSpaceXList = new ArrayList<Float>();
+    private List<Float> xYDetailedSpaceYList = new ArrayList<Float>();
+    private List<Float> xZDetailedSpaceXList = new ArrayList<Float>();
+    private List<Float> xZDetailedSpaceZList = new ArrayList<Float>();
+    private List<Float> yZDetailedSpaceYList = new ArrayList<Float>();
+    private List<Float> yZDetailedSpaceZList = new ArrayList<Float>();
+    private List<String> dateString = new ArrayList<String>();
     private float[] yCoordinates = {300, 350, 500, 600, 620, 640, 600, 700, 720, 750, 740, 755};
     //x and y store the actual coordinates
     private float[] xActualCoor = new float[12];
@@ -59,6 +62,7 @@ public class DrawShapes extends View {
     private FileReader freader;
     private File sensorFiles;
     private BufferedReader reader;
+    private boolean fileNotYetRead = true;
 
     // Stores the value of the current graph that is being shown
     private int graphCounter = 0;
@@ -77,12 +81,18 @@ public class DrawShapes extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        int fileNumber = 1;
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         super.onDraw(canvas);
         canvas.drawColor(Color.WHITE);
 
-        readFile("values0001");
+        if (fileNotYetRead) {
+            while (readFile("values" + String.valueOf(fileNumber))) {
+                fileNumber++;
+            }
+            fileNotYetRead = true;
+        }
 
         if (currentPage.equals("General")) {
             if (graphCounter == 0) {
@@ -104,13 +114,13 @@ public class DrawShapes extends View {
                 drawSpecificVolume(canvas, viewWidth, viewHeight);
                 drawGraphText(canvas, "Summary Page", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 1) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "X-Range(cm)", "Y-Range(cm)");
+                drawDetailed2DSpace(canvas, xYDetailedSpaceXList, xYDetailedSpaceYList, "X-Range(cm)", "Y-Range(cm)");
                 drawGraphText(canvas, "     X-Y Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 2) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "X-Range(cm)", "Z-Range(cm)");
+                drawDetailed2DSpace(canvas, xZDetailedSpaceXList, xZDetailedSpaceZList, "X-Range(cm)", "Z-Range(cm)");
                 drawGraphText(canvas, "     X-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 3) {
-                drawDetailed2DSpace(canvas, xYDetailedSpaceX, xYDetailedSpaceY, "Y-Range(cm)", "Z-Range(cm)");
+                drawDetailed2DSpace(canvas, yZDetailedSpaceYList, yZDetailedSpaceZList, "Y-Range(cm)", "Z-Range(cm)");
                 drawGraphText(canvas, "     Y-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             }
 
@@ -123,8 +133,15 @@ public class DrawShapes extends View {
         if(firstPos == -1 || lastPos == -1 || length<1){
             // Set the default view
             float[] tempArray = new float[10];
-            for(int i=0; i<10; i++) {
-                tempArray[i] = list.get(list.size()+i-10);
+            if (length > 9) {
+                for (int i = 0; i < 10; i++) {
+                    tempArray[i] = list.get(list.size() + i - 10);
+                }
+            }
+            else {
+                for (int i = 0; i < length; i++) {
+                    tempArray[i] = list.get(list.size() + i - length);
+                }
             }
             // Have to reset the last position if we are setting it to default
             lastPosition = dates.length - 1;
@@ -242,7 +259,7 @@ public class DrawShapes extends View {
         canvas.drawPath(path, pathPaint);
     }
 
-    private void drawDetailed2DSpace(Canvas canvas, float[] xCoor, float[] yCoor, String xAxis, String yAxis) {
+    private void drawDetailed2DSpace(Canvas canvas, List<Float> xCoor, List<Float> yCoor, String xAxis, String yAxis) {
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         // Need to find whether |xMin| or |xMax| is bigger
@@ -262,11 +279,11 @@ public class DrawShapes extends View {
         String[] tempString = new String[5];
         Paint graphColor = makePaint("Line", getResources().getColor(R.color.colorPrimary), viewWidth / 120);
 
-        if (xCoor[xMax] > -xCoor[xMin]) {
-            xGreatest = xCoor[xMax];
+        if (xCoor.get(xMax) > -xCoor.get(xMin)) {
+            xGreatest = xCoor.get(xMax);
         }
         else{
-            xGreatest = -xCoor[xMin];
+            xGreatest = -xCoor.get(xMin);
         }
         // I have to change this to make it more streamlined
         // Max i value is depending on the number of axis variables you want
@@ -425,6 +442,16 @@ public class DrawShapes extends View {
     }
 
 
+    public static int findMax(List<Float> array) {
+        int indexOfMax = 0;
+        for (int i = 0; i < array.size(); i++) {
+            if (array.get(i) > array.get(indexOfMax)) {
+                indexOfMax = i;
+            }
+        }
+        return indexOfMax;
+    }
+
     public static int findMax(float[] array) {
         int indexOfMax = 0;
         for (int i = 0; i < array.length; i++) {
@@ -435,10 +462,10 @@ public class DrawShapes extends View {
         return indexOfMax;
     }
 
-    public static int findMin(float[] array) {
+    public static int findMin(List<Float> array) {
         int indexOfMin = 0;
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] < array[indexOfMin]) {
+        for (int i = 0; i < array.size(); i++) {
+            if (array.get(i) < array.get(indexOfMin)) {
                 indexOfMin = i;
             }
         }
@@ -509,17 +536,18 @@ public class DrawShapes extends View {
         currentPage = page;
     }
 
-    private void readFile(String fileName) {
+    private boolean readFile(String fileName) {
         final int bufferSize = 2048;
         String nextLine;
         // To keep track of what line I'm in
         int count = 0;
 
-        fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        //fileName = fileName.substring(0, fileName.lastIndexOf('.'));
         try {
-            sensorFiles = new File(root, fileName + ".csv");
+            sensorFiles = new File(root, "/therappy/" + fileName + ".csv");
             if (!sensorFiles.exists()) {
                 Log.i(TAG, "Problem opening file...exiting");
+                return false;
             }
             freader = new FileReader(sensorFiles);
             reader = new BufferedReader(freader, bufferSize);
@@ -543,22 +571,22 @@ public class DrawShapes extends View {
                         xYRangeSpaceList.add(Float.parseFloat(sensorData[0]));
                     }
                     else if (count > 2 && count < 8) {
-                        xYDetailedSpaceList.add(Float.parseFloat(sensorData[0]));
-                        xYDetailedSpaceList.add(Float.parseFloat(sensorData[1]));
+                        xYDetailedSpaceXList.add(Float.parseFloat(sensorData[0]));
+                        xYDetailedSpaceYList.add(Float.parseFloat(sensorData[1]));
                     }
                     else if (count == 8) {
                         xZRangeSpaceList.add(Float.parseFloat(sensorData[0]));
                     }
                     else if (count > 8 && count < 14) {
-                        xZDetailedSpaceList.add(Float.parseFloat(sensorData[0]));
-                        xZDetailedSpaceList.add(Float.parseFloat(sensorData[2]));
+                        xZDetailedSpaceXList.add(Float.parseFloat(sensorData[0]));
+                        xZDetailedSpaceZList.add(Float.parseFloat(sensorData[2]));
                     }
                     else if (count == 14) {
                         yZRangeSpaceList.add(Float.parseFloat(sensorData[0]));
                     }
                     else if (count > 14 && count < 18) {
-                        yZDetailedSpaceList.add(Float.parseFloat(sensorData[1]));
-                        yZDetailedSpaceList.add(Float.parseFloat(sensorData[2]));
+                        yZDetailedSpaceYList.add(Float.parseFloat(sensorData[1]));
+                        yZDetailedSpaceZList.add(Float.parseFloat(sensorData[2]));
                     }
                 } catch (Exception e){
                     e.printStackTrace();
@@ -573,7 +601,7 @@ public class DrawShapes extends View {
         } catch (IOException e){
             e.printStackTrace();
         }
-
+        return true;
     }
 
 }
