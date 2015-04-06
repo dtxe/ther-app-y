@@ -125,6 +125,8 @@ public class signalWatcher {
             this.currentStatus = HAS_HIT_ORIGIN;        // yay we're done!
             Log.i(TAG, "backToOrigin");
         }
+
+        Log.i(TAG, "avgvelocity: "+avgVelocity.toString());
     }
 
     // get the magnitude of the vector in 3d space.
