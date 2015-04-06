@@ -1,5 +1,7 @@
 package ca.utoronto.therappy;
 
+import android.util.Log;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,6 +19,8 @@ public class signalWatcher {
 
     private Timer positionTimer;                // integrate position every so often...
     private static final int positionTimerPeriod = 5;       // this is the so often...
+
+    private static final String TAG = signalWatcher.class.getSimpleName();
 
     private int currentStatus;                  // keep track of what stage we're in (do things when returned to origin)
     private final static int BEGIN_AT_ORIGIN    = 0,
@@ -109,12 +113,15 @@ public class signalWatcher {
         // check status
         if(this.currentStatus == BEGIN_AT_ORIGIN && absvelocity > 2) {
             this.currentStatus = HAS_LEFT_ORIGIN;
+            Log.i(TAG, "left origin");
         } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 0.4) {     // TODO: these need to be tweaked
             this.currentStatus = HAS_HIT_TARGET;
+            Log.i(TAG, "hit target");
         } else if(this.currentStatus == HAS_HIT_TARGET && absvelocity > 2) {
             this.currentStatus = HAS_LEFT_TARGET;
         } else if(this.currentStatus == HAS_LEFT_TARGET && absavgvelocity < 0.4) {
             this.currentStatus = HAS_HIT_ORIGIN;        // yay we're done!
+            Log.i(TAG, "backToOrigin");
         }
     }
 
