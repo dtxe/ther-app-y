@@ -309,13 +309,13 @@ public class DrawShapes extends View {
             }
             if (xCoor.get(i) < 0){
                 tempActualX[i] = viewWidth/2 - Math.abs(xCoor.get(i))/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight/2;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight*3/7;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
             else{
                 tempActualX[i] = viewWidth/2 + xCoor.get(i)/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight/2;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yGreatest*viewHeight*3/7;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
@@ -426,7 +426,7 @@ public class DrawShapes extends View {
 /*        int yAxisRange = (int) (yCoordinates[maxIndex] - yCoordinates[0]);*/
 
         /* Say labels have 5 y-axis and x-axis labels */
-        for (int i = 0; i < xValues.length; i++) {
+        for (int i = 0; i < 5; i++) {
             /* x-axis label */
             drawGraphText(canvas, xValues[i], (i + 1) * viewWidth / 6 - viewWidth/50,
                     viewHeight * 49 / 72, Color.BLACK, unitSize);
