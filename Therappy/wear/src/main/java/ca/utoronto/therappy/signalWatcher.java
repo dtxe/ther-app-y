@@ -67,6 +67,10 @@ public class signalWatcher {
         this.velocity[0] = 0;
         this.velocity[1] = 0;
         this.velocity[2] = 0;
+
+        this.acceleration[0] = 0;
+        this.acceleration[1] = 0;
+        this.acceleration[2] = 0;
     }
 
     public double getFurthestPosition() {
