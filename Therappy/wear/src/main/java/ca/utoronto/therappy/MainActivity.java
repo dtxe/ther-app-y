@@ -111,6 +111,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     public void stopMeasuring() {
         mSensorManager.unregisterListener(this);
         MessageBuffer.clear();
+        watcher.onDestroy();
         finish();
     }
 
@@ -364,11 +365,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 mGoogleApiClient.disconnect();
             }
         }
+        watcher.onDestroy();
     }
 
     @Override
     public void finish(){
         super.finish();
+        watcher.onDestroy();
         if(mGoogleApiClient != null) {
             Wearable.MessageApi.removeListener(mGoogleApiClient, this);
             mGoogleApiClient.unregisterConnectionCallbacks(this);
