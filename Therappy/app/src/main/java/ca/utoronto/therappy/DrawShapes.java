@@ -216,20 +216,20 @@ public class DrawShapes extends View {
         drawGraphText(canvas, firstDate, viewWidth*7/18, viewHeight*3/24, Color.WHITE, unitSize);
         drawGraphText(canvas, lastDate, viewWidth*2/3, viewHeight*3/24, Color.WHITE, unitSize);
         // Volume Space values
-        drawGraphText(canvas, String.valueOf(yCoordinates[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
-        drawGraphText(canvas, String.valueOf(yCoordinates[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(volumeSpaceList.get(firstPosition)), viewWidth*7/18 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(volumeSpaceList.get(lastPosition)), viewWidth*2/3 + viewWidth/12, viewHeight*6/24, Color.WHITE, unitSize);
 
         // X-Y Space values
-        drawGraphText(canvas, String.valueOf(xYRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
-        drawGraphText(canvas, String.valueOf(xYRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xYRangeSpaceList.get(firstPosition)), viewWidth*7/18 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xYRangeSpaceList.get(lastPosition)), viewWidth*2/3 + viewWidth/12, viewHeight*9/24, Color.WHITE, unitSize);
 
         // X-Z Space values
-        drawGraphText(canvas, String.valueOf(xZRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
-        drawGraphText(canvas, String.valueOf(xZRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xZRangeSpaceList.get(firstPosition)), viewWidth*7/18 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(xZRangeSpaceList.get(lastPosition)), viewWidth*2/3 + viewWidth/12, viewHeight*12/24, Color.WHITE, unitSize);
 
         // Y-Z Space values
-        drawGraphText(canvas, String.valueOf(yZRangeSpace[firstPosition]), viewWidth*7/18 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
-        drawGraphText(canvas, String.valueOf(yZRangeSpace[lastPosition]), viewWidth*2/3 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(yZRangeSpaceList.get(firstPosition)), viewWidth*7/18 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
+        drawGraphText(canvas, String.valueOf(yZRangeSpaceList.get(lastPosition)), viewWidth*2/3 + viewWidth/12, viewHeight*15/24, Color.WHITE, unitSize);
     }
 
     private void drawChangeSpace(Canvas canvas, int viewWidth, int viewHeight){
