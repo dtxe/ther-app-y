@@ -96,16 +96,16 @@ public class DrawShapes extends View {
 
         if (currentPage.equals("General")) {
             if (graphCounter == 0) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(volumeSpaceList, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(volumeSpaceList, firstPosition, lastPosition), "Volume(mL)");
                 drawGraphText(canvas, " Volume Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 1) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xYRangeSpaceList, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xYRangeSpaceList, firstPosition, lastPosition), "Area(cm )");
                 drawGraphText(canvas, "     X-Y Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 2) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xZRangeSpaceList, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(xZRangeSpaceList, firstPosition, lastPosition), "Area(cm )");
                 drawGraphText(canvas, "     X-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             } else if (graphCounter == 3) {
-                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yZRangeSpaceList, firstPosition, lastPosition));
+                drawGeneralGraph(canvas, viewWidth, viewHeight, getRangeArray(yZRangeSpaceList, firstPosition, lastPosition), "Area(cm )");
                 drawGraphText(canvas, "     Y-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             }
         }
@@ -157,7 +157,7 @@ public class DrawShapes extends View {
 
     }
 
-    private void drawGeneralGraph(Canvas canvas, int viewWidth, int viewHeight, float[] coordinates) {
+    private void drawGeneralGraph(Canvas canvas, int viewWidth, int viewHeight, float[] coordinates, String yAxisTitle) {
         float[] tempCoorNorm = new float[coordinates.length];
         Path path = new Path();
         Paint pathPaint = makePaint("Path", getResources().getColor(R.color.colorPrimary), 255);
@@ -197,7 +197,7 @@ public class DrawShapes extends View {
             }
         }
 
-        drawAxis(canvas, viewWidth, viewHeight, dateString, coordinates[maxIndex], interXValue, coordinates.length);
+        drawAxis(canvas, viewWidth, viewHeight, dateString, coordinates[maxIndex], interXValue, coordinates.length, yAxisTitle);
     }
 
     private void drawSpecificVolume(Canvas canvas, int viewWidth, int viewHeight){
@@ -209,9 +209,12 @@ public class DrawShapes extends View {
         canvas.drawRect(viewWidth*47/72, viewHeight*2/24, viewWidth*66/72, viewHeight*16/24, paint2);
 
         drawGraphText(canvas, "Vol Space(mL)", viewWidth/15, viewHeight*6/24, Color.BLACK, unitSize);
-        drawGraphText(canvas, "X-Y Space(mL)", viewWidth/15, viewHeight*9/24, Color.BLACK, unitSize);
-        drawGraphText(canvas, "X-Z Space(mL)", viewWidth/15, viewHeight*12/24, Color.BLACK, unitSize);
-        drawGraphText(canvas, "Y-Z Space(mL)", viewWidth/15, viewHeight*15/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "X-Y Space(cm )", viewWidth/15, viewHeight*9/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "2", viewWidth*45/144, viewHeight*17/48, Color.BLACK, unitSize/2);
+        drawGraphText(canvas, "X-Z Space(cm)", viewWidth/15, viewHeight*12/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "2", viewWidth*45/144, viewHeight*23/48, Color.BLACK, unitSize/2);
+        drawGraphText(canvas, "Y-Z Space(cm)", viewWidth/15, viewHeight*15/24, Color.BLACK, unitSize);
+        drawGraphText(canvas, "2", viewWidth*45/144, viewHeight*29/48, Color.BLACK, unitSize/2);
         drawGraphText(canvas, firstDate, viewWidth*7/18, viewHeight*3/24, Color.WHITE, unitSize);
         drawGraphText(canvas, lastDate, viewWidth*2/3, viewHeight*3/24, Color.WHITE, unitSize);
         // Volume Space values
@@ -357,7 +360,7 @@ public class DrawShapes extends View {
     }
 
     private void drawAxis(Canvas canvas, int viewWidth, int viewHeight, List<String> xValues,
-                          float maxScale, float interXValue, int length) {
+                          float maxScale, float interXValue, int length, String yAxisTitle) {
         Paint axisColor = makePaint("Line", Color.BLACK, viewWidth / 86);
         int titleSize = viewWidth/30;
         int unitSize = viewWidth/35;
@@ -406,7 +409,13 @@ public class DrawShapes extends View {
         }
 
         /* Draw the Volume and Date Axis Titles */
-        drawGraphText(canvas, "Volume(mL)", viewWidth / 11, viewHeight * 8 / 78, Color.BLACK, titleSize);
+        if (yAxisTitle.equals("Volume(mL)")) {
+            drawGraphText(canvas, yAxisTitle, viewWidth / 11, viewHeight * 8 / 78, Color.BLACK, titleSize);
+        }
+        else {
+            drawGraphText(canvas, yAxisTitle, viewWidth / 11, viewHeight * 8 / 78, Color.BLACK, titleSize);
+            drawGraphText(canvas, "2", viewWidth*21/96, viewHeight * 7 / 78, Color.BLACK, titleSize / 2);
+        }
         // drawGraphText(canvas, "Date", viewWidth * 3 / 7, viewHeight * 25 / 33, Color.BLACK, titleSize);
     }
 
