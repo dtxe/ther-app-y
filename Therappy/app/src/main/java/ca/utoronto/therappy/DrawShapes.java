@@ -198,7 +198,7 @@ public class DrawShapes extends View {
             }
         }
 
-        drawAxis(canvas, viewWidth, viewHeight, dates, coordinates[maxIndex], interXValue, coordinates.length);
+        drawAxis(canvas, viewWidth, viewHeight, dateString, coordinates[maxIndex], interXValue, coordinates.length);
     }
 
     private void drawSpecificVolume(Canvas canvas, int viewWidth, int viewHeight){
@@ -357,7 +357,7 @@ public class DrawShapes extends View {
         draw2DAxis(canvas, viewWidth, viewHeight, tempString, yMax, xAxis, yAxis);
     }
 
-    private void drawAxis(Canvas canvas, int viewWidth, int viewHeight, String[] xValues,
+    private void drawAxis(Canvas canvas, int viewWidth, int viewHeight, List<String> xValues,
                           float maxScale, float interXValue, int length) {
         Paint axisColor = makePaint("Line", Color.BLACK, viewWidth / 86);
         int titleSize = viewWidth/30;
@@ -386,12 +386,12 @@ public class DrawShapes extends View {
             canvas.save();
             canvas.rotate(-45f, (float) (viewWidth / 7 + ((length-1-(i*mulTen)) * interXValue)),
                     (float) (viewHeight * 100 / 144));
-            char temp = xValues[lastPosition-((i)*mulTen)].charAt(0);
-            char temp2 = xValues[lastPosition-((i)*mulTen)].charAt(1);
-            char temp3 = xValues[lastPosition-((i)*mulTen)].charAt(2);
+            char temp = xValues.get(lastPosition-((i)*mulTen)).charAt(0);
+            char temp2 = xValues.get(lastPosition-((i)*mulTen)).charAt(1);
+            char temp3 = xValues.get(lastPosition-((i)*mulTen)).charAt(2);
             String month = String.valueOf(temp) + String.valueOf(temp2) + String.valueOf(temp3);
-            temp = xValues[lastPosition-((i)*mulTen)].charAt(4);
-            temp2 = xValues[lastPosition-((i)*mulTen)].charAt(5);
+            temp = xValues.get(lastPosition-((i)*mulTen)).charAt(4);
+            temp2 = xValues.get(lastPosition-((i)*mulTen)).charAt(5);
             String day = String.valueOf(temp) + String.valueOf(temp2);
             String date = month + " " + day;
 
