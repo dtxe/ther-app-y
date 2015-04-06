@@ -123,7 +123,6 @@ public class DrawShapes extends View {
                 drawDetailed2DSpace(canvas, yZDetailedSpaceYList, yZDetailedSpaceZList, "Y-Range(cm)", "Z-Range(cm)");
                 drawGraphText(canvas, "     Y-Z Space", viewWidth*3/10, viewHeight*7/8+20, Color.BLACK, 60);
             }
-
         }
     }
 
@@ -144,7 +143,7 @@ public class DrawShapes extends View {
                 }
             }
             // Have to reset the last position if we are setting it to default
-            lastPosition = dates.length - 1;
+            lastPosition = dateString.size() - 1;
             return tempArray;
         }
         else {
