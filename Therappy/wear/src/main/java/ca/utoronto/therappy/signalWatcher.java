@@ -167,6 +167,7 @@ public class signalWatcher {
         }
 
         if(this.counter == 100) {
+            Log.i(TAG, "avgaccl: " + avgAccl[0] + ", " + avgAccl[1] + ", " + avgAccl[2]);
             Log.i(TAG, "avgvelocity: " + this.avgVelocity[0] + ", " + this.avgVelocity[1] + ", " + this.avgVelocity[2]);
             Log.i(TAG, "position: " + this.position[0] + ", " + this.position[1] + ", " + this.position[2]);
 
