@@ -1,5 +1,7 @@
 package ca.utoronto.therappy;
 
+import android.util.Log;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,6 +20,8 @@ public class signalWatcher {
     private static final int positionTimerPeriod = 5;
 
     private boolean leftOrigin, hitTarget, backToOrigin;
+    private static final String TAG = signalWatcher.class.getSimpleName();
+
 
 
     public signalWatcher() {
@@ -81,11 +85,14 @@ public class signalWatcher {
         // check status
         if(!leftOrigin && absvelocity > 0.5) {
             leftOrigin = true;
+            Log.i(TAG, "left origin");
         }
         if(leftOrigin && !hitTarget && absvelocity < 0.5) {     // TODO: these need to be tweaked
+            Log.i(TAG, "hit target");
             hitTarget = true;
         }
         if(leftOrigin && hitTarget && !backToOrigin && absposition < 0.03) {
+            Log.i(TAG, "backToOrigin");
             backToOrigin = true;
         }
     }
