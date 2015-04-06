@@ -118,7 +118,9 @@ public class signalWatcher {
     // every so often... integrate the velocity to update position vector
     // check if a full "tap" has been completed
     public void onPositionTimerTick(float interval) {
-        float[] avgAccl = new float[3];
+
+        // STEP: take mean of accl accumulator
+        float[] avgAccl = new float[]{0, 0, 0};
         for(int kk = 0; kk < avgAccleration_ctr_max; kk++) {
             avgAccl[0] += avgAcceleration[kk][0];
             avgAccl[1] += avgAcceleration[kk][1];
@@ -128,6 +130,7 @@ public class signalWatcher {
         avgAccl[1] = avgAccl[1] / avgAccleration_ctr_max;
         avgAccl[2] = avgAccl[2] / avgAccleration_ctr_max;
 
+        // STEP: integrate acceleration and velocity
         this.velocity[0] = this.velocity[0] + (avgAccl[0] * interval * timer_timediv);
         this.velocity[1] = this.velocity[1] + (avgAccl[1] * interval * timer_timediv);
         this.velocity[2] = this.velocity[2] + (avgAccl[2] * interval * timer_timediv);
