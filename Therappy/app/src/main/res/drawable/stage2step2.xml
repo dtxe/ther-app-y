@@ -1,0 +1,10 @@
+<!-- Animation frames are xy1 to xy5 -->
+<animation-list
+    android:id="@+id/stage2step2"
+    android:oneshot="false"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/sidestart" android:duration="500" />
+    <item android:drawable="@drawable/up1" android:duration="500" />
+    <item android:drawable="@drawable/up2" android:duration="500" />
+    <item android:drawable="@drawable/up1" android:duration="500" />
+</animation-list>

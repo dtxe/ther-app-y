@@ -14,9 +14,10 @@ public class signalWatcher {
     private long lastTimestamp;               // last onSensorChanged timestamp
     private float[] position, velocity, acceleration;        // current position and velocity
 
-    private int avgAccleration_ctr;
+    private int avgAccleration_ctr, longavgAccleration_ctr;
     private final static int avgAccleration_ctr_max = 20;       // TODO: verify the width of accl peak
-    private float[][] avgAcceleration;
+    private final static int longavgAccleration_ctr_max = 500;       // TODO: verify the width of accl peak
+    private float[][] avgAcceleration, longavgAcceleration;
 
     private double furthestPosition;            // keep track of furthest position to return (ie. target position)
     private float[] avgVelocity;
@@ -47,6 +48,7 @@ public class signalWatcher {
         this.avgVelocity = new float[] {0, 0, 0};
 
         this.avgAcceleration = new float[avgAccleration_ctr_max][];
+        this.longavgAcceleration = new float[longavgAccleration_ctr_max][];
 
         this.furthestPosition = 0;
 
@@ -56,6 +58,8 @@ public class signalWatcher {
         this.currentStatus = BEGIN_AT_ORIGIN;
 
         this.counter = 0;
+        this.avgAccleration_ctr = 0;
+        this.longavgAccleration_ctr = 0;
     }
 
     // stop the position integration timer
@@ -94,6 +98,12 @@ public class signalWatcher {
             this.avgAccleration_ctr = 0;
         }
 
+        this.longavgAcceleration[this.longavgAccleration_ctr] = this.acceleration;
+        this.longavgAccleration_ctr++;
+        if(this.longavgAccleration_ctr == longavgAccleration_ctr_max){
+            this.longavgAccleration_ctr = 0;
+        }
+
         // update event timestamp
         this.lastTimestamp = eventTimestamp;
     }
@@ -130,7 +140,21 @@ public class signalWatcher {
         avgAccl[1] = avgAccl[1] / avgAccleration_ctr_max;
         avgAccl[2] = avgAccl[2] / avgAccleration_ctr_max;
 
-        thresholdByValue(avgAccl, (float) 0.1);
+        float[] longavgAccl = new float[]{0, 0, 0};
+        for(int kk = 0; kk < longavgAccleration_ctr_max; kk++){
+            longavgAccl[0] += longavgAcceleration[kk][0];
+            longavgAccl[1] += longavgAcceleration[kk][1];
+            longavgAccl[2] += longavgAcceleration[kk][2];
+        }
+        longavgAccl[0] = longavgAccl[0] / longavgAccleration_ctr_max;
+        longavgAccl[1] = longavgAccl[1] / longavgAccleration_ctr_max;
+        longavgAccl[2] = longavgAccl[2] / longavgAccleration_ctr_max;
+
+        avgAccl[0] = avgAccl[0] - longavgAccl[0];
+        avgAccl[1] = avgAccl[1] - longavgAccl[1];
+        avgAccl[2] = avgAccl[2] - longavgAccl[2];
+
+        //thresholdByValue(avgAccl, (float) 0.1);
 
         // STEP: integrate acceleration and velocity
         this.velocity[0] = this.velocity[0] + (avgAccl[0] * interval * timer_timediv);
@@ -179,9 +203,18 @@ public class signalWatcher {
     }
 
     protected void thresholdByValue(float[] vector, float threshold) {
-        vector[0] = vector[0] < threshold ? 0 : vector[0];
-        vector[1] = vector[1] < threshold ? 0 : vector[1];
-        vector[2] = vector[2] < threshold ? 0 : vector[2];
+        if(vector[0] > 0)
+            vector[0] = vector[0] < threshold ? 0 : vector[0];
+        else
+            vector[0] = vector[0] > -threshold ? 0 : vector[0];
+        if(vector[1] > 0)
+            vector[1] = vector[1] < threshold ? 0 : vector[1];
+        else
+            vector[1] = vector[1] > -threshold ? 0 : vector[1];
+        if(vector[0] > 0)
+            vector[2] = vector[2] < threshold ? 0 : vector[2];
+        else
+            vector[2] = vector[2] > -threshold ? 0 : vector[2];
     }
 
     // get the magnitude of the vector in 3d space.

@@ -127,7 +127,11 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
             // ensure arrays are sorted properly
-            Collections.sort(data_accl);
+            if(data_accl.isEmpty()){
+                cancel(true);
+            }else {
+                Collections.sort(data_accl);
+            }
             //Collections.sort(data_rota);
 
             publishProgress("file read. processing signals.");
