@@ -120,6 +120,7 @@ public class signalWatcher {
             Log.i(TAG, "hit target");
         } else if(this.currentStatus == HAS_HIT_TARGET && absvelocity > 2) {
             this.currentStatus = HAS_LEFT_TARGET;
+            Log.i(TAG, "left target");
         } else if(this.currentStatus == HAS_LEFT_TARGET && absavgvelocity < 0.4) {
             this.currentStatus = HAS_HIT_ORIGIN;        // yay we're done!
             Log.i(TAG, "backToOrigin");
