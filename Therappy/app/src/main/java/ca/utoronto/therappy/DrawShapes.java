@@ -292,24 +292,28 @@ public class DrawShapes extends View {
         }
 
         // Calculate the actual coordinates for the graph
-        float[] tempActualX = new float[xYDetailedSpaceX.length];
-        float[] tempActualY = new float[xYDetailedSpaceY.length];
-        float[] tempActualX2 = new float[xYDetailedSpaceX.length];
-        float[] tempActualY2 = new float[xYDetailedSpaceY.length];
+        float[] tempActualX = new float[5];
+        float[] tempActualY = new float[5];
+        float[] tempActualX2 = new float[5];
+        float[] tempActualY2 = new float[5];
 
         // Getting the Actual X and Y coordinates
-        for (int i=0; i<xYDetailedSpaceX.length; i++){
+        for (int i=0; i<5; i++){
             // min length is viewWidth/6, max length is view Width*5/6
             // min height is viewHeight/3, max height is viewHeight*5/6
-            if (xYDetailedSpaceX[i] < 0){
-                tempActualX[i] = viewWidth/2 - Math.abs(xYDetailedSpaceX[i])/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - xYDetailedSpaceY[i]/yMax*viewHeight/2;
+            if (yCoor.get(i) < 0){
+                // Then set to 0
+                yCoor.set(i, Float.valueOf(0));
+            }
+            if (xCoor.get(i) < 0){
+                tempActualX[i] = viewWidth/2 - Math.abs(xCoor.get(i))/xGreatest*viewWidth/3;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yMax*viewHeight/2;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
             else{
-                tempActualX[i] = viewWidth/2 + xYDetailedSpaceX[i]/xGreatest*viewWidth/3;
-                tempActualY[i] = viewHeight*23/36 - xYDetailedSpaceY[i]/yMax*viewHeight/2;
+                tempActualX[i] = viewWidth/2 + xCoor.get(i)/xGreatest*viewWidth/3;
+                tempActualY[i] = viewHeight*23/36 - yCoor.get(i)/yMax*viewHeight/2;
                 tempActualX2[i] = tempActualX[i];
                 tempActualY2[i] = tempActualY[i] * 25/36;
             }
@@ -326,11 +330,11 @@ public class DrawShapes extends View {
         path.moveTo(viewWidth/6, viewHeight*23/36);
         path2.moveTo(viewWidth/6, viewHeight*23/36);
 
-        for (int i=1; i<xYDetailedSpaceX.length; i++) {
+        for (int i=1; i<5; i++) {
             path.lineTo(tempActualX[i-1], tempActualY[i-1]);
             path2.lineTo(tempActualX2[i-1], tempActualY2[i-1]);
             // If its the last point, close the path
-            if (i == (xYDetailedSpaceX.length - 1)){
+            if (i == 4){
                 // Have to make sure if hits the axis at 0
                 path.lineTo(tempActualX[i], tempActualY[i]);
                 path.lineTo(tempActualX[i], viewHeight*23/36);
@@ -587,6 +591,13 @@ public class DrawShapes extends View {
                     else if (count > 14 && count < 18) {
                         yZDetailedSpaceYList.add(Float.parseFloat(sensorData[1]));
                         yZDetailedSpaceZList.add(Float.parseFloat(sensorData[2]));
+                        if (count == 17) {
+                            // To make it a nice 5 values
+                            yZDetailedSpaceYList.add(Float.parseFloat(sensorData[1]));
+                            yZDetailedSpaceZList.add(Float.parseFloat(sensorData[2]));
+                            yZDetailedSpaceYList.add(Float.parseFloat(sensorData[1]));
+                            yZDetailedSpaceZList.add(Float.parseFloat(sensorData[2]));
+                        }
                     }
                 } catch (Exception e){
                     e.printStackTrace();
