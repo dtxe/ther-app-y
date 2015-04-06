@@ -29,6 +29,8 @@ public class signalWatcher {
                              HAS_LEFT_TARGET    = 3,
                              HAS_HIT_ORIGIN     = 4;
 
+    private int counter;
+
     public signalWatcher() {
         this.lastTimestamp = 0;
 
@@ -42,6 +44,8 @@ public class signalWatcher {
         this.positionTimer.scheduleAtFixedRate(new MyTask(this, positionTimerPeriod), 0, positionTimerPeriod);
 
         this.currentStatus = BEGIN_AT_ORIGIN;
+
+        this.counter = 0;
     }
 
     // stop the position integration timer
@@ -79,9 +83,9 @@ public class signalWatcher {
         this.lastTimestamp = eventTimestamp;
 
         // keep track of rolling average
-        this.avgVelocity[0] = 0.9*this.avgVelocity[0] + 0.1*this.velocity[0];
-        this.avgVelocity[1] = 0.9*this.avgVelocity[1] + 0.1*this.velocity[1];
-        this.avgVelocity[2] = 0.9*this.avgVelocity[2] + 0.1*this.velocity[2];
+        this.avgVelocity[0] = 0.99*this.avgVelocity[0] + 0.01*this.velocity[0];
+        this.avgVelocity[1] = 0.99*this.avgVelocity[1] + 0.01*this.velocity[1];
+        this.avgVelocity[2] = 0.99*this.avgVelocity[2] + 0.01*this.velocity[2];
     }
 
     public double[] getPosition() {
@@ -119,7 +123,7 @@ public class signalWatcher {
         if(this.currentStatus == BEGIN_AT_ORIGIN && absvelocity > 2) {
             this.currentStatus = HAS_LEFT_ORIGIN;
             Log.i(TAG, "left origin");
-        } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 0.4) {     // TODO: these need to be tweaked
+        } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 1) {     // TODO: these need to be tweaked
             this.currentStatus = HAS_HIT_TARGET;
             Log.i(TAG, "hit target");
         } else if(this.currentStatus == HAS_HIT_TARGET && absvelocity > 2) {
@@ -130,7 +134,13 @@ public class signalWatcher {
             Log.i(TAG, "backToOrigin");
         }
 
-        Log.i(TAG, "avgvelocity: "+avgVelocity[0]+","+avgVelocity[1]+","+avgVelocity[2]);
+        if(this.counter == 20) {
+            Log.i(TAG, "avgvelocity: " + avgVelocity[0] + ", " + avgVelocity[1] + ", " + avgVelocity[2]);
+            Log.i(TAG, "position: " + position[0] + ", " + position[1] + ", " + position[2]);
+
+            this.counter = 0;
+        }
+        this.counter++;
     }
 
     // get the magnitude of the vector in 3d space.
