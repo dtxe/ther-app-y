@@ -58,6 +58,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     //private static ByteBuffer MessageBuffer = ByteBuffer.allocate((8 + 4*3)*COUNT);         // message buffer
     private static int cycle;                                                               // current number of items in buffer
     private boolean started;
+    private signalWatcher watcher;
 
     private ImageButton btnLoad;
 
@@ -97,7 +98,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         btnLoad = (ImageButton)findViewById(R.id.btnLoading);
         btnLoad.setOnClickListener(this);
         btnLoad.setEnabled(true);
-
+        watcher = new signalWatcher();
         sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
@@ -111,6 +112,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     public void stopMeasuring() {
         mSensorManager.unregisterListener(this);
         MessageBuffer.clear();
+        watcher.onDestroy();
         finish();
     }
 
@@ -152,19 +154,27 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
                 //type = 'a';
                 if(started){
+                    /*
                     MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
                     cycle++;
                     if(cycle == COUNT){
                         sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                         MessageBuffer.clear();
                         cycle = 0;
+                    }*/
+                    watcher.onSensorChanged(data, time);
+                    if(watcher.isBackToOrigin()){
+                        Log.i(TAG, "Back to origin!");
+                        sendMessage(DATA_MESSAGE_PATH, watcher.getFurthestPosition() + "");
                     }
                 }
                 break;
+
             case Sensor.TYPE_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
                 Matrix.invertM(rotmatrix, 0, rotmatrix, 0);
                 break;
+
             default:
                 break;
         }
@@ -353,6 +363,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             mGoogleApiClient.unregisterConnectionCallbacks(this);
             mGoogleApiClient.disconnect();
         }
+        watcher.onDestroy();
     }
 
     @Override
@@ -364,11 +375,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 mGoogleApiClient.disconnect();
             }
         }
+        watcher.onDestroy();
     }
 
     @Override
     public void finish(){
         super.finish();
+        watcher.onDestroy();
         if(mGoogleApiClient != null) {
             Wearable.MessageApi.removeListener(mGoogleApiClient, this);
             mGoogleApiClient.unregisterConnectionCallbacks(this);

@@ -57,8 +57,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
 
     /* recording variables */
     private boolean started = false;                        // whether or not the app is recording data or not
-    private int step = 0;                                   // current step number
-    private int NUM_STEPS = 3;                              // number of steps
+    private int step = 0, stage = 0;                                   // current step number
+    private int NUM_STEPS = 5, NUM_STAGE = 3;                              // number of steps
     private long time = System.currentTimeMillis();         // timestamp for the long
 
     /* communication variables */
@@ -141,10 +141,11 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 Log.i(TAG, "calling wear manually");
                 break;
             case R.id.sm_button:
-                if(step == 0){
+                if(stage == 0){
+                    stage++;
                     startRecording();
                 }
-                else if(step == NUM_STEPS){
+                else if(stage > NUM_STAGE){
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "flush");
                 }
                 else {
@@ -215,6 +216,25 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
+    public void setPoint(byte[] message) {
+        ByteBuffer buffer;
+        double furthestPosition;
+        buffer = ByteBuffer.wrap(message);
+        buffer.rewind();
+        furthestPosition = buffer.getDouble();
+
+        //status.setText("Furthest position: " + furthestPosition);
+        if(started) {
+            try {
+                writer.write(furthestPosition + "");
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        //getNextInstruction();
+    }
+
     /*  getNextInstruction
      *  Input:  void
      *  Output: void
@@ -224,30 +244,31 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
      */
     public void getNextInstruction() {
         step++;
-        String STEPNAME = "ERROR";
-        String source = null;
-        switch(step){
-            case 1: STEPNAME = "Stir the cauldron";
-               source = "xy_instruction";
-                break;
-            case 2: STEPNAME = "Paint the rainbow";
-                source = "xz_instruction";
-                break;
-            case 3: STEPNAME = "Ninja chop";
-                source = "yz_instruction";
-                break;
-            default:
-                break;
-        }
-        status.setText("Step " + step + "of" + NUM_STEPS + "\n" + STEPNAME);
+        String source = "stage" + stage + "step" + step;
+        status.setText("Stage " + stage + " of " + NUM_STAGE + "\nStep " + step + " of " + NUM_STEPS);
         tapNext.setText("Tap screen to continue...");
         Log.i(TAG, "Next step!");
+
         // setup the animations
         ivInstruction.setImageResource(getResources().getIdentifier(source,"drawable",getPackageName()));
         frameAnimation = (AnimationDrawable)ivInstruction.getDrawable();
         frameAnimation.setCallback(ivInstruction);
         frameAnimation.setVisible(true, true);
         frameAnimation.start();
+        if(step == NUM_STEPS){
+            stage++;
+            step = 0;
+            switch(stage){
+                case 1: NUM_STEPS = 5;
+                    break;
+                case 2: NUM_STEPS = 2;
+                    break;
+                case 3: NUM_STEPS = 2;
+                    break;
+                default: NUM_STEPS = 0;
+                    break;
+            }
+        }
     }
 
     /* settings/option menu commands */
@@ -371,7 +392,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 // if the message is sensor data, send it to be recorded
                 if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
                     Log.i(TAG, "data rec'd: " + msg);
-                    setData(messageEvent.getData());
+                    /*
+                    setData(messageEvent.getData()); */
+                    setPoint(messageEvent.getData());
                 }
                 // if it is connection data, set the label
                 else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
