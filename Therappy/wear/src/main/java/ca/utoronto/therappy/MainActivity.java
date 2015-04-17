@@ -42,6 +42,14 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private Sensor mAccelerometer, mRotation;               // accelerometer and rotation vector sensor variables
     private float[] rotmatrix = new float[16];              // rotation matrix
 
+    // Linear interpolation stuffs
+    private float[][] bufferAccl = new float[128][];        // buffered acceleration values, making this large enough that it'll hold everything
+    private long[] bufferAcclTime = new long[128];
+    private int bufferAcclCounter = 0;
+
+    private float[] bufferRot;                              // the previous rotation value, buffered.
+    private long bufferRotTime = 0;
+
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -85,11 +93,14 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         // pre-clear variables
         for(int i = 0; i < 16; i++){
-            rotmatrix[i] = 0;
+            this.rotmatrix[i] = 0;
         }
         MessageBuffer.clear();
         cycle = 0;
         started = false;
+
+        // initialize acceleration buffer
+        clearBufferAccl();
 
         // initiate communication
         initGoogleApiClient();
@@ -100,6 +111,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         btnLoad.setEnabled(true);
         watcher = new signalWatcher();
         sendMessage(WEAR_MESSAGE_PATH, "");
+
+
+
     }
 
     /* stopMeasuring
@@ -130,6 +144,17 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         // Do something here if sensor accuracy changes.
     }
 
+    // clear the acceleration buffer once it has been processed
+    private void clearBufferAccl() {
+        for(int kk = 0; kk < this.bufferAccl.length; kk++) {
+            this.bufferAccl[kk] = null;
+            this.bufferAcclTime[kk] = 0;
+        }
+        this.bufferAcclCounter = 0;
+    }
+
+
+
     /*  onSensorChanged
      *  Input:  SensorEvent event - contains the sensor which has changed and the new values
      *  Output: void
@@ -146,50 +171,69 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         data[1] = event.values[1];
         data[2] = event.values[2];
         data[3] = 0;
-        //char type = 'x';
         long time = event.timestamp;
 
+        // check sensor type
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
-                //type = 'a';
-                if(started){
-                    /*
-                    MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-                    cycle++;
-                    if(cycle == COUNT){
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
-                        cycle = 0;
-                    }*/
-                    watcher.onSensorChanged(data, time);
-                    if(watcher.isBackToOrigin()){
-                        Log.i(TAG, "Back to origin!");
-                        sendMessage(DATA_MESSAGE_PATH, watcher.getFurthestPosition() + "");
-                    }
+                if (started) {
+                    // store into buffer
+                    this.bufferAccl[this.bufferAcclCounter] = data;
+                    this.bufferAcclTime[this.bufferAcclCounter] = time;
+                    this.bufferAcclCounter++;
                 }
+
                 break;
 
             case Sensor.TYPE_ROTATION_VECTOR:
-                SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
-                Matrix.invertM(rotmatrix, 0, rotmatrix, 0);
-                break;
+                if (started) {
+                    // get linear coefficients for interpolation.
+                    float Ax, Ay, Az;
+                    Ax = (data[0] - this.bufferRot[0]) / (time - this.bufferRotTime);
+                    Ay = (data[1] - this.bufferRot[1]) / (time - this.bufferRotTime);
+                    Az = (data[2] - this.bufferRot[2]) / (time - this.bufferRotTime);
+
+
+                    // float arrays are default zeroed upon initialization. not that it matters.
+                    float[] tempRot = new float[3];
+                    float[] tempAccl = new float[4];
+                    float[] rotmatrix = new float[16], trotmatrix = new float[16];      // NOTE: not sure if matrix can be transposed in place.
+
+                    // loop over acceleration values
+                    for (int kk = 0; kk < this.bufferAcclCounter; kk++) {
+                        // calculate interpolated rotation values
+                        tempRot[0] = Ax * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[0];
+                        tempRot[1] = Ay * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[1];
+                        tempRot[2] = Az * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[2];
+
+                        // calculate rotation matrix
+                        SensorManager.getRotationMatrixFromVector(rotmatrix, tempRot);
+                        Matrix.transposeM(trotmatrix, 0, rotmatrix, 0);        // apparently transposing a rotation matrix is a more computationally effective way of inverting
+
+                        // rotate the acceleration vector
+                        Matrix.multiplyMV(tempAccl, 0, trotmatrix, 0, this.bufferAccl[kk], 0);
+
+                        // give this to signalWatcher
+                        watcher.onSensorChanged(tempAccl, this.bufferAcclTime[kk]);
+                    }
+                } // if (started)
+
+                // >> BEGIN debugging monitoring
+                if(watcher.isBackToOrigin()){
+                    Log.i(TAG, "Back to origin!");
+                    sendMessage(DATA_MESSAGE_PATH, watcher.getFurthestPosition() + "");
+                }
+                // >> END debugging monitoring
+
+                // update the buffer
+                this.bufferRot = data;
+                this.bufferRotTime = time;
+
+                break;  // case Sensor.TYPE_ROTATION_VECTOR:
 
             default:
                 break;
         }
-        /*if(started && type == 'a') {
-            //MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
-            //MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            MessageBuffer.putLong(time).putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            cycle++;
-            //cycle = cycle + 2;
-            if(cycle == COUNT){
-                sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                MessageBuffer.clear();
-                cycle = 0;
-            }
-        }*/
     }
 
     public void onClick(View view) {
