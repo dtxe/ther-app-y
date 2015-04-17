@@ -206,15 +206,15 @@ public class signalWatcher {
         if(vector[0] > 0)
             vector[0] = vector[0] < threshold ? 0 : vector[0];
         else
-            vector[0] = vector[0] > -threshold ? 0 : vector[0];
+            vector[0] = vector[0] > -1.0f * threshold ? 0 : vector[0];
         if(vector[1] > 0)
             vector[1] = vector[1] < threshold ? 0 : vector[1];
         else
-            vector[1] = vector[1] > -threshold ? 0 : vector[1];
-        if(vector[0] > 0)
+            vector[1] = vector[1] > -1.0f * threshold ? 0 : vector[1];
+        if(vector[2] > 0)
             vector[2] = vector[2] < threshold ? 0 : vector[2];
         else
-            vector[2] = vector[2] > -threshold ? 0 : vector[2];
+            vector[2] = vector[2] > -1.0f * threshold ? 0 : vector[2];
     }
 
     // get the magnitude of the vector in 3d space.
