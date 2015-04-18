@@ -43,12 +43,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private float[] rotmatrix = new float[16];              // rotation matrix
 
     // Linear interpolation stuffs
-    private float[][] bufferAccl = new float[128][];        // buffered acceleration values, making this large enough that it'll hold everything
-    private long[] bufferAcclTime = new long[128];
+    private sensorPoint[] bufferAccl = new sensorPoint[128]; // buffered acceleration values, making this large enough that it'll hold everything
     private int bufferAcclCounter = 0;
 
-    private float[] bufferRot;                              // the previous rotation value, buffered.
-    private long bufferRotTime = 0;
+    private sensorPoint bufferRot;                          // the previous rotation value, buffered.
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -148,7 +146,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private void clearBufferAccl() {
         for(int kk = 0; kk < this.bufferAccl.length; kk++) {
             this.bufferAccl[kk] = null;
-            this.bufferAcclTime[kk] = 0;
         }
         this.bufferAcclCounter = 0;
     }
@@ -178,8 +175,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 if (started) {
                     // store into buffer
-                    this.bufferAccl[this.bufferAcclCounter] = data;
-                    this.bufferAcclTime[this.bufferAcclCounter] = time;
+                    this.bufferAccl[this.bufferAcclCounter] = new sensorPoint(time, data);
                     this.bufferAcclCounter++;
                 }
 
@@ -189,9 +185,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 if (started) {
                     // get linear coefficients for interpolation.
                     float Ax, Ay, Az;
-                    Ax = (data[0] - this.bufferRot[0]) / (time - this.bufferRotTime);
-                    Ay = (data[1] - this.bufferRot[1]) / (time - this.bufferRotTime);
-                    Az = (data[2] - this.bufferRot[2]) / (time - this.bufferRotTime);
+                    Ax = (data[0] - this.bufferRot.value[0]) / (time - this.bufferRot.time);
+                    Ay = (data[1] - this.bufferRot.value[1]) / (time - this.bufferRot.time);
+                    Az = (data[2] - this.bufferRot.value[2]) / (time - this.bufferRot.time);
 
 
                     // float arrays are default zeroed upon initialization. not that it matters.
@@ -202,19 +198,19 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     // loop over acceleration values
                     for (int kk = 0; kk < this.bufferAcclCounter; kk++) {
                         // calculate interpolated rotation values
-                        tempRot[0] = Ax * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[0];
-                        tempRot[1] = Ay * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[1];
-                        tempRot[2] = Az * (this.bufferAcclTime[kk] - this.bufferRotTime) + this.bufferRot[2];
+                        tempRot[0] = Ax * (this.bufferAccl[kk].time - this.bufferRot.time) + this.bufferRot.value[0];
+                        tempRot[1] = Ay * (this.bufferAccl[kk].time - this.bufferRot.time) + this.bufferRot.value[1];
+                        tempRot[2] = Az * (this.bufferAccl[kk].time - this.bufferRot.time) + this.bufferRot.value[2];
 
                         // calculate rotation matrix
                         SensorManager.getRotationMatrixFromVector(rotmatrix, tempRot);
                         Matrix.transposeM(trotmatrix, 0, rotmatrix, 0);        // apparently transposing a rotation matrix is a more computationally effective way of inverting
 
                         // rotate the acceleration vector
-                        Matrix.multiplyMV(tempAccl, 0, trotmatrix, 0, this.bufferAccl[kk], 0);
+                        Matrix.multiplyMV(tempAccl, 0, trotmatrix, 0, this.bufferAccl[kk].value, 0);
 
                         // give this to signalWatcher
-                        watcher.onSensorChanged(tempAccl, this.bufferAcclTime[kk]);
+                        watcher.onSensorChanged(tempAccl, this.bufferAccl[kk].time);
                     }
                 } // if (started)
 
@@ -226,8 +222,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 // >> END debugging monitoring
 
                 // update the buffer
-                this.bufferRot = data;
-                this.bufferRotTime = time;
+                this.bufferRot = new sensorPoint(time, data);
 
                 break;  // case Sensor.TYPE_ROTATION_VECTOR:
 
