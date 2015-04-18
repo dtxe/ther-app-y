@@ -6,10 +6,15 @@ package ca.utoronto.therappy;
 public class sensorPoint implements Comparable<sensorPoint> {
     public static final int DATA_ROTATIONVEC = 2;
     public static final int DATA_ACCELERATION = 1;
+    public static final int DATA_UNSPECIFIED = 0;
 
     private final long time;
     private final float[] value;
     private final int datatype;
+
+    public sensorPoint(long time, float[] val) {
+        this(time, val, DATA_UNSPECIFIED);
+    }
 
     public sensorPoint(long time, float[] val, int datatype) {
         this.time = time;
