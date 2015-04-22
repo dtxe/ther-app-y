@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.CountDownTimer;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -66,7 +67,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private static final String START_ACTIVITY = "/therappy-start_activity";            // start command for watch
     private static final String WEAR_MESSAGE_PATH = "/message";                         // watch message header
     private static final String DATA_MESSAGE_PATH = "/sensordata";                      // watch sensor data header
-    private static final String EVENT_MESSAGE_PATH = "/event";                          // event data header
     private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
 
     /* debug variables */
@@ -143,19 +143,40 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 break;
             case R.id.sm_button:
                 if(stage == 0){
+                    countdown();
                     stage++;
                     startRecording();
                 }
                 else if(stage > NUM_STAGE){
-                    sendMessage(INSTRUCTION_MESSAGE_PATH, "flush");
+                    sendMessage(INSTRUCTION_MESSAGE_PATH, "LASTFLUSH");
                 }
                 else {
-                    getNextInstruction();
+                    sendMessage(INSTRUCTION_MESSAGE_PATH, "FLUSH");
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    private void countdown(){
+        vloading.setVisibility(View.VISIBLE);
+        vmain.setVisibility(View.GONE);
+        bNext.setEnabled(false);
+        lhint.setText("Please wait!");
+        lhint.setText("Hold steady...\n5");
+        new CountDownTimer(5000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                lstatus.setText("Hold steady...\n"+ (millisUntilFinished/1000)+1);
+            }
+
+            public void onFinish() {
+                vloading.setVisibility(View.GONE);
+                vmain.setVisibility(View.VISIBLE);
+                bNext.setEnabled(true);
+            }
+        }.start();
     }
 
     private void startRecording(){
@@ -165,8 +186,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     }
 
     private void stopRecording(){
-        sendMessage(WEAR_MESSAGE_PATH, "STOP");
         // stop recording. flush buffer and save file.
+        Log.i(TAG, "Finished recording. Saving files now");
+        sendMessage(WEAR_MESSAGE_PATH, "END");
         try{
             writer.flush();
             fwriter.flush();
@@ -217,25 +239,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
-    public void setPoint(byte[] message) {
-        ByteBuffer buffer;
-        double furthestPosition;
-        buffer = ByteBuffer.wrap(message);
-        buffer.rewind();
-        furthestPosition = buffer.getDouble();
-
-        //status.setText("Furthest position: " + furthestPosition);
-        if(started) {
-            try {
-                writer.write("fp," + furthestPosition);
-                writer.newLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        getNextInstruction();
-    }
-
     /*  getNextInstruction
      *  Input:  void
      *  Output: void
@@ -243,7 +246,15 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
      *  This function retrieves the next instruction in the sequence, displays the appropriate
      *  visual aid, and sends the correct next sequence to the watch.
      */
-    public void getNextInstruction() {
+    private void getNextInstruction() {
+        try {
+            writer.write("0,N,0,0,0");
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // set up the stage/step
         step++;
         String source = "stage" + stage + "step" + step;
         status.setText("Stage " + stage + " of " + NUM_STAGE + "\nStep " + step + " of " + NUM_STEPS);
@@ -396,10 +407,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     Log.i(TAG, "data rec'd: " + msg);
                     setData(messageEvent.getData());
                 }
-                else if(path.equalsIgnoreCase(EVENT_MESSAGE_PATH)){
-                    Log.i(TAG,"furtherest point is: " + msg);
-                    setPoint(messageEvent.getData());
-                }
                 // if it is connection data, set the label
                 else if (path.equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     vloading.setVisibility(View.GONE);
@@ -412,30 +419,19 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     tapNext.setText("Tap to start");
                 }
                 else if (path.equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
-                    // do something
                     if(msg.equalsIgnoreCase("START")){
                         Log.i(TAG, "message for recording start");
-                        //startRecording();
                     }
                     else if(msg.equalsIgnoreCase("END")){
                         Log.i(TAG, "message for recording end");
                         stopRecording();
                     }
+                    else if(msg.equalsIgnoreCase("FLUSHED")){
+                        getNextInstruction();
+                    }
                 }
             }
         });
-    }
-
-    // for sending notifications on the phone (not used)
-    public void sendNotifications(String title, String text){
-        NotificationCompat.Builder notificationBuilder;
-        int notificationId = 001;
-        NotificationManagerCompat notificationManager =  NotificationManagerCompat.from(SensorModule.this);
-        notificationBuilder =  new NotificationCompat.Builder(SensorModule.this)
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle(title)
-                .setContentText(text);
-        notificationManager.notify(notificationId, notificationBuilder.build());
     }
 
     /* System commands */

@@ -41,7 +41,7 @@ public class SPM extends ActionBarActivity{
         fileName = intent.getStringExtra("fileName");
 
         new SPMCalculate().execute(fileName);
-        finish();
+        //finish();
     }
 
     private class SPMCalculate extends AsyncTask<String, String, Void> {

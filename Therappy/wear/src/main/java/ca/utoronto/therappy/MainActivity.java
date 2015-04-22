@@ -50,8 +50,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private static final String WEAR_MESSAGE_PATH = "/message";
     private static final String DATA_MESSAGE_PATH = "/sensordata";
     private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
-    private static final String EVENT_MESSAGE_PATH = "/event";                          // event data header
-    private String currInstruction;
 
     /* for recording */
     private static final int COUNT = 64;                                                        // size of buffer (in number of samples)
@@ -158,19 +156,17 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
                     cycle++;
                     if(cycle == COUNT){
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
-                        cycle = 0;
+                        flushBuffer();
                     }
                     watcher.onSensorChanged(data, time);
-                    if(watcher.isBackToOrigin()){
+                    /*if(watcher.isBackToOrigin()){
                         Log.i(TAG, "Back to origin!");
                         MessageBuffer.compact();
                         sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                         MessageBuffer.clear();
                         cycle = 0;
                         sendMessage(EVENT_MESSAGE_PATH, watcher.getFurthestPosition() + "");
-                    }
+                    }*/
                 }
                 break;
 
@@ -182,18 +178,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
-        /*if(started && type == 'a') {
-            //MessageBuffer.putLong(time).putChar('b').putFloat(event.values[0]).putFloat(event.values[1]).putFloat(event.values[2]).array();
-            //MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            MessageBuffer.putLong(time).putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
-            cycle++;
-            //cycle = cycle + 2;
-            if(cycle == COUNT){
-                sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                MessageBuffer.clear();
-                cycle = 0;
-            }
-        }*/
+    }
+
+    private void flushBuffer(){
+        MessageBuffer.compact();
+        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+        MessageBuffer.clear();
+        cycle = 0;
     }
 
     public void onClick(View view) {
@@ -266,25 +257,27 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         Log.i(TAG, "Recording has started");
                         started = true;
                     }
-                    else if(msg.equalsIgnoreCase("STOP")) {
-                        Log.i(TAG, "Recording has stopped");
-                        started = false;
-                        finish();
+                    else if(msg.equalsIgnoreCase("END")){
+                        Log.i(TAG, "Finishing");
+                        stopMeasuring();
                     }
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)) {
                     // do something
                     if(msg.equalsIgnoreCase("READY")){
                         btnLoad.setEnabled(false);
-                        currInstruction = "START";
                         Log.i(TAG, "Recording!");
                     }
                     else if(msg.equalsIgnoreCase("FLUSH")){
-                        MessageBuffer.compact();
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
+                        flushBuffer();
+                        sendMessage(INSTRUCTION_MESSAGE_PATH,"FLUSHED");
+                    }
+                    else if(msg.equalsIgnoreCase("LASTFLUSH")) {
+                        Log.i(TAG, "Recording has stopped");
+                        started = false;
+                        flushBuffer();
+                        Log.i(TAG, "Sending message to end");
                         sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
-                        Log.i(TAG, "End of transmission");
                     }
                 }
             }
