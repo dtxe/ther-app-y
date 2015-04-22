@@ -156,9 +156,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
                     cycle++;
                     if(cycle == COUNT){
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
-                        cycle = 0;
+                        flushBuffer();
                     }
                     watcher.onSensorChanged(data, time);
                     /*if(watcher.isBackToOrigin()){
@@ -180,6 +178,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             default:
                 break;
         }
+    }
+
+    private void flushBuffer(){
+        MessageBuffer.compact();
+        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+        MessageBuffer.clear();
+        cycle = 0;
     }
 
     public void onClick(View view) {
@@ -264,17 +269,13 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         Log.i(TAG, "Recording!");
                     }
                     else if(msg.equalsIgnoreCase("FLUSH")){
-                        MessageBuffer.compact();
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
+                        flushBuffer();
                         sendMessage(INSTRUCTION_MESSAGE_PATH,"FLUSHED");
                     }
                     else if(msg.equalsIgnoreCase("LASTFLUSH")) {
                         Log.i(TAG, "Recording has stopped");
                         started = false;
-                        MessageBuffer.compact();
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
+                        flushBuffer();
                         Log.i(TAG, "Sending message to end");
                         sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
                     }

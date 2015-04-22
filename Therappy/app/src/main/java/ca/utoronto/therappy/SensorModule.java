@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.CountDownTimer;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -142,6 +143,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 break;
             case R.id.sm_button:
                 if(stage == 0){
+                    countdown();
                     stage++;
                     startRecording();
                 }
@@ -155,6 +157,26 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             default:
                 break;
         }
+    }
+
+    private void countdown(){
+        vloading.setVisibility(View.VISIBLE);
+        vmain.setVisibility(View.GONE);
+        bNext.setEnabled(false);
+        lhint.setText("Please wait!");
+        lhint.setText("Hold steady...\n5");
+        new CountDownTimer(5000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                lstatus.setText("Hold steady...\n"+millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                vloading.setVisibility(View.GONE);
+                vmain.setVisibility(View.VISIBLE);
+                bNext.setEnabled(true);
+            }
+        }.start();
     }
 
     private void startRecording(){
@@ -224,7 +246,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
      *  This function retrieves the next instruction in the sequence, displays the appropriate
      *  visual aid, and sends the correct next sequence to the watch.
      */
-    public void getNextInstruction() {
+    private void getNextInstruction() {
         try {
             writer.write("0,N,0,0,0");
             writer.newLine();
