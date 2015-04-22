@@ -110,90 +110,33 @@ public class signalWatcher {
     public void onPositionTimerTick(float interval) {
         // TODO: may have to create copy of buffer to prevent race condition
 
-        int idx_begin = 0,          // ArrayList index of values within the current time interval that we care about
-            idx_accl_short = 0,     // ArrayList index+1 for last accl value within the short-time average (ie. starting index for values NOT within st avg)
-            idx_accl_long = 0;      // ArrayList index+1 for last accl value within the long-term average
-        long temp_time,             // retrieved time value from previous sensor point
-             temp_timediff;
-        sensorPoint temp_sp;
+        long[] times = new long[]{this.lastTimestamp, this.lastTimestamp + bAccl_short_len};
+        int[] idx = new int[]{0, 0};
+
 
         float[] accl_avg_short = new float[] {0, 0, 0},
                 accl_avg_long  = new float[] {0, 0, 0};
 
-        long currentTimestamp = this.lastTimestamp + bAccl_short_len;
 
         // ensure sorted
         Collections.sort(this.bufferAccl);
 
-        // create time vector
-        long[] resampleTime = new long[interpLength];
-        final long timestep = bAccl_short_len / interpLength;
-
-        for(int kk = 0; kk < interpLength; kk++) {
-            resampleTime[kk] = this.lastTimestamp + (kk * timestep);
-        }
-
-        // loop through time vector, find nearest points, and interpolate results
-        sensorPoint[] resampleData = new sensorPoint[interpLength];
-        int bufferCounter = this.bufferAccl.size()-1;
-
-        for(int kk = 0; kk < interpLength; kk++) {
-            int resampleCounter = interpLength - kk - 1;
-
-            // decrement bufferCounter until we find the surrounding points
-            while(this.bufferAccl.get(bufferCounter).time > resampleTime[resampleCounter]) {
-                bufferCounter--;
-            }
-
-            // so now bufferCounter+1 is the larger value, bufferCounter is the smaller.
-
-            sensorPoint smallerVals = this.bufferAccl.get(bufferCounter),
-                          largerVals  = this.bufferAccl.get(bufferCounter+1);
-
-            // fit coefficients
-            float[] A = new float[3];
-            A[0] = (largerVals.value[0] - smallerVals.value[0]) / (largerVals.time - smallerVals.time);
-            A[1] = (largerVals.value[1] - smallerVals.value[1]) / (largerVals.time - smallerVals.time);
-            A[2] = (largerVals.value[2] - smallerVals.value[2]) / (largerVals.time - smallerVals.time);
-
-            // get fit data
-            float[] newpoints = new float[3];
-            newpoints[0] = A[0] * (resampleTime[resampleCounter] - smallerVals.time) + smallerVals.value[0];
-            newpoints[1] = A[1] * (resampleTime[resampleCounter] - smallerVals.time) + smallerVals.value[1];
-            newpoints[2] = A[2] * (resampleTime[resampleCounter] - smallerVals.time) + smallerVals.value[2];
-
-            // create sensorPoint
-            resampleData[resampleCounter] = new sensorPoint(resampleTime[resampleCounter], newpoints);
-        }
 
 
 
+    }
 
-        this.lastTimestamp = currentTimestamp;
+    protected void integratePoint(float [] A, float[] value, long timediff) {
+        A[0] = A[0] + (value[0] * timediff);
+        A[1] = A[1] + (value[1] * timediff);
+        A[2] = A[2] + (value[2] * timediff);
+    }
 
-        // check status
-        if(this.currentStatus == BEGIN_AT_ORIGIN && absvelocity > 2) {
-            this.currentStatus = HAS_LEFT_ORIGIN;
-            Log.i(TAG, "left origin");
-        } else if(this.currentStatus == HAS_LEFT_ORIGIN && absavgvelocity < 0.5) {     // TODO: these need to be tweaked
-            this.currentStatus = HAS_HIT_TARGET;
-            Log.i(TAG, "hit target");
-        } else if(this.currentStatus == HAS_HIT_TARGET && absvelocity > 2) {
-            this.currentStatus = HAS_LEFT_TARGET;
-            Log.i(TAG, "left target");
-        } else if(this.currentStatus == HAS_LEFT_TARGET && absavgvelocity < 0.4) {
-            this.currentStatus = HAS_HIT_ORIGIN;        // yay we're done!
-            Log.i(TAG, "backToOrigin");
-        }
 
-        if(this.counter == 100) {
-            Log.i(TAG, "avgaccl: " + avgAccl[0] + ", " + avgAccl[1] + ", " + avgAccl[2]);
-            Log.i(TAG, "avgvelocity: " + this.avgVelocity[0] + ", " + this.avgVelocity[1] + ", " + this.avgVelocity[2]);
-            Log.i(TAG, "position: " + this.position[0] + ", " + this.position[1] + ", " + this.position[2]);
-
-            this.counter = 0;
-        }
-        this.counter++;
+    protected void fitLinear(float[] A, sensorPoint largerVals, sensorPoint smallerVals) {
+        A[0] = (largerVals.value[0] - smallerVals.value[0]) / (largerVals.time - smallerVals.time);
+        A[1] = (largerVals.value[1] - smallerVals.value[1]) / (largerVals.time - smallerVals.time);
+        A[2] = (largerVals.value[2] - smallerVals.value[2]) / (largerVals.time - smallerVals.time);
     }
 
     protected void thresholdByValue(float[] vector, float threshold) {
