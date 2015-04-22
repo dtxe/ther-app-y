@@ -105,11 +105,9 @@ public class SPM_FunctionalWorkspace {
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
 
-        return resampled_data;
-
         // *****************************************
 
-        /*
+
         // STEP: integrate acceleration twice to get position
         //  - integrate accl to get velocity
         double[][] velocity = new double[3][resampled_length];
@@ -136,7 +134,7 @@ public class SPM_FunctionalWorkspace {
         }
         // *****************************************
 
-        return position;*/
+        return position;
     }
 
     // remove values with duplicated time stamps
