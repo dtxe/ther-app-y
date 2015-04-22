@@ -254,7 +254,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     }
                     else if(msg.equalsIgnoreCase("END")){
                         Log.i(TAG, "Finishing");
-                        finish();
+                        stopMeasuring();
                     }
                 }
                 else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)) {

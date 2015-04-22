@@ -166,7 +166,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private void stopRecording(){
         // stop recording. flush buffer and save file.
         Log.i(TAG, "Finished recording. Saving files now");
-        sendMessage(WEAR_MESSAGE_PATH, "STOP");
+        sendMessage(WEAR_MESSAGE_PATH, "END");
         try{
             writer.flush();
             fwriter.flush();
