@@ -168,7 +168,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         new CountDownTimer(5000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                lstatus.setText("Hold steady...\n"+millisUntilFinished / 1000);
+                lstatus.setText("Hold steady...\n"+ (millisUntilFinished/1000)+1);
             }
 
             public void onFinish() {
