@@ -50,6 +50,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private static final String WEAR_MESSAGE_PATH = "/message";
     private static final String DATA_MESSAGE_PATH = "/sensordata";
     private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
+    private static final String EVENT_MESSAGE_PATH = "/event";                          // event data header
     private String currInstruction;
 
     /* for recording */
@@ -154,18 +155,21 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
                 //type = 'a';
                 if(started){
-                    /*
                     MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
                     cycle++;
                     if(cycle == COUNT){
                         sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
                         MessageBuffer.clear();
                         cycle = 0;
-                    }*/
+                    }
                     watcher.onSensorChanged(data, time);
                     if(watcher.isBackToOrigin()){
                         Log.i(TAG, "Back to origin!");
-                        sendMessage(DATA_MESSAGE_PATH, watcher.getFurthestPosition() + "");
+                        MessageBuffer.compact();
+                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
+                        MessageBuffer.clear();
+                        cycle = 0;
+                        sendMessage(EVENT_MESSAGE_PATH, watcher.getFurthestPosition() + "");
                     }
                 }
                 break;

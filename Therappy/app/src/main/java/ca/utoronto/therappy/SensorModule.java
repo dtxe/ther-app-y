@@ -66,6 +66,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private static final String START_ACTIVITY = "/therappy-start_activity";            // start command for watch
     private static final String WEAR_MESSAGE_PATH = "/message";                         // watch message header
     private static final String DATA_MESSAGE_PATH = "/sensordata";                      // watch sensor data header
+    private static final String EVENT_MESSAGE_PATH = "/event";                          // event data header
     private static final String INSTRUCTION_MESSAGE_PATH = "/instruction";              // instruction data header
 
     /* debug variables */
@@ -226,13 +227,13 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         //status.setText("Furthest position: " + furthestPosition);
         if(started) {
             try {
-                writer.write(furthestPosition + "");
+                writer.write("fp," + furthestPosition);
                 writer.newLine();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        //getNextInstruction();
+        getNextInstruction();
     }
 
     /*  getNextInstruction
@@ -389,15 +390,18 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             @Override
             public void run() {
                 final String msg = new String(messageEvent.getData());
+                final String path = messageEvent.getPath();
                 // if the message is sensor data, send it to be recorded
                 if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
                     Log.i(TAG, "data rec'd: " + msg);
-                    /*
-                    setData(messageEvent.getData()); */
+                    setData(messageEvent.getData());
+                }
+                else if(path.equalsIgnoreCase(EVENT_MESSAGE_PATH)){
+                    Log.i(TAG,"furtherest point is: " + msg);
                     setPoint(messageEvent.getData());
                 }
                 // if it is connection data, set the label
-                else if (messageEvent.getPath().equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
+                else if (path.equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
                     vloading.setVisibility(View.GONE);
                     lButton.setEnabled(false);
                     lButton.setVisibility(View.GONE);
@@ -407,7 +411,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "READY");
                     tapNext.setText("Tap to start");
                 }
-                else if (messageEvent.getPath().equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
+                else if (path.equalsIgnoreCase(INSTRUCTION_MESSAGE_PATH)){
                     // do something
                     if(msg.equalsIgnoreCase("START")){
                         Log.i(TAG, "message for recording start");
