@@ -9,7 +9,8 @@ public class Main {
 
     public static void main(String[] args) {
         // ** PARAMETERS **
-        String filePrefix = ".." + sep + "assets2" + sep + "therappy";
+        String filePrefix = sep + ".." + sep + "assets2" + sep + "cindy-protocol" + sep,
+               filename = "therappy1429730568794";
 
         // ** LESS USEFUL PARAMETERS **
         int bufferSize = 2048;    // size of write buffer
@@ -17,7 +18,7 @@ public class Main {
 
         // Variables
         String nextLine;
-        long time = 0, t0 = 0;
+        long time = 0, t_last = 0, t0 = 0;
         float x = 0, y = 0, z = 0;
         boolean open = false;
 
@@ -29,8 +30,8 @@ public class Main {
         // ********************************************
         // construct paths
         String currentDir = System.getProperty("user.dir");
-        String outputFile = currentDir+filePrefix,
-                inputFile = currentDir+filePrefix;
+        String outputFile = currentDir+filePrefix+filename+"-output.txt",
+                inputFile = currentDir+filePrefix+filename+".txt";
 
 
         try {
@@ -53,19 +54,29 @@ public class Main {
                     e.printStackTrace();
                 }
 
+
                 // if this is the first line read, set initial time
-                if(!open){
+                if (!open) {
+                    if(time == 0) {     // if this is the first line, AND time = 0, then skip
+                        continue;          // TODO: remove this once data files don't begin with 0
+                    }
                     t0 = time;
                     open = true;
                 }
 
+
                 // parse sensor type then add to corresponding arrayList
-                if(sensorData[1].compareTo("a") == 0) {
-                    data_accl.add(new sensorPoint(time-t0, new float[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
-                } else if(sensorData[1].compareTo("N") == 0) {
-                    data_accl.add(new sensorPoint(time-t0, new float[]{0, 0, 0}, sensorPoint.TRACE_BREAK));
+                if (sensorData[1].compareTo("a") == 0) {
+                    data_accl.add(new sensorPoint(time - t0, new float[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
+                } else if (sensorData[1].compareTo("N") == 0) {
+                    // divider sensorPoint has time equal to the last time point
+                    data_accl.add(new sensorPoint(t_last - t0, new float[]{0, 0, 0}, sensorPoint.TRACE_BREAK));
                 }
+
+                // update the last timestamp variable
+                t_last = time;
             }
+
 
             // # Calculate Data
             SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl);

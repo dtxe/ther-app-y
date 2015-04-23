@@ -40,7 +40,7 @@ public class SPM_FunctionalWorkspace {
         ArrayList<int[]> sectionIndices = new ArrayList<>();
 
         // - add first segment
-        sectionIndices.add(new int[] {0, 0});
+        sectionIndices.add(new int[] {-1, 0});
 
         // - loop through the arraylist looking for Ns
         for(int kk = 0; kk < this.data_accl.size(); kk++) {
@@ -198,7 +198,7 @@ public class SPM_FunctionalWorkspace {
     protected double[][] getMovingAverage(double[][] input, int numsamples) {
         double[][] output = new double[3][];
         for(int kk = 0; kk < 3; kk++) {
-            output[kk] = new double[input.length - numsamples + 1];
+            output[kk] = new double[input[0].length - numsamples + 1];
         }
 
         for(int kk = 0; kk < output.length; kk++) {
