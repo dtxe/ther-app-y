@@ -8,7 +8,7 @@ clear
 
 % Parameters
 
-FLAG_ANIMATE        = true;
+FLAG_ANIMATE        = false;
 FLAG_ANIMATE360     = false;
 FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
@@ -18,8 +18,8 @@ FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linea
 FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
 % Load data
-FILENAME = 'therappy1427411340412';
-data = importdata(['./assets/' FILENAME '.txt']);
+FILENAME = 'therappy1429728628988';
+data = importdata(['./assets2/no-motion/' FILENAME '.txt']);
 
 
 
@@ -49,18 +49,18 @@ accl_t(temp_idx) = [];
 accl_data(temp_idx, :) = [];
 
 % gyroscope data
-gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'b'), data.textdata(:,2));
-gyro_len = sum(gyro_idx);
-gyro_data = data.data(gyro_idx,:);
-gyro_t = str2double(data.textdata(gyro_idx,1));
-gyro_t = gyro_t - gyro_t(1);
-
-[gyro_t, temp_idx] = sort(gyro_t);
-gyro_data = gyro_data(temp_idx, :);
-
-temp_idx = find(diff(gyro_t) <= 0)+1;
-gyro_t(temp_idx) = [];
-gyro_data(temp_idx, :) = [];
+% gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'b'), data.textdata(:,2));
+% gyro_len = sum(gyro_idx);
+% gyro_data = data.data(gyro_idx,:);
+% gyro_t = str2double(data.textdata(gyro_idx,1));
+% gyro_t = gyro_t - gyro_t(1);
+% 
+% [gyro_t, temp_idx] = sort(gyro_t);
+% gyro_data = gyro_data(temp_idx, :);
+% 
+% temp_idx = find(diff(gyro_t) <= 0)+1;
+% gyro_t(temp_idx) = [];
+% gyro_data(temp_idx, :) = [];
 
 % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
 % Flip X direction
@@ -98,7 +98,7 @@ accl_re_data = interp1(accl_t, accl_data, data_re_t);
 
 %%%% GYROSCOPE
 % create new time vector & interpolate
-gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
+% gyro_re_data = interp1(gyro_t, gyro_data, data_re_t);
 
 
 % Plot resampled things
@@ -131,7 +131,7 @@ fq_gain = ones(data_re_len, 1);
 
 % frequency ranges to cut + invert for -ve freqs
 fq_gain(1) = 0;     % kill DC
-fq_gain((fq > 100)) = 0;
+fq_gain((fq > 50)) = 0;
 fq_gain(data_re_len:-1:ceil(data_re_len/2)+1) = fq_gain(1:floor(data_re_len/2));
 
 % filter using fft/ifft
@@ -178,7 +178,8 @@ tdsp_rotationmatrix;
 vel = zeros(data_re_len, 3);
 for kk = 1:3
     % initial velocity is zero
-    vel(1,kk) = accl_re_filtd(1,kk)*data_re_dt;
+%     vel(1,kk) = accl_re_filtd(1,kk)*data_re_dt;
+    vel(1,kk) = 0;
     
     for jj = 2:data_re_len
         vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*data_re_dt;
@@ -187,7 +188,8 @@ end
 
 pos = zeros(data_re_len, 3);
 for kk = 1:3
-    pos(1,kk) = vel(1,kk)*data_re_dt;
+%     pos(1,kk) = vel(1,kk)*data_re_dt;
+    pos(1,kk) = 0;
     
     for jj = 2:data_re_len
         pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*data_re_dt;
@@ -246,12 +248,14 @@ elseif FLAG_VELCORRECT
     pos = pos - cumsum(pos_corr);
 end
 
+ax = [];
 % Plot integrated trace
 if FLAG_PLOTTRACE
-    figure('Position', [50 50 1200 400]);
-    subplot(1, 2, 1);
+%     figure('Position', [50 50 1000 800]);
+figure;
+%     ax(1) = subplot(1, 2, 1);
     
-    plot3(pos(:,1), pos(:,2), pos(:,3));
+    plot3(pos(:,1), pos(:,2), pos(:,3), 'LineWidth', 3);
     daspect([1 1 1]);
     title('Raw integrated trace');
     xlabel('X distance (m)');
@@ -269,6 +273,43 @@ if FLAG_PLOTTRACE
 %     zlabel('Z distance (m)');
 end
 
+return;
+
+
+%% read outputted filtered data
+accl_re_filtd = load('assets2/therappy1428275413665-output.txt');
+data_re_len = length(accl_re_filtd);
+data_re_dt = accl_t(end) * 1e-9 / data_re_len;
+
+vel = zeros(data_re_len, 3);
+for kk = 1:3
+    % initial velocity is zero
+    vel(1,kk) = accl_re_filtd(1,kk)*data_re_dt;
+    
+    for jj = 2:data_re_len
+        vel(jj,kk) = vel(jj-1,kk) + accl_re_filtd(jj,kk)*data_re_dt;
+    end
+end
+
+pos = zeros(data_re_len, 3);
+for kk = 1:3
+    pos(1,kk) = vel(1,kk)*data_re_dt;
+    
+    for jj = 2:data_re_len
+        pos(jj,kk) = pos(jj-1,kk) + vel(jj,kk)*data_re_dt;
+    end
+end
+
+
+ax(2) = subplot(1, 2, 2);
+plot3(pos(:,1), pos(:,2), pos(:,3));
+daspect([1 1 1]);
+title('Post-filtered integrated trace');
+xlabel('X distance (m)');
+ylabel('Y distance (m)');
+zlabel('Z distance (m)');
+
+linkprop(ax, {'CameraPosition', 'CameraUpVector'});
 
 %% Timing
 toc(t_begin);
