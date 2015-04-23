@@ -4,9 +4,10 @@ package ca.utoronto.therappy;
  * Created by Andrew on 26/03/2015.
  */
 public class sensorPoint implements Comparable<sensorPoint> {
-    public static final int DATA_ROTATIONVEC = 2;
-    public static final int DATA_ACCELERATION = 1;
-    public static final int DATA_UNSPECIFIED = 0;
+    public static final int TRACE_BREAK = 3,
+                            DATA_ROTATIONVEC = 2,
+                            DATA_ACCELERATION = 1,
+                            DATA_UNSPECIFIED = 0;
 
     public final long time;
     public final float[] value;
