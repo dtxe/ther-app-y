@@ -97,7 +97,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         btnLoad = (ImageButton)findViewById(R.id.btnLoading);
         btnLoad.setOnClickListener(this);
         btnLoad.setEnabled(true);
-        watcher = new signalWatcher();
+        //watcher = new signalWatcher();
         sendMessage(WEAR_MESSAGE_PATH, "");
     }
 
@@ -111,7 +111,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     public void stopMeasuring() {
         mSensorManager.unregisterListener(this);
         MessageBuffer.clear();
-        watcher.onDestroy();
+        if(watcher != null)
+            watcher.onDestroy();
         finish();
     }
 
@@ -158,8 +159,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                     if(cycle == COUNT){
                         flushBuffer();
                     }
-                    watcher.onSensorChanged(data, time);
-                    /*if(watcher.isBackToOrigin()){
+                    /*watcher.onSensorChanged(data, time);
+                    If(watcher.isBackToOrigin()){
                         Log.i(TAG, "Back to origin!");
                         MessageBuffer.compact();
                         sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
@@ -279,6 +280,10 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                         Log.i(TAG, "Sending message to end");
                         sendMessage(INSTRUCTION_MESSAGE_PATH, "END");
                     }
+                    else if(msg.equalsIgnoreCase("CALIBFLUSH")) {
+                        flushBuffer();
+                        sendMessage(INSTRUCTION_MESSAGE_PATH, "CALIBRATED");
+                    }
                 }
             }
         });
@@ -360,7 +365,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             mGoogleApiClient.unregisterConnectionCallbacks(this);
             mGoogleApiClient.disconnect();
         }
-        watcher.onDestroy();
+        if(watcher != null)
+            watcher.onDestroy();
     }
 
     @Override
@@ -372,13 +378,15 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
                 mGoogleApiClient.disconnect();
             }
         }
-        watcher.onDestroy();
+        if(watcher != null)
+            watcher.onDestroy();
     }
 
     @Override
     public void finish(){
         super.finish();
-        watcher.onDestroy();
+        if(watcher != null)
+            watcher.onDestroy();
         if(mGoogleApiClient != null) {
             Wearable.MessageApi.removeListener(mGoogleApiClient, this);
             mGoogleApiClient.unregisterConnectionCallbacks(this);

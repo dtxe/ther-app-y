@@ -47,20 +47,20 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
     private final File root = android.os.Environment.getExternalStorageDirectory();     // location of external directory
 
     /* UI variables */
-    private Button lButton, bNext;            // UI buttons
+    private Button lButton, bNext;                              // UI buttons
     private ImageView ivInstruction;
-    private TextView status, lstatus, lhint, tapNext;            // UI title
-    private RelativeLayout layout;      // UI layout
+    private TextView status, lstatus, lhint, tapNext;           // UI title
+    private RelativeLayout layout;                              // UI layout
     private Intent intent;
     private View vloading, vmain;
     private ProgressBar loader;
     private AnimationDrawable frameAnimation;
 
     /* recording variables */
-    private boolean started = false;                        // whether or not the app is recording data or not
-    private int step = 0, stage = 0;                                   // current step number
-    private int NUM_STEPS = 5, NUM_STAGE = 3;                              // number of steps
-    private long time = System.currentTimeMillis();         // timestamp for the long
+    private int started = 0;                                    // whether or not the app is recording data or not. 1 = calibration, 2 = recording
+    private int step = 0, stage = 0;                            // current step number
+    private int NUM_STEPS = 5, NUM_STAGE = 3;                   // number of steps
+    private long time = System.currentTimeMillis();             // timestamp for the long
 
     /* communication variables */
     private GoogleApiClient mGoogleApiClient;                                           // communications protocol with the watch
@@ -144,8 +144,7 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             case R.id.sm_button:
                 if(stage == 0){
                     countdown();
-                    stage++;
-                    startRecording();
+                    startCalibrating();
                 }
                 else if(stage > NUM_STAGE){
                     sendMessage(INSTRUCTION_MESSAGE_PATH, "LASTFLUSH");
@@ -164,25 +163,32 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         vmain.setVisibility(View.GONE);
         bNext.setEnabled(false);
         lhint.setText("Please wait!");
-        lhint.setText("Hold steady...\n5");
         new CountDownTimer(5000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                lstatus.setText("Hold steady...\n"+ (millisUntilFinished/1000)+1);
+                lstatus.setText("Hold steady...\n"+ (millisUntilFinished/1000));
             }
 
             public void onFinish() {
-                vloading.setVisibility(View.GONE);
-                vmain.setVisibility(View.VISIBLE);
-                bNext.setEnabled(true);
+                sendMessage(INSTRUCTION_MESSAGE_PATH, "CALIBFLUSH");
+                Log.i(TAG,"finished countdown");
             }
         }.start();
     }
 
+    private void startCalibrating(){
+        sendMessage(WEAR_MESSAGE_PATH, "START");
+        started = 1;
+    }
+
     private void startRecording(){
+        stage++;
+        vloading.setVisibility(View.GONE);
+        vmain.setVisibility(View.VISIBLE);
+        bNext.setEnabled(true);
         sendMessage(WEAR_MESSAGE_PATH, "START");
         getNextInstruction();
-        started = true;
+        started = 2;
     }
 
     private void stopRecording(){
@@ -190,15 +196,13 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         Log.i(TAG, "Finished recording. Saving files now");
         sendMessage(WEAR_MESSAGE_PATH, "END");
         try{
-            writer.flush();
-            fwriter.flush();
             writer.close();
             fwriter.close();
         } catch (IOException e) {
             Log.i(TAG, "I/O issue at flush and close");
             e.printStackTrace();
         }
-        started = false;
+        started = 0;
         intent.putExtra("location", sensorFiles.toString());
         setResult(RESULT_OK,intent);
         finish();
@@ -227,14 +231,11 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
             y = buffer.getFloat();
             z = buffer.getFloat();
 
-            if (started) {      // save data only if the recording has started
-                try {
-                    //writer.write(time + "," + x + "," + y + "," + z);
-                    writer.write(time + "," + type + "," + x + "," + y + "," + z);
-                    writer.newLine();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                writer.write(time + "," + type + "," + x + "," + y + "," + z);
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -404,8 +405,8 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                 final String path = messageEvent.getPath();
                 // if the message is sensor data, send it to be recorded
                 if (messageEvent.getPath().equalsIgnoreCase(DATA_MESSAGE_PATH)) {
-                    Log.i(TAG, "data rec'd: " + msg);
-                    setData(messageEvent.getData());
+                    if(started == 2)
+                        setData(messageEvent.getData());
                 }
                 // if it is connection data, set the label
                 else if (path.equalsIgnoreCase(WEAR_MESSAGE_PATH)) {
@@ -428,6 +429,9 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
                     }
                     else if(msg.equalsIgnoreCase("FLUSHED")){
                         getNextInstruction();
+                    }
+                    else if (msg.equalsIgnoreCase("CALIBRATED")){
+                        startRecording();
                     }
                 }
             }
@@ -460,8 +464,6 @@ public class SensorModule extends ActionBarActivity implements GoogleApiClient.C
         mGoogleApiClient.disconnect();
         if(writer != null) {
             try {
-                writer.flush();
-                fwriter.flush();
                 writer.close();
                 fwriter.close();
             } catch (IOException e) {
