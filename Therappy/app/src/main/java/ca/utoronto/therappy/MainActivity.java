@@ -46,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
                 Log.i(TAG, "calling SPM!");
                 Intent signalsIntent = new Intent(this,SPM.class);
                 signalsIntent.putExtra("fileName",data.getStringExtra("location"));
-                //startActivity(signalsIntent);
+                startActivity(signalsIntent);
             }
         }
     }

@@ -41,7 +41,7 @@ public class SPM extends ActionBarActivity{
         fileName = intent.getStringExtra("fileName");
 
         new SPMCalculate().execute(fileName);
-        finish();
+        //finish();
     }
 
     private class SPMCalculate extends AsyncTask<String, String, Void> {
@@ -65,7 +65,7 @@ public class SPM extends ActionBarActivity{
             String fileName = params[0];
             String nextLine;
             long time = 0;
-            double t0 = 0;
+            long t0 = 0;
             float x = 0, y = 0, z = 0;
             boolean open = false;
             double[][] results;
@@ -112,16 +112,16 @@ public class SPM extends ActionBarActivity{
 
                     // if this is the first line read, set initial time
                     if(!open){
-                        t0 = (double)time;
+                        t0 = time;
                         open = true;
                     }
 
                     // parse sensor type then add to corresponding arrayList
                     if(sensorData[1].compareTo("a") == 0) {
-                        data_accl.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
-                    } /*else if (sensorData[1].compareTo("r") == 0) {
-                        data_rota.add(new sensorPoint(time-t0, new double[]{x, y, z}, sensorPoint.DATA_ROTATIONVEC));
-                    }*/
+                        data_accl.add(new sensorPoint(time-t0, new float[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
+                    } else if(sensorData[1].compareTo("N") == 0) {
+                        data_accl.add(new sensorPoint(time-t0, new float[]{0, 0, 0}, sensorPoint.TRACE_BREAK));
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
