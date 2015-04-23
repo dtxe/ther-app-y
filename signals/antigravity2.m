@@ -4,7 +4,6 @@
 % 2014 Feb 28
 
 close all
-clear
 
 % Parameters
 
@@ -12,62 +11,66 @@ FLAG_ANIMATE        = false;
 FLAG_ANIMATE360     = false;
 FLAG_PLOTRESAMPLE   = false;
 FLAG_PLOTFILTER     = true;
+FLAG_PLOTVELPOS     = true;
 FLAG_PLOTTRACE      = true;
 
 FLAG_LINEARCORRECT  = false;     % assume same start/end position. correct linearly through.
 FLAG_VELCORRECT     = false;      % assume same start/end, correct based on absolute velocity.
 
-% Load data
-FILENAME = 'therappy1429728628988';
-data = importdata(['./assets2/no-motion/' FILENAME '.txt']);
+FILENAME = 'therappy1429730667994';
 
+slidewnd_len = 1500;
 
 
 %% Timing
 t_begin = tic;
 
 %% Data Preprocessing
-% Separate accelerometer and rotation
-% count number of a, r
-accl_idx = cellfun(@(c) strcmp(c, 'a'), data.textdata(:,2));
-accl_len = sum(accl_idx);
 
-% get accl data
-accl_t = str2double(data.textdata(accl_idx,1));
-accl_data = data.data(accl_idx,:);
+if ~exist('data', 'var')
+    % Load data
+    data = importdata(['./assets2/cindy-protocol/' FILENAME '.txt']);
 
-% zero-ref time vector
-accl_t = accl_t - accl_t(1);
+    % Separate accelerometer and rotation
+    % count number of a, r
+    accl_idx = cellfun(@(c) strcmp(c, 'a'), data.textdata(:,2));
+    accl_len = sum(accl_idx);
 
-% ensure data is sorted
-[accl_t, temp_idx] = sort(accl_t);
-accl_data = accl_data(temp_idx, :);
+    % get accl data
+    accl_t = str2double(data.textdata(accl_idx,1));
+    accl_data = data.data(accl_idx,:);
 
-% check for duplicate values
-temp_idx = find(diff(accl_t) <= 0)+1;
-accl_t(temp_idx) = [];
-accl_data(temp_idx, :) = [];
+    % zero-ref time vector
+    accl_t = accl_t - accl_t(1);
 
-% gyroscope data
-% gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'b'), data.textdata(:,2));
-% gyro_len = sum(gyro_idx);
-% gyro_data = data.data(gyro_idx,:);
-% gyro_t = str2double(data.textdata(gyro_idx,1));
-% gyro_t = gyro_t - gyro_t(1);
-% 
-% [gyro_t, temp_idx] = sort(gyro_t);
-% gyro_data = gyro_data(temp_idx, :);
-% 
-% temp_idx = find(diff(gyro_t) <= 0)+1;
-% gyro_t(temp_idx) = [];
-% gyro_data(temp_idx, :) = [];
+    % ensure data is sorted
+    [accl_t, temp_idx] = sort(accl_t);
+    accl_data = accl_data(temp_idx, :);
 
-% CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
-% Flip X direction
-% accl_data(:,1) = -1*accl_data(:,1);
-% gyro_data(:,1) = -1*gyro_data(:,1);
+    % check for duplicate values
+    temp_idx = find(diff(accl_t) <= 0)+1;
+    accl_t(temp_idx) = [];
+    accl_data(temp_idx, :) = [];
 
+    % gyroscope data
+    % gyro_idx = cellfun(@(c) strcmp(c, 'r') || strcmp(c, 'b'), data.textdata(:,2));
+    % gyro_len = sum(gyro_idx);
+    % gyro_data = data.data(gyro_idx,:);
+    % gyro_t = str2double(data.textdata(gyro_idx,1));
+    % gyro_t = gyro_t - gyro_t(1);
+    % 
+    % [gyro_t, temp_idx] = sort(gyro_t);
+    % gyro_data = gyro_data(temp_idx, :);
+    % 
+    % temp_idx = find(diff(gyro_t) <= 0)+1;
+    % gyro_t(temp_idx) = [];
+    % gyro_data(temp_idx, :) = [];
 
+    % CORRECT FOR STUPID !@#$%@$%^@%#$%^ ANDROID LEFT HAND RULE AXES
+    % Flip X direction
+    % accl_data(:,1) = -1*accl_data(:,1);
+    % gyro_data(:,1) = -1*gyro_data(:,1);
+end
 
 
 %% Resample
@@ -141,6 +144,19 @@ for kk = 1:3
     accl_re_filtd(:,kk) = real(ifft(fq_gain .* fft(accl_re_data(:,kk))));
 %     gyro_re_filtd(:,kk) = real(ifft(fq_gain .* fft(gyro_re_data(:,kk))));
 end
+
+
+% subtract sliding window
+slidewnd = zeros(size(accl_re_filtd));
+
+for kk = 1:3
+    for tt = 1:size(data_re_t,1)
+        wndtt = max([1,tt-slidewnd_len/2]):min([data_re_len,tt+slidewnd_len/2]);
+        slidewnd(tt,kk) = accl_re_filtd(tt,kk) - mean(accl_re_filtd(wndtt,kk),1);
+    end
+end
+
+accl_re_filtd = slidewnd;
 
 
 
@@ -246,6 +262,31 @@ elseif FLAG_VELCORRECT
     end
     
     pos = pos - cumsum(pos_corr);
+end
+
+% Plot filter stuff
+if FLAG_PLOTVELPOS
+    
+    pltitle = {'X-axis Velocity', 'Y-axis Velocity', 'Z-axis Velocity', 'X-axis Position', 'Y-axis Position', 'Z-axis Position',};
+
+    figure;
+    for kk = 1:3
+        ax(kk) = subplot(2,3,kk);
+        plot(data_re_t, vel(:,kk));
+        ylabel('Velocity (ms^{-1})');
+        xlabel('Time (ms)');
+        title(pltitle{kk});
+
+        ax(kk+3) = subplot(2,3,kk+3);
+        plot(data_re_t, pos(:,kk));
+        ylabel('Position (m)');
+        xlabel('Time (ms)');
+        title(pltitle{kk+3});
+    end
+
+    linkaxes(ax(1:3));
+    linkaxes(ax(4:6));
+
 end
 
 ax = [];

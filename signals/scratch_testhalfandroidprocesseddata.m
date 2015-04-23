@@ -57,9 +57,27 @@ plot3(pos(:,1), pos(:,2), pos(:,3));
 
 %% animate
 
+    clear imgs
+
+    tti = 1;
+    f = figure(50);
+    for tt = 1:100:length(pos)
+        hold on;
+        plot3(pos(:,1), pos(:,2), pos(:,3));
+        plot3(pos(1:tt,1), pos(1:tt,2), pos(1:tt,3), 'r', 'LineWidth', 3);
+        daspect([1 1 1]);
+
+        refresh(f);
+        imgs(tti) = getframe(f);
+        tti = tti + 1;
+
+        clf(f);
+    end
+
 
 
 %%
-pos = load('assets2/therappy1428280195403-output.txt');
+pos = load('assets2/cindy-protocol/therappy1429730667994-output.txt');
 figure; plot3(pos(:,1), pos(:,2), pos(:,3));
+daspect([1 1 1]);
 
