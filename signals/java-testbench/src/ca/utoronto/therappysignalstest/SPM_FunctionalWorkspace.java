@@ -77,7 +77,7 @@ public class SPM_FunctionalWorkspace {
             }
 
             // transfer new position vectors into array         TODO: this may not be necessary if we're fitting
-            position.ensureCapacity(position.size() + tempposition.length);
+            position.ensureCapacity(position.size() + tempposition[0].length);
             for(int jj = 0; jj < tempposition[0].length; jj++) {
                 position.add(new double[]{tempposition[0][jj], tempposition[1][jj], tempposition[2][jj]});
             }
@@ -168,7 +168,7 @@ public class SPM_FunctionalWorkspace {
         // *****************************************
 
         resampled_data = getMovingAverage(resampled_data, 25);      // get moving average over 5 pre-resampled accl samples
-        resampled_length = resampled_data.length;
+        resampled_length = resampled_data[0].length;
 
 
         // STEP: integrate acceleration twice to get position
