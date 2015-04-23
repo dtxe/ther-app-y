@@ -18,6 +18,9 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class SPM_FunctionalWorkspace {
 
+    private final static double LONGTERM_WND_LENGTH = 0.95,
+                                SHORTERM_WND_LENGTH = 0.03;
+
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     private ArrayList<sensorPoint> data_accl;
@@ -26,7 +29,7 @@ public class SPM_FunctionalWorkspace {
     // when creating the signal processing module, must provide acceleration data
     public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl) {
         // pass the loaded acceleration data here
-        // the vector is prerotated
+        // the vector is pre-rotated
         this.data_accl = data_accl;
     }
 
@@ -167,8 +170,29 @@ public class SPM_FunctionalWorkspace {
         }
         // *****************************************
 
-        resampled_data = getMovingAverage(resampled_data, 25);      // get moving average over 5 pre-resampled accl samples
-        resampled_length = resampled_data[0].length;
+
+        int half_longterm_wnd_length = (int) Math.round((LONGTERM_WND_LENGTH / 2) / meandiff),
+            shortterm_wnd_length = (int) Math.round(SHORTERM_WND_LENGTH / meandiff);
+
+        // STEP: subtract longer term moving average
+        double[][] resampled_debiased_data = new double[3][resampled_length];
+
+        for(int kk = 0; kk < 3; kk++) {
+            for(int tt = 0; tt < resampled_length; tt++) {
+                int idxBegin = Math.max(0, tt-half_longterm_wnd_length),
+                    idxLength = Math.min(resampled_length-1, tt+half_longterm_wnd_length) - idxBegin;
+                resampled_debiased_data[kk][tt] = resampled_data[kk][tt] - StatUtils.mean(resampled_data[kk], idxBegin, idxLength);
+            }
+        }
+        // *****************************************
+
+
+
+
+        // STEP: get short-term moving average
+        //resampled_data = getMovingAverage(resampled_data, shortterm_wnd_length);      // get moving average over 5 pre-resampled accl samples
+        //resampled_length = resampled_data[0].length;
+        // *****************************************
 
 
         // STEP: integrate acceleration twice to get position
@@ -214,6 +238,8 @@ public class SPM_FunctionalWorkspace {
                 output[1][kk] += input[1][kk+jj];
                 output[2][kk] += input[2][kk+jj];
             }
+
+            output[0][kk] = output[0][kk] / numsamples;
         }
 
         return output;

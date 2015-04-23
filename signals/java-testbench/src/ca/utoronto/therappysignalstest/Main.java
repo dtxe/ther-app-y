@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // ** PARAMETERS **
         String filePrefix = sep + ".." + sep + "assets2" + sep + "cindy-protocol" + sep,
-               filename = "therappy1429730568794";
+               filename;
 
         // ** LESS USEFUL PARAMETERS **
         int bufferSize = 2048;    // size of write buffer
@@ -28,13 +28,20 @@ public class Main {
 
 
         // ********************************************
-        // construct paths
-        String currentDir = System.getProperty("user.dir");
-        String outputFile = currentDir+filePrefix+filename+"-output.txt",
-                inputFile = currentDir+filePrefix+filename+".txt";
+
 
 
         try {
+
+            // enter filename
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Enter filename: ");
+            filename = br.readLine();
+
+            // construct paths
+            String currentDir = System.getProperty("user.dir");
+            String outputFile = currentDir+filePrefix+filename+"-output.txt",
+                    inputFile = currentDir+filePrefix+filename+".txt";
 
             FileWriter fwriter = new FileWriter(outputFile, true);
             BufferedWriter bwriter = new BufferedWriter(fwriter, bufferSize);
@@ -99,6 +106,9 @@ public class Main {
 
             breader.close();
             freader.close();
+
+
+            System.out.println("all done! :D");
 
         } catch(Exception ex) {
             ex.printStackTrace();
