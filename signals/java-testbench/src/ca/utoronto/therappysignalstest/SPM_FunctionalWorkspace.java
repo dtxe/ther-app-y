@@ -129,7 +129,7 @@ public class SPM_FunctionalWorkspace {
         //  - find sampling frequency
         double meandiff = StatUtils.mean(diff(thetime));
         meandiff = meandiff / 5;                            // aim for oversample by 5x
-        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
+        int resampled_length = (int) Math.floor((thetime[thetime.length-1] - thetime[0]) / meandiff);
 
         //  - turn resampled_length into closest higher power of 2          TODO: might need to add option to pad with zeros if it gets too long
         resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
@@ -139,7 +139,7 @@ public class SPM_FunctionalWorkspace {
         double[] resampled_time = new double[resampled_length];
 
         for(int kk = 0; kk < resampled_length; kk++) {
-            resampled_time[kk] = meandiff * kk;
+            resampled_time[kk] = (meandiff * kk) + thetime[0];
         }
 
         //  - resample each acceleration dimension
