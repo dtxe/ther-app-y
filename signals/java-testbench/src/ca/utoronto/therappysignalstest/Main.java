@@ -24,7 +24,7 @@ public class Main {
 
         ArrayList<sensorPoint> data_accl = new ArrayList<>();
 
-        double[][] results;
+        ArrayList<double[]> results;
 
 
         // ********************************************
@@ -84,17 +84,17 @@ public class Main {
 
 
             // # Save results
-            int len = results[0].length;
+            int len = results.size();
             for (int i = 0; i < len; i++) {
-                bwriter.write(results[0][i] + "," + results[1][i] + "," + results[2][i]);
+                bwriter.write(results.get(i)[0] + "," + results.get(i)[1] + "," + results.get(i)[2]);
                 bwriter.newLine();
             }
 
 
             // # Clean up
             bwriter.flush();
-            bwriter.close();
             fwriter.flush();
+            bwriter.close();
             fwriter.close();
 
             breader.close();
