@@ -12,3 +12,6 @@
 # MATLAB stuff
 *.avi
 *~
+
+# Java compilation
+**/out/**/*.class
