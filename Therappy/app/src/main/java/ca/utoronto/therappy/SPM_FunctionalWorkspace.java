@@ -59,10 +59,10 @@ public class SPM_FunctionalWorkspace {
             sensorPoint tempsp = this.data_accl.get(kk);
 
             // store the timestamp in a vector
-            thetime[kk] = tempsp.getTime() * time_div;      // convert to seconds
+            thetime[kk] = tempsp.time * time_div;      // convert to seconds
 
             // store the values in respective accl vector
-            double[] tempdata = tempsp.getValue();
+            float[] tempdata = tempsp.value;
             thedata[0][kk] = tempdata[0];
             thedata[1][kk] = tempdata[1];
             thedata[2][kk] = tempdata[2];
@@ -145,7 +145,7 @@ public class SPM_FunctionalWorkspace {
 
         // loop through sensor points and mark duplicated time stamps for removal
         for(int kk = 1; kk < input.size(); kk++) {
-            if(input.get(kk).getTime() == input.get(kk-1).getTime()) {
+            if(input.get(kk).time == input.get(kk-1).time) {
                 // if the timestamps are equal, then mark it for dropping
                 duplicatedTimes.add(kk);
             }
