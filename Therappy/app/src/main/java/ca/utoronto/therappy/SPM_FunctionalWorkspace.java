@@ -1,6 +1,8 @@
 package ca.utoronto.therappy;
 
 import java.util.ArrayList;
+import java.util.Collections;
+
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.complex.Complex;
@@ -30,9 +32,58 @@ public class SPM_FunctionalWorkspace {
     // do the whole signals processing thing here.
     public double[][] doChurnData () {
         // do signals processing stuff
-        double[][] position;
-        position = doDeadReckoning();
-        return position;
+
+        // STEP: remove duplicated acceleration values
+        this.data_accl = removeDuplicates(this.data_accl);
+
+        // STEP: split into sections
+        ArrayList<int[]> sectionIndices = new ArrayList<>();
+
+        // - add first segment
+        sectionIndices.add(new int[] {0, 0});
+
+        // - loop through the arraylist looking for Ns
+        for(int kk = 0; kk < this.data_accl.size(); kk++) {
+            if(this.data_accl.get(kk).datatype == sensorPoint.TRACE_BREAK) {
+                sectionIndices.add(new int[]{kk, 0});
+            }
+        }
+
+        // - loop through indices add find segment length
+        for(int kk = 0; kk < sectionIndices.size(); kk++) {
+            int[] curr = sectionIndices.get(kk);
+            curr[0] = curr[0] + 1;                                      // set index to first sensorPoint that isn't 'N'
+
+            if(kk+1 >= sectionIndices.size())
+                curr[1] = this.data_accl.size() - curr[0];              // if this is the last index...
+            else
+                curr[1] = sectionIndices.get(kk+1)[0] - curr[0];        // calculate the length of the segment
+        }
+
+        // STEP: run signals processing code on it.
+        ArrayList<double[]> position = new ArrayList<>();
+
+        for(int kk = 0; kk < sectionIndices.size(); kk++) {
+            int[] curr = sectionIndices.get(kk);
+
+            double[][] tempposition;
+            tempposition = doDeadReckoning(curr[0], curr[1]);
+
+            // transfer new position vectors into array         TODO: this may not be necessary if we're fitting
+            position.ensureCapacity(position.size() + tempposition.length);
+            for(int jj = 0; jj < tempposition.length; jj++) {
+                position.add(tempposition[jj]);
+            }
+        }
+
+        // clean up for garbage collector
+        this.data_accl.clear();
+        this.data_accl = null;
+
+
+        return (double[][]) position.toArray();
+
+
 
 
         // fit areas to get metrics
@@ -44,19 +95,24 @@ public class SPM_FunctionalWorkspace {
         return null;
     }
 
+
     // this is the bulk of the signals processing code. It removes duplicated time points,
     // resamples the data, filters using FFT, then integrates acceleration to get position.
-    protected double[][] doDeadReckoning() {
-        // STEP: remove duplicated acceleration values
-        this.data_accl = removeDuplicates(this.data_accl);
+    protected double[][] doDeadReckoning(int segmentBegin, int segmentLength) {
+
+        // if we are asked to process a segment which is longer than the data acceleration vector,
+        // signal that this isn't going to work out.
+        if (segmentBegin+segmentLength-1 >= this.data_accl.size()) {
+            return null;
+        }
 
         // take data out of arraylist/sensorpoint
-        double[][] thedata = new double[3][this.data_accl.size()];
-        double[] thetime = new double[this.data_accl.size()];
+        double[][] thedata = new double[3][segmentLength];
+        double[] thetime = new double[segmentLength];
 
-        for(int kk = 0; kk < this.data_accl.size(); kk++) {
+        for(int kk = 0; kk < segmentLength; kk++) {
             // retrieve sensorPoint from the ArrayList
-            sensorPoint tempsp = this.data_accl.get(kk);
+            sensorPoint tempsp = this.data_accl.get(kk + segmentBegin);
 
             // store the timestamp in a vector
             thetime[kk] = tempsp.time * time_div;      // convert to seconds
@@ -67,8 +123,6 @@ public class SPM_FunctionalWorkspace {
             thedata[1][kk] = tempdata[1];
             thedata[2][kk] = tempdata[2];
         }
-        this.data_accl.clear();
-        this.data_accl = null;
         // *****************************************
 
         // STEP: do linear interpolation of the data
@@ -77,7 +131,7 @@ public class SPM_FunctionalWorkspace {
         meandiff = meandiff / 5;                            // aim for oversample by 5x
         int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
 
-        //  - turn resampled_length into closest higher power of 2
+        //  - turn resampled_length into closest higher power of 2          TODO: might need to add option to pad with zeros if it gets too long
         resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
         meandiff = thetime[thetime.length-1] / (resampled_length-1);
 
@@ -104,8 +158,10 @@ public class SPM_FunctionalWorkspace {
             double normalized_hicutoff = 30 * meandiff / 2;
             resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
-
         // *****************************************
+
+        resampled_data = getMovingAverage(resampled_data, 25);      // get moving average over 5 pre-resampled accl samples
+        resampled_length = resampled_data.length;
 
 
         // STEP: integrate acceleration twice to get position
@@ -137,16 +193,38 @@ public class SPM_FunctionalWorkspace {
         return position;
     }
 
+
+    // calculate the moving average of a 3 x N matrix of values in the N dimension.
+    protected double[][] getMovingAverage(double[][] input, int numsamples) {
+        double[][] output = new double[3][];
+        for(int kk = 0; kk < 3; kk++) {
+            output[kk] = new double[input.length - numsamples + 1];
+        }
+
+        for(int kk = 0; kk < output.length; kk++) {
+            for(int jj = 0; jj < numsamples; jj++) {
+                output[0][kk] += input[0][kk+jj];
+                output[1][kk] += input[1][kk+jj];
+                output[2][kk] += input[2][kk+jj];
+            }
+        }
+
+        return output;
+    }
+
     // remove values with duplicated time stamps
     // TODO: perhaps consider averaging.
     protected ArrayList<sensorPoint> removeDuplicates(ArrayList<sensorPoint> input) {
 
         ArrayList<Integer> duplicatedTimes = new ArrayList<>();
 
+        // ensure the data is sorted.
+        Collections.sort(input);
+
         // loop through sensor points and mark duplicated time stamps for removal
         for(int kk = 1; kk < input.size(); kk++) {
-            if(input.get(kk).time == input.get(kk-1).time) {
-                // if the timestamps are equal, then mark it for dropping
+            if(input.get(kk).time == input.get(kk-1).time                       // if the timestamps are equal, then mark it for dropping
+                    && input.get(kk).datatype != sensorPoint.TRACE_BREAK) {     // unless it's a trace break (ie. signals a return to origin)
                 duplicatedTimes.add(kk);
             }
         }
