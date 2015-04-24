@@ -24,6 +24,8 @@ public class SPM_FunctionalWorkspace {
     private ArrayList<sensorPoint> data_accl;
     double fwvol, xyarea, yzarea, xzarea;
 
+    double [] maxpositions;
+
     double meandiff;
     double [][] resampled_data;
     int [][] resampled_idx;
@@ -53,6 +55,7 @@ public class SPM_FunctionalWorkspace {
 
         // STEP: run signals processing code on it.
         ArrayList<double[]> position = new ArrayList<>();
+        this.maxpositions = new double[this.resampled_idx.length];      // this stores the max position within each interval
 
         for(int kk = 0; kk < this.resampled_idx.length; kk++) {
             int[] curr = this.resampled_idx[kk];
@@ -65,7 +68,12 @@ public class SPM_FunctionalWorkspace {
 
             for(int jj = 0; jj < tempposition[0].length; jj++) {
                 position.add(new double[]{tempposition[0][jj], tempposition[1][jj], tempposition[2][jj]});
+
+                // within each interval, find max position
+                double vecnorm = Math.sqrt(Math.pow(tempposition[0][jj],2) + Math.pow(tempposition[1][jj],2) + Math.pow(tempposition[2][jj],2));
+                this.maxpositions[kk] = Math.max(vecnorm, this.maxpositions[kk]);
             }
+
         }
 
         this.position = position;
@@ -402,5 +410,9 @@ public class SPM_FunctionalWorkspace {
 
     public ArrayList<double[]> getPosition() {
         return this.position;
+    }
+
+    public double[] getMaxpositions() {
+        return this.maxpositions;
     }
 }
