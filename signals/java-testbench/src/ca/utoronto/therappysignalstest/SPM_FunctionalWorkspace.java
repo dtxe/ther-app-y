@@ -1,6 +1,5 @@
 package ca.utoronto.therappysignalstest;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -18,8 +17,7 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class SPM_FunctionalWorkspace {
 
-    private final static double LONGTERM_WND_LENGTH = 0.95,
-                                SHORTERM_WND_LENGTH = 0.01;
+    private final static double LONGTERM_WND_LENGTH = 0.7;
 
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
@@ -30,6 +28,8 @@ public class SPM_FunctionalWorkspace {
     double [][] resampled_data;
     int [][] resampled_idx;
 
+    private ArrayList<double[]> position;
+
     // when creating the signal processing module, must provide acceleration data
     public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl) {
         // pass the loaded acceleration data here
@@ -38,14 +38,18 @@ public class SPM_FunctionalWorkspace {
     }
 
     // do the whole signals processing thing here.
-    public ArrayList<double[]> doChurnData () {
+    public void doChurnData () {
         // do signals processing stuff
 
         // STEP: remove duplicated acceleration values
-        this.data_accl = removeDuplicates(this.data_accl);
+        this.data_accl = doRemoveDuplicates(this.data_accl);
 
         // STEP: preprocess everything
         this.doPreprocessing();
+
+        // clean up for garbage collector
+        this.data_accl.clear();
+        this.data_accl = null;
 
         // STEP: run signals processing code on it.
         ArrayList<double[]> position = new ArrayList<>();
@@ -53,28 +57,18 @@ public class SPM_FunctionalWorkspace {
         for(int kk = 0; kk < this.resampled_idx.length; kk++) {
             int[] curr = this.resampled_idx[kk];
 
-            double[][] tempposition = null;
+            double[][] tempposition;
+            tempposition = this.doIntegration(curr[0], curr[1]-curr[0]);
 
-            try {
-                tempposition = this.doIntegration(curr[0], curr[1]);
-            } catch(Exception ex) {
-                System.out.println("Current section: " + kk);
-                ex.printStackTrace();
-            }
-
-            // transfer new position vectors into array         TODO: this may not be necessary if we're fitting
+            // transfer new position vectors into array
             position.ensureCapacity(position.size() + tempposition[0].length);
+
             for(int jj = 0; jj < tempposition[0].length; jj++) {
                 position.add(new double[]{tempposition[0][jj], tempposition[1][jj], tempposition[2][jj]});
             }
         }
 
-        // clean up for garbage collector
-        this.data_accl.clear();
-        this.data_accl = null;
-
-
-        return position;
+        this.position = position;
 
 
 
@@ -89,6 +83,8 @@ public class SPM_FunctionalWorkspace {
     }
 
 
+    /* perform acceleration preprocessing: all the steps up until integration.
+       split into segments, resample, filter, subtract moving average   */
     protected void doPreprocessing() {
 
         // STEP: split into sections
@@ -119,7 +115,7 @@ public class SPM_FunctionalWorkspace {
 
         // - remove from arraylist
         for(int kk = sectionIndices.size()-1; kk >= 1; kk--) {
-            this.data_accl.remove(sectionIndices.get(kk));
+            this.data_accl.remove((int) sectionIndices.get(kk));
         }
         sectionIndices.clear();
 
@@ -145,7 +141,7 @@ public class SPM_FunctionalWorkspace {
 
         // STEP: do linear interpolation of the data
         //  - find sampling frequency
-        double meandiff = StatUtils.mean(diff(thetime));
+        double meandiff = StatUtils.mean(calculateDiff(thetime));
         meandiff = meandiff / 5;                            // aim for oversample by 5x
         int resampled_length = (int) Math.floor((thetime[thetime.length-1] - thetime[0]) / meandiff);
 
@@ -163,7 +159,7 @@ public class SPM_FunctionalWorkspace {
         //  - resample each acceleration dimension
         double[][] resampled_data = new double[3][];
         for(int kk = 0; kk < 3; kk++) {
-            resampled_data[kk] = interp1(resampled_time, thetime, thedata[kk]);
+            resampled_data[kk] = calculateInterp1(resampled_time, thetime, thedata[kk]);
         }
 
         //  - free for garbage collect
@@ -174,7 +170,7 @@ public class SPM_FunctionalWorkspace {
         // STEP: filter data
         for(int kk = 0; kk < 3; kk++) {
             double normalized_hicutoff = 30 * meandiff / 2;
-            resampled_data[kk] = doFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
+            resampled_data[kk] = calculateFilterNoDC_FFT(resampled_data[kk], normalized_hicutoff);
         }
         // *****************************************
 
@@ -187,7 +183,7 @@ public class SPM_FunctionalWorkspace {
         for(int kk = 0; kk < 3; kk++) {
             for(int tt = 0; tt < resampled_length; tt++) {
                 int idxBegin = Math.max(0, tt-half_longterm_wnd_length),
-                        idxLength = Math.min(resampled_length-1, tt+half_longterm_wnd_length) - idxBegin;
+                    idxLength = Math.min(resampled_length-1, tt+half_longterm_wnd_length) - idxBegin;
                 resampled_debiased_data[kk][tt] = resampled_data[kk][tt] - StatUtils.mean(resampled_data[kk], idxBegin, idxLength);
             }
         }
@@ -204,6 +200,7 @@ public class SPM_FunctionalWorkspace {
         // *****************************************
 
         this.resampled_data = resampled_debiased_data;
+        this.meandiff = meandiff;
     }
 
 
@@ -215,11 +212,11 @@ public class SPM_FunctionalWorkspace {
         double[][] velocity = new double[3][segmentLength];
         for(int kk = 0; kk < 3; kk++) {
             // initial velocity is zero + change in first time step
-            velocity[kk][0] = (meandiff * resampled_data[kk][0 + segmentBegin]);
+            velocity[kk][0] = (meandiff * this.resampled_data[kk][segmentBegin]);
 
             // loop through time steps and add changes
             for(int tt = 1; tt < segmentLength; tt++) {
-                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff * resampled_data[kk][tt + segmentBegin]);
+                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff * this.resampled_data[kk][tt + segmentBegin]);
             }
         }
 
@@ -237,11 +234,13 @@ public class SPM_FunctionalWorkspace {
         // *****************************************
 
         return position;
+
+        // TODO: correct position based on return-to-zero
     }
 
 
     // calculate the moving average of a 3 x N matrix of values in the N dimension.
-    protected double[][] getMovingAverage(double[][] input, int numsamples) {
+    protected double[][] calculateMovingAverage(double[][] input, int numsamples) {
         double[][] output = new double[3][];
         for(int kk = 0; kk < 3; kk++) {
             output[kk] = new double[input[0].length - numsamples + 1];
@@ -261,8 +260,8 @@ public class SPM_FunctionalWorkspace {
     }
 
     // remove values with duplicated time stamps
-    // TODO: perhaps consider averaging.
-    protected ArrayList<sensorPoint> removeDuplicates(ArrayList<sensorPoint> input) {
+    // TODO: perhaps consider averaging duplicates instead
+    protected ArrayList<sensorPoint> doRemoveDuplicates(ArrayList<sensorPoint> input) {
 
         ArrayList<Integer> duplicatedTimes = new ArrayList<>();
 
@@ -288,7 +287,7 @@ public class SPM_FunctionalWorkspace {
     }
 
     // do 1D linear interpolation of data, similar to matlab interp1 command
-    protected double[] interp1(double [] newTime, double[] oldTime, double[] oldX) {
+    protected double[] calculateInterp1(double[] newTime, double[] oldTime, double[] oldX) {
         // fit linear interpolator model to provided data
         PolynomialSplineFunction psfmodel = (new LinearInterpolator()).interpolate(oldTime, oldX);
 
@@ -306,7 +305,7 @@ public class SPM_FunctionalWorkspace {
     }
 
     // low pass filter data using an FFT, and removing DC components
-    protected double[] doFilterNoDC_FFT(double[] datain, double hicutoff) {
+    protected double[] calculateFilterNoDC_FFT(double[] datain, double hicutoff) {
         // filter the signal using an FFT / iFFT algorithm, removing the DC component, and any
         // components above the specified hicutoff
         //      hicutoff should be provided as normalized frequency
@@ -369,7 +368,7 @@ public class SPM_FunctionalWorkspace {
     }
 
     // imitates MATLAB diff command. takes the difference between elements of a vector
-    protected double[] diff(double[] input) {
+    protected double[] calculateDiff(double[] input) {
         double[] output = new double[input.length - 1];
 
         for(int kk = 0; kk < input.length - 1; kk++) {
@@ -399,5 +398,9 @@ public class SPM_FunctionalWorkspace {
     public double getXZplane() {
 
         return this.xzarea;
+    }
+
+    public ArrayList<double[]> getPosition() {
+        return this.position;
     }
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class Main {
     private final static String sep = File.separator;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // ** PARAMETERS **
         String filePrefix = sep + ".." + sep + "assets2" + sep + "cindy-protocol" + sep,
                filename;
@@ -43,7 +43,7 @@ public class Main {
             String outputFile = currentDir+filePrefix+filename+"-output.txt",
                     inputFile = currentDir+filePrefix+filename+".txt";
 
-            FileWriter fwriter = new FileWriter(outputFile, true);
+            FileWriter fwriter = new FileWriter(outputFile, false);
             BufferedWriter bwriter = new BufferedWriter(fwriter, bufferSize);
 
             FileReader freader = new FileReader(inputFile);
@@ -87,7 +87,9 @@ public class Main {
 
             // # Calculate Data
             SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl);
-            results = sigProcInstance.doChurnData();
+            sigProcInstance.doChurnData();
+
+            results = sigProcInstance.getPosition();
 
 
             // # Save results
