@@ -19,12 +19,16 @@ import org.apache.commons.math3.stat.StatUtils;
 public class SPM_FunctionalWorkspace {
 
     private final static double LONGTERM_WND_LENGTH = 0.95,
-                                SHORTERM_WND_LENGTH = 0.03;
+                                SHORTERM_WND_LENGTH = 0.01;
 
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     private ArrayList<sensorPoint> data_accl;
     double fwvol, xyarea, yzarea, xzarea;
+
+    double meandiff;
+    double [][] resampled_data;
+    int [][] resampled_idx;
 
     // when creating the signal processing module, must provide acceleration data
     public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl) {
@@ -40,40 +44,19 @@ public class SPM_FunctionalWorkspace {
         // STEP: remove duplicated acceleration values
         this.data_accl = removeDuplicates(this.data_accl);
 
-        // STEP: split into sections
-        ArrayList<int[]> sectionIndices = new ArrayList<>();
-
-        // - add first segment
-        sectionIndices.add(new int[] {-1, 0});
-
-        // - loop through the arraylist looking for Ns
-        for(int kk = 0; kk < this.data_accl.size(); kk++) {
-            if(this.data_accl.get(kk).datatype == sensorPoint.TRACE_BREAK) {
-                sectionIndices.add(new int[]{kk, 0});
-            }
-        }
-
-        // - loop through indices add find segment length
-        for(int kk = 0; kk < sectionIndices.size(); kk++) {
-            int[] curr = sectionIndices.get(kk);
-            curr[0] = curr[0] + 1;                                      // set index to first sensorPoint that isn't 'N'
-
-            if(kk+1 >= sectionIndices.size())
-                curr[1] = this.data_accl.size() - curr[0];              // if this is the last index...
-            else
-                curr[1] = sectionIndices.get(kk+1)[0] - curr[0] - 1;    // calculate the length of the segment
-        }
+        // STEP: preprocess everything
+        this.doPreprocessing();
 
         // STEP: run signals processing code on it.
         ArrayList<double[]> position = new ArrayList<>();
 
-        for(int kk = 0; kk < sectionIndices.size(); kk++) {
-            int[] curr = sectionIndices.get(kk);
+        for(int kk = 0; kk < this.resampled_idx.length; kk++) {
+            int[] curr = this.resampled_idx[kk];
 
             double[][] tempposition = null;
 
             try {
-                tempposition = doDeadReckoning(curr[0], curr[1]);
+                tempposition = this.doIntegration(curr[0], curr[1]);
             } catch(Exception ex) {
                 System.out.println("Current section: " + kk);
                 ex.printStackTrace();
@@ -106,23 +89,48 @@ public class SPM_FunctionalWorkspace {
     }
 
 
-    // this is the bulk of the signals processing code. It removes duplicated time points,
-    // resamples the data, filters using FFT, then integrates acceleration to get position.
-    protected double[][] doDeadReckoning(int segmentBegin, int segmentLength) {
+    protected void doPreprocessing() {
 
-        // if we are asked to process a segment which is longer than the data acceleration vector,
-        // signal that this isn't going to work out.
-        if (segmentBegin+segmentLength-1 >= this.data_accl.size()) {
-            return null;
+        // STEP: split into sections
+        ArrayList<Integer> sectionIndices = new ArrayList<>();
+        double[][] sectionTimes;
+
+        // - add first segment
+        sectionIndices.add(-1);
+
+        // - loop through the arraylist looking for Ns
+        for(int kk = 0; kk < this.data_accl.size(); kk++) {
+            if(this.data_accl.get(kk).datatype == sensorPoint.TRACE_BREAK) {
+                sectionIndices.add(kk);
+            }
         }
 
-        // take data out of arraylist/sensorpoint
-        double[][] thedata = new double[3][segmentLength];
-        double[] thetime = new double[segmentLength];
+        sectionTimes = new double[sectionIndices.size()][2];
+        // - loop through indices and get times
+        for(int kk = 0; kk < sectionIndices.size(); kk++) {
+            sectionTimes[kk][0] = this.data_accl.get(sectionIndices.get(kk)+1).time * time_div;
 
-        for(int kk = 0; kk < segmentLength; kk++) {
+            if(kk+1 == sectionIndices.size()) {
+                sectionTimes[kk][1] = this.data_accl.get(this.data_accl.size() - 1).time * time_div;
+            } else {
+                sectionTimes[kk][1] = this.data_accl.get(sectionIndices.get(kk+1)-1).time * time_div;
+            }
+        }
+
+        // - remove from arraylist
+        for(int kk = sectionIndices.size()-1; kk >= 1; kk--) {
+            this.data_accl.remove(sectionIndices.get(kk));
+        }
+        sectionIndices.clear();
+
+        // STEP
+        // take data out of arraylist/sensorpoint
+        double[][] thedata = new double[3][this.data_accl.size()];
+        double[] thetime = new double[this.data_accl.size()];
+
+        for(int kk = 0; kk < this.data_accl.size(); kk++) {
             // retrieve sensorPoint from the ArrayList
-            sensorPoint tempsp = this.data_accl.get(kk + segmentBegin);
+            sensorPoint tempsp = this.data_accl.get(kk);
 
             // store the timestamp in a vector
             thetime[kk] = tempsp.time * time_div;      // convert to seconds
@@ -141,7 +149,7 @@ public class SPM_FunctionalWorkspace {
         meandiff = meandiff / 5;                            // aim for oversample by 5x
         int resampled_length = (int) Math.floor((thetime[thetime.length-1] - thetime[0]) / meandiff);
 
-        //  - turn resampled_length into closest higher power of 2          TODO: might need to add option to pad with zeros if it gets too long
+        //  - turn resampled_length into closest higher power of 2
         resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
         meandiff = (thetime[thetime.length-1] - thetime[0]) / (resampled_length-1);
 
@@ -171,8 +179,7 @@ public class SPM_FunctionalWorkspace {
         // *****************************************
 
 
-        int half_longterm_wnd_length = (int) Math.round((LONGTERM_WND_LENGTH / 2) / meandiff),
-            shortterm_wnd_length = (int) Math.round(SHORTERM_WND_LENGTH / meandiff);
+        int half_longterm_wnd_length = (int) Math.round((LONGTERM_WND_LENGTH / 2) / meandiff);
 
         // STEP: subtract longer term moving average
         double[][] resampled_debiased_data = new double[3][resampled_length];
@@ -180,42 +187,50 @@ public class SPM_FunctionalWorkspace {
         for(int kk = 0; kk < 3; kk++) {
             for(int tt = 0; tt < resampled_length; tt++) {
                 int idxBegin = Math.max(0, tt-half_longterm_wnd_length),
-                    idxLength = Math.min(resampled_length-1, tt+half_longterm_wnd_length) - idxBegin;
+                        idxLength = Math.min(resampled_length-1, tt+half_longterm_wnd_length) - idxBegin;
                 resampled_debiased_data[kk][tt] = resampled_data[kk][tt] - StatUtils.mean(resampled_data[kk], idxBegin, idxLength);
             }
         }
         // *****************************************
 
 
+        // STEP: convert separator times into indices
+        this.resampled_idx = new int[sectionTimes.length][2];
 
-
-        // STEP: get short-term moving average
-        //resampled_data = getMovingAverage(resampled_data, shortterm_wnd_length);      // get moving average over 5 pre-resampled accl samples
-        //resampled_length = resampled_data[0].length;
+        for(int kk = 0; kk < this.resampled_idx.length; kk++) {
+            this.resampled_idx[kk][0] = (int) Math.ceil((sectionTimes[kk][0] - resampled_time[0]) / meandiff);
+            this.resampled_idx[kk][1] = (int) Math.floor((sectionTimes[kk][1] - resampled_time[0]) / meandiff);
+        }
         // *****************************************
 
+        this.resampled_data = resampled_debiased_data;
+    }
+
+
+    // perform integration over a certain interval to get position
+    protected double[][] doIntegration(int segmentBegin, int segmentLength) {
 
         // STEP: integrate acceleration twice to get position
         //  - integrate accl to get velocity
-        double[][] velocity = new double[3][resampled_length];
+        double[][] velocity = new double[3][segmentLength];
         for(int kk = 0; kk < 3; kk++) {
             // initial velocity is zero + change in first time step
-            velocity[kk][0] = (meandiff * resampled_data[kk][0]);
+            velocity[kk][0] = (meandiff * resampled_data[kk][0 + segmentBegin]);
 
             // loop through time steps and add changes
-            for(int tt = 1; tt < resampled_length; tt++) {
-                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff * resampled_data[kk][tt]);
+            for(int tt = 1; tt < segmentLength; tt++) {
+                velocity[kk][tt] = velocity[kk][tt-1] + (meandiff * resampled_data[kk][tt + segmentBegin]);
             }
         }
 
         //  - integrate velocity to get position
-        double[][] position = new double[3][resampled_length];
+        double[][] position = new double[3][segmentLength];
         for(int kk = 0; kk < 3; kk++) {
 
             // initial position is zero + change in first time step
             position[kk][0] = (meandiff * velocity[kk][0]);
 
-            for(int tt = 1; tt < resampled_length; tt++) {
+            for(int tt = 1; tt < segmentLength; tt++) {
                 position[kk][tt] = position[kk][tt-1] + (meandiff * velocity[kk][tt]);
             }
         }
