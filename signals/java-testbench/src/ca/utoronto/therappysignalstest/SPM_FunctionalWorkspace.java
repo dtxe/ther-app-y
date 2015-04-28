@@ -101,7 +101,7 @@ public class SPM_FunctionalWorkspace {
         }
 
         // calculate sphere volume
-        this.fitmeasures[0] = 4.0/3.0 * Math.PI * Math.pow(this.fitmeasures[0], 3);
+        this.fitmeasures[0] = Math.PI * Math.pow(this.fitmeasures[0], 3) / 3.0;
 
         // calculate workspace areas
         for (int aa = 1; aa < indices.length; aa++) {
