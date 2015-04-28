@@ -1,5 +1,6 @@
-package ca.utoronto.therappy;
+package ca.utoronto.therappysignalstest;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -30,7 +31,7 @@ public class SPM_FunctionalWorkspace {
     }
 
     // do the whole signals processing thing here.
-    public double[][] doChurnData () {
+    public ArrayList<double[]> doChurnData () {
         // do signals processing stuff
 
         // STEP: remove duplicated acceleration values
@@ -40,7 +41,7 @@ public class SPM_FunctionalWorkspace {
         ArrayList<int[]> sectionIndices = new ArrayList<>();
 
         // - add first segment
-        sectionIndices.add(new int[] {0, 0});
+        sectionIndices.add(new int[] {-1, 0});
 
         // - loop through the arraylist looking for Ns
         for(int kk = 0; kk < this.data_accl.size(); kk++) {
@@ -57,7 +58,7 @@ public class SPM_FunctionalWorkspace {
             if(kk+1 >= sectionIndices.size())
                 curr[1] = this.data_accl.size() - curr[0];              // if this is the last index...
             else
-                curr[1] = sectionIndices.get(kk+1)[0] - curr[0];        // calculate the length of the segment
+                curr[1] = sectionIndices.get(kk+1)[0] - curr[0] - 1;    // calculate the length of the segment
         }
 
         // STEP: run signals processing code on it.
@@ -66,13 +67,19 @@ public class SPM_FunctionalWorkspace {
         for(int kk = 0; kk < sectionIndices.size(); kk++) {
             int[] curr = sectionIndices.get(kk);
 
-            double[][] tempposition;
-            tempposition = doDeadReckoning(curr[0], curr[1]);
+            double[][] tempposition = null;
+
+            try {
+                tempposition = doDeadReckoning(curr[0], curr[1]);
+            } catch(Exception ex) {
+                System.out.println("Current section: " + kk);
+                ex.printStackTrace();
+            }
 
             // transfer new position vectors into array         TODO: this may not be necessary if we're fitting
             position.ensureCapacity(position.size() + tempposition.length);
-            for(int jj = 0; jj < tempposition.length; jj++) {
-                position.add(tempposition[jj]);
+            for(int jj = 0; jj < tempposition[0].length; jj++) {
+                position.add(new double[]{tempposition[0][jj], tempposition[1][jj], tempposition[2][jj]});
             }
         }
 
@@ -81,7 +88,7 @@ public class SPM_FunctionalWorkspace {
         this.data_accl = null;
 
 
-        return (double[][]) position.toArray();
+        return position;
 
 
 
@@ -129,17 +136,17 @@ public class SPM_FunctionalWorkspace {
         //  - find sampling frequency
         double meandiff = StatUtils.mean(diff(thetime));
         meandiff = meandiff / 5;                            // aim for oversample by 5x
-        int resampled_length = (int) Math.floor(thetime[thetime.length-1] / meandiff);
+        int resampled_length = (int) Math.floor((thetime[thetime.length-1] - thetime[0]) / meandiff);
 
         //  - turn resampled_length into closest higher power of 2          TODO: might need to add option to pad with zeros if it gets too long
         resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
-        meandiff = thetime[thetime.length-1] / (resampled_length-1);
+        meandiff = (thetime[thetime.length-1] - thetime[0]) / (resampled_length-1);
 
         //  - generate new time vector
         double[] resampled_time = new double[resampled_length];
 
         for(int kk = 0; kk < resampled_length; kk++) {
-            resampled_time[kk] = meandiff * kk;
+            resampled_time[kk] = (meandiff * kk) + thetime[0];
         }
 
         //  - resample each acceleration dimension
@@ -198,7 +205,7 @@ public class SPM_FunctionalWorkspace {
     protected double[][] getMovingAverage(double[][] input, int numsamples) {
         double[][] output = new double[3][];
         for(int kk = 0; kk < 3; kk++) {
-            output[kk] = new double[input.length - numsamples + 1];
+            output[kk] = new double[input[0].length - numsamples + 1];
         }
 
         for(int kk = 0; kk < output.length; kk++) {

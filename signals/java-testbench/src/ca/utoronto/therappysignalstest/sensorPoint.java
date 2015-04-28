@@ -1,4 +1,4 @@
-package ca.utoronto.therappy;
+package ca.utoronto.therappysignalstest;
 
 /**
  * Created by Andrew on 26/03/2015.
