@@ -10,6 +10,9 @@ import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+
+
 
 /**
  * Created by simeon on 2015-03-14.
@@ -17,31 +20,40 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class SPM_FunctionalWorkspace {
 
-    private final static double LONGTERM_WND_LENGTH = 0.9;
-
+    // Constants
+    private final static double LONGTERM_WND_LENGTH = 1.7;
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
-    private ArrayList<sensorPoint> data_accl;
-    double [] fitmeasures; // fwvol, xyarea, yzarea, xzarea;
+    // INPUT
+    private ArrayList<sensorPoint> data_input;
 
-    double [] maxpositions;
+    // Interim
+    private double [][] resampled_data;
+    private int [][] resampled_idx;
+    private double meandiff;
 
-    double meandiff;
-    double [][] resampled_data;
-    int [][] resampled_idx;
+    private double [][] data_accl, data_rota;
+    private double[] time_accl, time_rota, time_split;
 
+    // OUTPUTS
+    private double [] fitmeasures; // fwvol, xyarea, yzarea, xzarea;
+    private double [] maxpositions;
     private ArrayList<double[]> position;
 
     // when creating the signal processing module, must provide acceleration data
-    public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_accl) {
+    public SPM_FunctionalWorkspace(ArrayList<sensorPoint> data_input) {
         // pass the loaded acceleration data here
         // the vector is pre-rotated
-        this.data_accl = data_accl;
+        this.data_input = data_input;
     }
 
     // do the whole signals processing thing here.
     public void doChurnData () {
         // do signals processing stuff
+
+        Collections.sort(this.data_input);
+
+        doSeparateData();
 
         // STEP: remove duplicated acceleration values
         this.data_accl = doRemoveDuplicates(this.data_accl);
@@ -49,9 +61,6 @@ public class SPM_FunctionalWorkspace {
         // STEP: preprocess everything
         this.doPreprocessing();
 
-        // clean up for garbage collector
-        this.data_accl.clear();
-        this.data_accl = null;
 
         // STEP: run signals processing code on it.
         ArrayList<double[]> position = new ArrayList<>();
@@ -83,6 +92,76 @@ public class SPM_FunctionalWorkspace {
 
         // fit areas to get metrics
         doFitTargets();
+    }
+
+    protected void doInterpRotate() {
+
+    }
+
+    // separate the input sensorPoint data into individual components for processing
+    protected void doSeparateData() {
+
+        // ensure sorted
+        Collections.sort(this.data_input);
+
+        int num_accl = 0, num_gyro = 0, num_split = 0;
+
+        // count the number of each item
+        for(int kk = 0; kk < this.data_input.size(); kk++) {
+            int type = this.data_input.get(kk).datatype;
+
+            if(type == sensorPoint.DATA_ACCELERATION) {
+                num_accl++;
+            }
+            else if(type == sensorPoint.DATA_ROTATIONVEC) {
+                num_gyro++;
+            }
+            else if(type == sensorPoint.TRACE_BREAK) {
+                num_split++;
+            }
+        }
+
+        this.data_accl = new double[3][num_accl];
+        this.time_accl = new double[num_accl];
+
+        this.data_rota = new double[3][num_gyro];
+        this.time_rota = new double[num_gyro];
+
+        this.time_split = new double[num_split];
+
+        int counter_accl = 0, counter_rota = 0, counter_split = 0;
+
+        // take data out of sensor points
+        for(int kk = 0; kk < this.data_input.size(); kk++) {
+            sensorPoint sp = this.data_input.get(kk);
+
+            if(sp.datatype == sensorPoint.DATA_ACCELERATION) {
+                this.data_accl[0][counter_accl] = sp.value[0];
+                this.data_accl[1][counter_accl] = sp.value[1];
+                this.data_accl[2][counter_accl] = sp.value[2];
+
+                this.time_accl[counter_accl] = sp.time;
+
+                counter_accl++;
+            }
+            else if(sp.datatype == sensorPoint.DATA_ROTATIONVEC) {
+                this.data_rota[0][counter_rota] = sp.value[0];
+                this.data_rota[1][counter_rota] = sp.value[1];
+                this.data_rota[2][counter_rota] = sp.value[2];
+
+                this.time_rota[counter_rota] = sp.time;
+
+                counter_rota++;
+            }
+            else if(sp.datatype == sensorPoint.TRACE_BREAK) {
+                this.time_split[counter_split] = sp.time;
+
+                counter_split++;
+            }
+        }
+
+        this.data_input.clear();
+        this.data_input = null;
     }
 
     protected void doFitTargets() {
@@ -288,7 +367,7 @@ public class SPM_FunctionalWorkspace {
 
     // remove values with duplicated time stamps
     // TODO: perhaps consider averaging duplicates instead
-    protected ArrayList<sensorPoint> doRemoveDuplicates(ArrayList<sensorPoint> input) {
+    protected doRemoveDuplicates() {
 
         ArrayList<Integer> duplicatedTimes = new ArrayList<>();
 
