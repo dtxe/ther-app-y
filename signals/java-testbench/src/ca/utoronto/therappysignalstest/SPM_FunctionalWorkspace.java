@@ -74,12 +74,12 @@ public class SPM_FunctionalWorkspace {
 
 
         // fit areas to get metrics
+        doFitTargets();
 
     }
 
-    protected double[] doFitTargets(double[][] position) {
+    protected void doFitTargets() {
 
-        return null;
     }
 
 

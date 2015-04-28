@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="java-testbench:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/java_testbench_jar</output-path>
+    <root id="archive" name="java-testbench.jar">
+      <element id="module-output" name="java-testbench" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Therappy/app/libs/commons-math3-3.4.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

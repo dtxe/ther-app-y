@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         // ** PARAMETERS **
-        String filePrefix = sep + ".." + sep + "assets2" + sep + "cindy-protocol" + sep,
+        String filePrefix = sep + ".." + sep + "assets2" + sep,
                filename;
 
         // ** LESS USEFUL PARAMETERS **
