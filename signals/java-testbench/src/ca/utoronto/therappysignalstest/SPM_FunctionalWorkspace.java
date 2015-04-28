@@ -22,7 +22,7 @@ public class SPM_FunctionalWorkspace {
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     private ArrayList<sensorPoint> data_accl;
-    double fwvol, xyarea, yzarea, xzarea;
+    double [] fitmeasures; // fwvol, xyarea, yzarea, xzarea;
 
     double [] maxpositions;
 
@@ -83,11 +83,30 @@ public class SPM_FunctionalWorkspace {
 
         // fit areas to get metrics
         doFitTargets();
-
     }
 
     protected void doFitTargets() {
+        // points for xy, yz, xz
+        int[][] indices = new int[][]{new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                new int[]{0, 1, 2, 3, 4}, new int[]{2, 5, 6}, new int[]{0, 7, 6, 8, 4}};
+        this.fitmeasures = new double[indices.length];
 
+        for (int aa = 0; aa < indices.length; aa++) {
+
+            this.fitmeasures[aa] = 0;
+            for (int bb = 0; bb < indices[aa].length; bb++) {
+                this.fitmeasures[aa] += this.maxpositions[indices[aa][bb]];
+            }
+            this.fitmeasures[aa] /= (indices[aa].length+1);
+        }
+
+        // calculate sphere volume
+        this.fitmeasures[0] = 4.0/3.0 * Math.PI * Math.pow(this.fitmeasures[0], 3);
+
+        // calculate workspace areas
+        for (int aa = 1; aa < indices.length; aa++) {
+            this.fitmeasures[aa] = Math.PI * Math.pow(this.fitmeasures[aa], 2) / 2.0;
+        }
     }
 
 
@@ -389,23 +408,23 @@ public class SPM_FunctionalWorkspace {
     // return the computed workspace volume
     public double getWorkspaceVolume () {
 
-        return this.fwvol;
+        return this.fitmeasures[0];
     }
 
     // return the computed XY plane area
     public double getXYplane() {
 
-        return this.xyarea;
+        return this.fitmeasures[1];
     }
 
     public double getYZplane() {
 
-        return this.yzarea;
+        return this.fitmeasures[2];
     }
 
     public double getXZplane() {
 
-        return this.xzarea;
+        return this.fitmeasures[3];
     }
 
     public ArrayList<double[]> getPosition() {

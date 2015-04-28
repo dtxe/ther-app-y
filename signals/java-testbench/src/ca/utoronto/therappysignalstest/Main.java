@@ -40,11 +40,15 @@ public class Main {
 
             // construct paths
             String currentDir = System.getProperty("user.dir");
-            String outputFile = currentDir+filePrefix+filename+"-output.txt",
+            String metricsFile = currentDir+filePrefix+filename+"-metrics.txt",
+                    outputFile = currentDir+filePrefix+filename+"-output.txt",
                     inputFile = currentDir+filePrefix+filename+".txt";
 
             FileWriter fwriter = new FileWriter(outputFile, false);
             BufferedWriter bwriter = new BufferedWriter(fwriter, bufferSize);
+
+            FileWriter fwriter2 = new FileWriter(metricsFile, false);
+            BufferedWriter bwriter2 = new BufferedWriter(fwriter2, bufferSize);
 
             FileReader freader = new FileReader(inputFile);
             BufferedReader breader = new BufferedReader(freader, bufferSize);
@@ -99,12 +103,42 @@ public class Main {
                 bwriter.newLine();
             }
 
+            // # Save fancy metrics
+            bwriter2.write("# Raw direction measurements");
+            bwriter2.newLine();
+
+            double[] maxposition = sigProcInstance.getMaxpositions();
+            String tempout = "";
+            for(int kk = 0; kk < maxposition.length; kk++) {
+                tempout += ","+maxposition[kk];
+            }
+            bwriter2.write(tempout.substring(1));
+            bwriter2.newLine();
+
+            bwriter2.write("------------------------");
+            bwriter2.newLine();
+            bwriter2.write("# Workspace Measurements");
+            bwriter2.newLine();
+
+            bwriter2.write(sigProcInstance.getWorkspaceVolume() + "," +
+                sigProcInstance.getXYplane() + "," +
+                sigProcInstance.getYZplane() + "," +
+                sigProcInstance.getXZplane());
+            bwriter2.newLine();
+
+
+
 
             // # Clean up
             bwriter.flush();
+            bwriter2.flush();
             fwriter.flush();
+            fwriter2.flush();
+
             bwriter.close();
+            bwriter2.close();
             fwriter.close();
+            fwriter2.close();
 
             breader.close();
             freader.close();
