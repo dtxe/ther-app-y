@@ -40,7 +40,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     /* sensor variables */
     private SensorManager mSensorManager;                   // sensor manager
     private Sensor mAccelerometer, mRotation;               // accelerometer and rotation vector sensor variables
-    private float[] rotmatrix = new float[16];              // rotation matrix
 
     /* debug variables */
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -82,10 +81,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
 
-        // pre-clear variables
-        for(int i = 0; i < 16; i++){
-            rotmatrix[i] = 0;
-        }
+
         MessageBuffer.clear();
         cycle = 0;
         started = false;
@@ -151,29 +147,25 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                Matrix.multiplyMV(data, 0, rotmatrix, 0, data, 0);
-                //type = 'a';
+
                 if(started){
                     MessageBuffer.putLong(time).putChar('a').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
                     cycle++;
                     if(cycle == COUNT){
                         flushBuffer();
                     }
-                    /*watcher.onSensorChanged(data, time);
-                    If(watcher.isBackToOrigin()){
-                        Log.i(TAG, "Back to origin!");
-                        MessageBuffer.compact();
-                        sendMessage(DATA_MESSAGE_PATH, MessageBuffer);
-                        MessageBuffer.clear();
-                        cycle = 0;
-                        sendMessage(EVENT_MESSAGE_PATH, watcher.getFurthestPosition() + "");
-                    }*/
+
                 }
                 break;
 
             case Sensor.TYPE_ROTATION_VECTOR:
-                SensorManager.getRotationMatrixFromVector(rotmatrix, event.values);
-                Matrix.invertM(rotmatrix, 0, rotmatrix, 0);
+                if(started) {
+                    MessageBuffer.putLong(time).putChar('r').putFloat(data[0]).putFloat(data[1]).putFloat(data[2]).array();
+                    cycle++;
+                    if(cycle == COUNT){
+                        flushBuffer();
+                    }
+                }
                 break;
 
             default:

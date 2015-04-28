@@ -62,7 +62,7 @@ public class SPM extends ActionBarActivity{
         }
 
         protected Void doInBackground(String... params){
-            String fileName = params[0];
+            /*String fileName = params[0];
             String nextLine;
             long time = 0;
             long t0 = 0;
@@ -139,13 +139,13 @@ public class SPM extends ActionBarActivity{
             // CALL SENSOR MODULE HERE
             SPM_FunctionalWorkspace sigProcInstance = new SPM_FunctionalWorkspace(data_accl);
             results = sigProcInstance.doChurnData();
-            /*
+            *//*
             // retrieve results
             double xyarea = sigProcInstance.getXYplane();
             double xzarea = sigProcInstance.getXZplane();
             double yzarea = sigProcInstance.getYZplane();
             double fwvol = sigProcInstance.getWorkspaceVolume();
-            */
+            *//*
             // now onto Joel's stuff!
             try {
                 int len = results[0].length;
@@ -157,7 +157,7 @@ public class SPM extends ActionBarActivity{
                 e.printStackTrace();
             }
 
-            /*
+            *//*
              * line 1: timestamp
              * line 2: FW volume
              * line 3: X-Y area
@@ -166,7 +166,7 @@ public class SPM extends ActionBarActivity{
              * line 6: X,Y coordinates for X-Z area
              * line 7: Y-Z area
              * line 8: X,Y coordinates for Y-Z area
-             */
+             *//*
 
             // close writing and reading.
             try {
@@ -178,7 +178,7 @@ public class SPM extends ActionBarActivity{
                 freader.close();
             }catch(Exception e){
                 e.printStackTrace();
-            }
+            } */
             return null;
         }
 
