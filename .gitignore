@@ -16,3 +16,6 @@
 
 # Java compilation
 **/out/**/*.class
+
+*metrics.txt
+*output.txt

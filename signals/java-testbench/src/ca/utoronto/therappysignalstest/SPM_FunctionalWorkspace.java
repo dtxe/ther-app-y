@@ -17,7 +17,7 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class SPM_FunctionalWorkspace {
 
-    private final static double LONGTERM_WND_LENGTH = 0.7;
+    private final static double LONGTERM_WND_LENGTH = 0.9;
 
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
@@ -433,5 +433,54 @@ public class SPM_FunctionalWorkspace {
 
     public double[] getMaxpositions() {
         return this.maxpositions;
+    }
+
+
+    // calculate the z-score of data
+    public static double[] calculateZScore(double[] data) {
+        double [] output = new double[data.length];
+        double popmean = StatUtils.mean(data);
+        double popstd = Math.sqrt(StatUtils.variance(data, popmean));
+
+        for(int kk = 0; kk < data.length; kk++) {
+            output[kk] = (data[kk] - popmean) / popstd;
+        }
+
+        return output;
+    }
+
+    // return all the values between the middle prctile-th percentiles of the data
+    public static double[] calculateThresholdPrctile(double[] data, double prctile) {
+        boolean[] output_temp = new boolean[data.length];
+        int newlength = 0;
+
+        double edgeprctile = (1-prctile)/2;
+        double thresholdlow = StatUtils.percentile(data, edgeprctile),
+               thresholdhigh = StatUtils.percentile(data, 1-edgeprctile);
+
+
+        // find data within bounds
+        for(int kk = 0; kk < data.length; kk++) {
+            if(data[kk] >= thresholdlow && data[kk] <= thresholdhigh) {
+                output_temp[kk] = true;
+                newlength++;
+            } else {
+                output_temp[kk] = false;
+            }
+
+        }
+
+        // copy data between thresholds to new array
+        double[] output = new double[newlength];
+        int counter = 0;
+        for(int kk = 0; kk < data.length; kk++) {
+            if(output_temp[kk]) {
+                output[counter] = data[kk];
+                counter++;
+            }
+        }
+
+
+        return output;
     }
 }
