@@ -97,6 +97,8 @@ public class Main {
                     // parse sensor type then add to corresponding arrayList
                     if (sensorData[1].compareTo("a") == 0) {
                         data_accl.add(new sensorPoint(time - t0, new float[]{x, y, z}, sensorPoint.DATA_ACCELERATION));
+                    } else if(sensorData[1].compareTo("r") == 0) {
+                        data_accl.add(new sensorPoint(time - t0, new float[]{x, y, z}, sensorPoint.DATA_ROTATIONVEC));
                     } else if (sensorData[1].compareTo("N") == 0) {
                         // divider sensorPoint has time equal to the last time point
                         data_accl.add(new sensorPoint(t_last - t0 + 1, new float[]{0, 0, 0}, sensorPoint.TRACE_BREAK));

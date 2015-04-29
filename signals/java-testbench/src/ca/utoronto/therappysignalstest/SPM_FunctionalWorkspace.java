@@ -21,7 +21,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 public class SPM_FunctionalWorkspace {
 
     // Constants
-    private final static double LONGTERM_WND_LENGTH = 1.7;
+    private final static double LONGTERM_WND_LENGTH = 1.5;
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     // INPUT
@@ -33,7 +33,8 @@ public class SPM_FunctionalWorkspace {
     private double meandiff;
 
     private double [][] data_accl, data_rota;
-    private double[] time_accl, time_rota, time_split;
+    private double[] time_accl, time_rota;
+    private double[][] time_split;
 
     // OUTPUTS
     private double [] fitmeasures; // fwvol, xyarea, yzarea, xzarea;
@@ -53,10 +54,8 @@ public class SPM_FunctionalWorkspace {
 
         Collections.sort(this.data_input);
 
+        // STEP: remove duplicates and separate data
         doSeparateData();
-
-        // STEP: remove duplicated acceleration values
-        this.data_accl = doRemoveDuplicates(this.data_accl);
 
         // STEP: preprocess everything
         this.doPreprocessing();
@@ -104,64 +103,75 @@ public class SPM_FunctionalWorkspace {
         // ensure sorted
         Collections.sort(this.data_input);
 
-        int num_accl = 0, num_gyro = 0, num_split = 0;
+        ArrayList<Integer> idx_accl = new ArrayList<>(), idx_gyro = new ArrayList<>(), idx_split = new ArrayList<>();
+
+        // add first segment
+        idx_split.add(-1);
 
         // count the number of each item
         for(int kk = 0; kk < this.data_input.size(); kk++) {
             int type = this.data_input.get(kk).datatype;
 
             if(type == sensorPoint.DATA_ACCELERATION) {
-                num_accl++;
+                idx_accl.add(kk);
             }
             else if(type == sensorPoint.DATA_ROTATIONVEC) {
-                num_gyro++;
+                idx_gyro.add(kk);
             }
             else if(type == sensorPoint.TRACE_BREAK) {
-                num_split++;
+                idx_split.add(kk);
             }
         }
 
-        this.data_accl = new double[3][num_accl];
-        this.time_accl = new double[num_accl];
+        // remove duplicates
+        idx_accl = doRemoveDuplicates(idx_accl);
+        idx_gyro = doRemoveDuplicates(idx_gyro);
 
-        this.data_rota = new double[3][num_gyro];
-        this.time_rota = new double[num_gyro];
 
-        this.time_split = new double[num_split];
+        // >>> take data out of sensor points
+        // - acceleration
+        this.data_accl = new double[3][idx_accl.size()];
+        this.time_accl = new double[idx_accl.size()];
 
-        int counter_accl = 0, counter_rota = 0, counter_split = 0;
+        for(int kk = 0; kk < idx_accl.size(); kk++) {
+            sensorPoint sp = this.data_input.get(idx_accl.get(kk));
 
-        // take data out of sensor points
-        for(int kk = 0; kk < this.data_input.size(); kk++) {
-            sensorPoint sp = this.data_input.get(kk);
+            this.data_accl[0][kk] = sp.value[0];
+            this.data_accl[1][kk] = sp.value[1];
+            this.data_accl[2][kk] = sp.value[2];
 
-            if(sp.datatype == sensorPoint.DATA_ACCELERATION) {
-                this.data_accl[0][counter_accl] = sp.value[0];
-                this.data_accl[1][counter_accl] = sp.value[1];
-                this.data_accl[2][counter_accl] = sp.value[2];
+            this.time_accl[kk] = sp.time * time_div;
+        }
 
-                this.time_accl[counter_accl] = sp.time;
+        // - rotation
+        this.data_rota = new double[3][idx_gyro.size()];
+        this.time_rota = new double[idx_gyro.size()];
 
-                counter_accl++;
-            }
-            else if(sp.datatype == sensorPoint.DATA_ROTATIONVEC) {
-                this.data_rota[0][counter_rota] = sp.value[0];
-                this.data_rota[1][counter_rota] = sp.value[1];
-                this.data_rota[2][counter_rota] = sp.value[2];
+        for(int kk = 0; kk < idx_gyro.size(); kk++) {
+            sensorPoint sp = this.data_input.get(idx_gyro.get(kk));
 
-                this.time_rota[counter_rota] = sp.time;
+            this.data_rota[0][kk] = sp.value[0];
+            this.data_rota[1][kk] = sp.value[1];
+            this.data_rota[2][kk] = sp.value[2];
 
-                counter_rota++;
-            }
-            else if(sp.datatype == sensorPoint.TRACE_BREAK) {
-                this.time_split[counter_split] = sp.time;
+            this.time_rota[kk] = sp.time * time_div;
+        }
 
-                counter_split++;
+        // - split
+        this.time_split = new double[idx_split.size()][2];
+
+        for(int kk = 0; kk < idx_split.size(); kk++) {
+            this.time_split[kk][0] = this.data_input.get(idx_split.get(kk)+1).time * time_div;
+
+            if(kk+2 >= idx_split.size()) {
+                this.time_split[kk][1] = this.data_input.get(this.data_input.size()-1).time * time_div;
+            } else {
+                this.time_split[kk][1] = this.data_input.get(idx_split.get(kk+1)-1).time * time_div;
             }
         }
 
-        this.data_input.clear();
-        this.data_input = null;
+      //  this.data_input.clear();
+        //this.data_input = null;
     }
 
     protected void doFitTargets() {
@@ -193,84 +203,56 @@ public class SPM_FunctionalWorkspace {
        split into segments, resample, filter, subtract moving average   */
     protected void doPreprocessing() {
 
-        // STEP: split into sections
-        ArrayList<Integer> sectionIndices = new ArrayList<>();
-        double[][] sectionTimes;
-
-        // - add first segment
-        sectionIndices.add(-1);
-
-        // - loop through the arraylist looking for Ns
-        for(int kk = 0; kk < this.data_accl.size(); kk++) {
-            if(this.data_accl.get(kk).datatype == sensorPoint.TRACE_BREAK) {
-                sectionIndices.add(kk);
-            }
-        }
-
-        sectionTimes = new double[sectionIndices.size()][2];
-        // - loop through indices and get times
-        for(int kk = 0; kk < sectionIndices.size(); kk++) {
-            sectionTimes[kk][0] = this.data_accl.get(sectionIndices.get(kk)+1).time * time_div;
-
-            if(kk+1 == sectionIndices.size()) {
-                sectionTimes[kk][1] = this.data_accl.get(this.data_accl.size() - 1).time * time_div;
-            } else {
-                sectionTimes[kk][1] = this.data_accl.get(sectionIndices.get(kk+1)-1).time * time_div;
-            }
-        }
-
-        // - remove from arraylist
-        for(int kk = sectionIndices.size()-1; kk >= 1; kk--) {
-            this.data_accl.remove((int) sectionIndices.get(kk));
-        }
-        sectionIndices.clear();
-
-        // STEP
-        // take data out of arraylist/sensorpoint
-        double[][] thedata = new double[3][this.data_accl.size()];
-        double[] thetime = new double[this.data_accl.size()];
-
-        for(int kk = 0; kk < this.data_accl.size(); kk++) {
-            // retrieve sensorPoint from the ArrayList
-            sensorPoint tempsp = this.data_accl.get(kk);
-
-            // store the timestamp in a vector
-            thetime[kk] = tempsp.time * time_div;      // convert to seconds
-
-            // store the values in respective accl vector
-            float[] tempdata = tempsp.value;
-            thedata[0][kk] = tempdata[0];
-            thedata[1][kk] = tempdata[1];
-            thedata[2][kk] = tempdata[2];
-        }
-        // *****************************************
 
         // STEP: do linear interpolation of the data
+        double startTime = Math.max(this.time_accl[0], this.time_rota[0]),
+                endTime = Math.min(this.time_accl[this.time_accl.length - 1], this.time_rota[this.time_rota.length - 1]);
+
         //  - find sampling frequency
-        double meandiff = StatUtils.mean(calculateDiff(thetime));
+        double meandiff = StatUtils.mean(calculateDiff(this.time_accl));
         meandiff = meandiff / 5;                            // aim for oversample by 5x
-        int resampled_length = (int) Math.floor((thetime[thetime.length-1] - thetime[0]) / meandiff);
+        int resampled_length = (int) Math.floor((endTime - startTime) / meandiff);
 
         //  - turn resampled_length into closest higher power of 2
         resampled_length = (int) Math.pow(2, Math.ceil(  (Math.log(resampled_length)/Math.log(2)) - 0.1 ));
-        meandiff = (thetime[thetime.length-1] - thetime[0]) / (resampled_length-1);
+        meandiff = (endTime - startTime) / (resampled_length-1);
 
         //  - generate new time vector
         double[] resampled_time = new double[resampled_length];
 
         for(int kk = 0; kk < resampled_length; kk++) {
-            resampled_time[kk] = (meandiff * kk) + thetime[0];
+            resampled_time[kk] = (meandiff * kk) + startTime;
         }
 
         //  - resample each acceleration dimension
         double[][] resampled_data = new double[3][];
         for(int kk = 0; kk < 3; kk++) {
-            resampled_data[kk] = calculateInterp1(resampled_time, thetime, thedata[kk]);
+            resampled_data[kk] = calculateInterp1(resampled_time, this.time_accl, this.data_accl[kk]);
         }
 
         //  - free for garbage collect
-        thedata = null;
-        thetime = null;
+        this.data_accl = null;
+        this.time_accl = null;
+
+        // STEP: rotate the acceleration vectors
+        double[][] resampled_rotation = new double[3][];
+        for(int kk = 0; kk < 3; kk++) {
+            resampled_rotation[kk] = calculateInterp1(resampled_time, this.time_rota, this.data_rota[kk]);
+        }
+
+        for(int tt = 0; tt < resampled_length; tt++) {
+            double q0 = Math.sqrt(1 - Math.pow(resampled_rotation[0][tt], 2) - Math.pow(resampled_rotation[1][tt], 2) - Math.pow(resampled_rotation[2][tt], 2));
+            Rotation rotator = new Rotation(q0, resampled_rotation[0][tt], resampled_rotation[1][tt], resampled_rotation[2][tt], false);
+
+            double[] output = new double[3];
+            rotator.applyTo(new double[]{resampled_data[0][tt], resampled_data[1][tt], resampled_data[2][tt]}, output);
+
+            resampled_data[0][tt] = output[0];
+            resampled_data[1][tt] = output[1];
+            resampled_data[2][tt] = output[2];
+        }
+
+
         // *****************************************
 
         // STEP: filter data
@@ -297,11 +279,11 @@ public class SPM_FunctionalWorkspace {
 
 
         // STEP: convert separator times into indices
-        this.resampled_idx = new int[sectionTimes.length][2];
+        this.resampled_idx = new int[this.time_split.length][2];
 
         for(int kk = 0; kk < this.resampled_idx.length; kk++) {
-            this.resampled_idx[kk][0] = (int) Math.ceil((sectionTimes[kk][0] - resampled_time[0]) / meandiff);
-            this.resampled_idx[kk][1] = (int) Math.floor((sectionTimes[kk][1] - resampled_time[0]) / meandiff);
+            this.resampled_idx[kk][0] = (int) Math.ceil((this.time_split[kk][0] - resampled_time[0]) / meandiff);
+            this.resampled_idx[kk][1] = (int) Math.floor((this.time_split[kk][1] - resampled_time[0]) / meandiff);
         }
         // *****************************************
 
@@ -367,17 +349,13 @@ public class SPM_FunctionalWorkspace {
 
     // remove values with duplicated time stamps
     // TODO: perhaps consider averaging duplicates instead
-    protected doRemoveDuplicates() {
+    protected ArrayList<Integer> doRemoveDuplicates(ArrayList<Integer> idx) {
 
         ArrayList<Integer> duplicatedTimes = new ArrayList<>();
 
-        // ensure the data is sorted.
-        Collections.sort(input);
-
         // loop through sensor points and mark duplicated time stamps for removal
-        for(int kk = 1; kk < input.size(); kk++) {
-            if(input.get(kk).time == input.get(kk-1).time                       // if the timestamps are equal, then mark it for dropping
-                    && input.get(kk).datatype != sensorPoint.TRACE_BREAK) {     // unless it's a trace break (ie. signals a return to origin)
+        for(int kk = 1; kk < idx.size(); kk++) {
+            if(this.data_input.get(idx.get(kk)).time == this.data_input.get(idx.get(kk-1)).time) {
                 duplicatedTimes.add(kk);
             }
         }
@@ -386,10 +364,10 @@ public class SPM_FunctionalWorkspace {
         // we can't remove while searching, because then the size of the arraylist would change, that that makes things complicated.
         // - search backwards and delete, so that it doesn't upset the indexing
         for(int kk = duplicatedTimes.size()-1; kk >= 0; kk--) {
-            input.remove((int) duplicatedTimes.get(kk));
+            idx.remove((int) duplicatedTimes.get(kk));
         }
 
-        return input;
+        return idx;
     }
 
     // do 1D linear interpolation of data, similar to matlab interp1 command
