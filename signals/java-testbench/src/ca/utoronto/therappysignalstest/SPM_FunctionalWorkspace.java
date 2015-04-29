@@ -21,7 +21,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 public class SPM_FunctionalWorkspace {
 
     // Constants
-    private final static double LONGTERM_WND_LENGTH = 1.5;
+    private final static double LONGTERM_WND_LENGTH = 3.0;
     private final static double time_div = 1E-9;       // timestamp is in nanoseconds
 
     // INPUT
